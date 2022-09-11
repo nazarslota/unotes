@@ -1,23 +1,10 @@
 {
-  "host": "0.0.0.0",
-  "port": 8080,
-  "logger_output": "./logs/auth.log",
-  "access_token_secret": "",
-  "access_token_expires_in": "60m",
-  "refresh_token_secret": "",
-  "refresh_token_expires_in": "168h",
-  "debug": false,
-  "mongodb": {
-    "host": "",
-    "port": "",
-    "username": "",
-    "password": "",
-    "database": "",
-    "users_collection": ""
-  },
-  "redis": {
-    "addr": "",
-    "password": "",
-    "database": 0
+  "auth": {
+    "host": "0.0.0.0",
+    "port": "8080",
+    "access_token_secret": "A",
+    "refresh_token_secret": "R",
+    "access_token_expires_in": "1m",
+    "refresh_token_expires_in": "168h"
   }
 }
