@@ -4,7 +4,7 @@
     "port": "8080",
     "access_token_secret": "A",
     "refresh_token_secret": "R",
-    "access_token_expires_in": "1m",
+    "access_token_expires_in": "60m",
     "refresh_token_expires_in": "168h"
   }
 }
