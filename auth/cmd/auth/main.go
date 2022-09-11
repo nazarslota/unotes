@@ -14,15 +14,43 @@ import (
 	"github.com/udholdenhed/unotes/auth/internal/handler"
 	"github.com/udholdenhed/unotes/auth/internal/service"
 	"github.com/udholdenhed/unotes/auth/internal/storage"
+	"github.com/udholdenhed/unotes/auth/internal/storage/mongo"
+	"github.com/udholdenhed/unotes/auth/internal/storage/redis"
 	"github.com/udholdenhed/unotes/auth/pkg/utils"
+	mongodriver "go.mongodb.org/mongo-driver/mongo"
 )
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+	log.Info().Msg("Connecting to MongoDB.")
+	mongoDBClient, err := mongo.NewMongoDBClient(context.Background(), &mongo.Config{
+		Host:     config.C().MongoDB.Host,
+		Port:     config.C().MongoDB.Port,
+		Username: config.C().MongoDB.Username,
+		Password: config.C().MongoDB.Password,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("Filed to connect to MongoDB.")
+	}
+	log.Info().Msg("Connected to MongoDB.")
+
+	log.Info().Msg("Connecting to Redis.")
+	redisClient, err := redis.NewRedisClient(context.Background(), &redis.Config{
+		Addr:     "",
+		Password: "",
+		DB:       0,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("Filed to connect to Redis.")
+	}
+	log.Info().Msg("Connected to Redis.")
+
 	repos := storage.NewRepositoryProvider(
-		storage.WithMemoryUserRepository(),
-		storage.WithMemoryRefreshTokenRepository(),
+		storage.WithMongoDBUserRepository(func() *mongodriver.Collection {
+			return mongoDBClient.Database(config.C().MongoDB.Database).Collection("users")
+		}()),
+		storage.WithRedisRefreshTokenRepository(redisClient),
 	)
 
 	services := service.NewService(&service.OAuth2ServiceOptions{
@@ -41,7 +69,7 @@ func main() {
 		config.C().Auth.Port,
 	)
 
-	log.Info().Msgf("Auth service starting on addr: '%s'.", addr)
+	log.Info().Msgf("Starting HTTP server on addr: %q...", addr)
 
 	h := handlers.InitRoutes()
 	server := &http.Server{
@@ -58,14 +86,28 @@ func main() {
 		}
 	}()
 
-	log.Info().Msg("Auth service started.")
+	log.Info().Msg("Server started.")
 
 	<-utils.GracefulShutdown()
 
-	log.Info().Msg("Auth service shutting down.")
+	log.Info().Msg("Shutting down...")
 	if err := server.Shutdown(context.Background()); err != nil {
-		log.Error().Msg("Error occurred on server shutting down.")
+		log.Error().Err(err).Msg("Error occurred on server shutting down.")
 	}
 
-	log.Info().Msg("Auth service shutdown completed.")
+	log.Info().Msg("Disconnecting from MongoDB...")
+	if err := mongoDBClient.Disconnect(context.Background()); err != nil {
+		log.Error().Err(err).Msg("Error occurred when disconnecting from the MongoDB.")
+	} else {
+		log.Info().Msg("Disconnected from MongoDB.")
+	}
+
+	log.Info().Msg("Disconnecting from Redis...")
+	if err := redisClient.Close(); err != nil {
+		log.Error().Err(err).Msg("Error occurred when disconnecting from the Redis.")
+	} else {
+		log.Info().Msg("Disconnected from Redis.")
+	}
+
+	log.Info().Msg("Shutdown completed.")
 }

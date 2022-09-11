@@ -19,6 +19,18 @@ type Config struct {
 		AccessTokenExpiresIn  time.Duration `mapstructure:"access_token_expires_in"`
 		RefreshTokenExpiresIn time.Duration `mapstructure:"refresh_token_expires_in"`
 	} `mapstructure:"auth"`
+	MongoDB struct {
+		Host     string `mapstructure:"host"`
+		Port     string `mapstructure:"port"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+		Database string `mapstructure:"database"`
+	} `mapstructure:"mongodb"`
+	Redis struct {
+		Addr     string `mapstructure:"addr"`
+		Password string `mapstructure:"password"`
+		DB       int    `mapstructure:"db"`
+	} `mapstructure:"redis"`
 }
 
 const File = "configs/config.json"
