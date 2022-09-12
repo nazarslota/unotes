@@ -8,49 +8,35 @@ import (
 	"os"
 	"time"
 
+	redisdriver "github.com/go-redis/redis/v9"
+	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/udholdenhed/unotes/auth/internal/config"
 	"github.com/udholdenhed/unotes/auth/internal/handler"
 	"github.com/udholdenhed/unotes/auth/internal/service"
 	"github.com/udholdenhed/unotes/auth/internal/storage"
-	"github.com/udholdenhed/unotes/auth/internal/storage/mongo"
+	"github.com/udholdenhed/unotes/auth/internal/storage/postgres"
 	"github.com/udholdenhed/unotes/auth/internal/storage/redis"
 	"github.com/udholdenhed/unotes/auth/pkg/utils"
-	mongodriver "go.mongodb.org/mongo-driver/mongo"
 )
 
 func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	initLogger()
 
-	log.Info().Msg("Connecting to MongoDB.")
-	mongoDBClient, err := mongo.NewMongoDBClient(context.Background(), &mongo.Config{
-		Host:     config.C().MongoDB.Host,
-		Port:     config.C().MongoDB.Port,
-		Username: config.C().MongoDB.Username,
-		Password: config.C().MongoDB.Password,
-	})
+	postgresDB, err := newPostgreSQL()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Filed to connect to MongoDB.")
+		log.Fatal().Err(err).Msg("Filed to connect to PostgreSQL.")
 	}
-	log.Info().Msg("Connected to MongoDB.")
 
-	log.Info().Msg("Connecting to Redis.")
-	redisClient, err := redis.NewRedisClient(context.Background(), &redis.Config{
-		Addr:     "",
-		Password: "",
-		DB:       0,
-	})
+	redisDB, err := newRedisDB()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Filed to connect to Redis.")
 	}
-	log.Info().Msg("Connected to Redis.")
 
 	repos := storage.NewRepositoryProvider(
-		storage.WithMongoDBUserRepository(func() *mongodriver.Collection {
-			return mongoDBClient.Database(config.C().MongoDB.Database).Collection("users")
-		}()),
-		storage.WithRedisRefreshTokenRepository(redisClient),
+		storage.WithPostgreSQLUserRepository(postgresDB),
+		storage.WithRedisRefreshTokenRepository(redisDB),
 	)
 
 	services := service.NewService(&service.OAuth2ServiceOptions{
@@ -63,18 +49,9 @@ func main() {
 	})
 
 	handlers := handler.NewHandler(services, &log.Logger)
-
-	addr := net.JoinHostPort(
-		config.C().Auth.Host,
-		config.C().Auth.Port,
-	)
-
-	log.Info().Msgf("Starting HTTP server on addr: %q...", addr)
-
-	h := handlers.InitRoutes()
 	server := &http.Server{
-		Addr:           addr,
-		Handler:        h,
+		Addr:           net.JoinHostPort(config.C().Auth.Host, config.C().Auth.Port),
+		Handler:        handlers.InitRoutes(),
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20, // 1 MB
@@ -89,25 +66,45 @@ func main() {
 	log.Info().Msg("Server started.")
 
 	<-utils.GracefulShutdown()
-
 	log.Info().Msg("Shutting down...")
+
 	if err := server.Shutdown(context.Background()); err != nil {
 		log.Error().Err(err).Msg("Error occurred on server shutting down.")
 	}
 
-	log.Info().Msg("Disconnecting from MongoDB...")
-	if err := mongoDBClient.Disconnect(context.Background()); err != nil {
-		log.Error().Err(err).Msg("Error occurred when disconnecting from the MongoDB.")
-	} else {
-		log.Info().Msg("Disconnected from MongoDB.")
+	if err := postgresDB.Close(); err != nil {
+		log.Error().Err(err).Msg("Error occurred when disconnecting from the PostgreSQL.")
 	}
 
-	log.Info().Msg("Disconnecting from Redis...")
-	if err := redisClient.Close(); err != nil {
+	if err := redisDB.Close(); err != nil {
 		log.Error().Err(err).Msg("Error occurred when disconnecting from the Redis.")
-	} else {
-		log.Info().Msg("Disconnected from Redis.")
 	}
 
 	log.Info().Msg("Shutdown completed.")
+}
+
+func initLogger() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stderr,
+		TimeFormat: time.RFC1123,
+	})
+}
+
+func newPostgreSQL() (*sqlx.DB, error) {
+	return postgres.NewPostgreSQL(context.Background(), &postgres.Config{
+		Host:     config.C().PostgreSQL.Host,
+		Port:     config.C().PostgreSQL.Port,
+		Username: config.C().PostgreSQL.Username,
+		Password: config.C().PostgreSQL.Password,
+		DBName:   config.C().PostgreSQL.DBName,
+		SSLMode:  config.C().PostgreSQL.SSLMode,
+	})
+}
+
+func newRedisDB() (*redisdriver.Client, error) {
+	return redis.NewRedis(context.Background(), &redis.Config{
+		Addr:     config.C().Redis.Addr,
+		Password: config.C().Redis.Password,
+		DB:       config.C().Redis.DB,
+	})
 }
