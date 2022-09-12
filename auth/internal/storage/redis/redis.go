@@ -13,7 +13,7 @@ type Config struct {
 	DB       int
 }
 
-func NewRedisClient(ctx context.Context, config *Config) (*redis.Client, error) {
+func NewRedis(ctx context.Context, config *Config) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     config.Addr,
 		Password: config.Password,

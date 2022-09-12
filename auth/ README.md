@@ -32,6 +32,17 @@
 1) `cd <folder with the project>/unotes/auth`
 2) `go mod download` or `make go-dep`
 
+### Other
+
+- For easy management of database migrations, it is recommended to use
+  the [migrate](https://github.com/golang-migrate/migrate) tool.
+    - Up
+        - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' up`
+        - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' up`
+    - Down
+        - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' down`
+        - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' down`
+
 ## Contributions
 
 If you have **questions**, **ideas**, or you find a **bug**, you can create

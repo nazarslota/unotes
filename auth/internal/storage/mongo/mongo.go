@@ -18,7 +18,7 @@ type Config struct {
 	Database string
 }
 
-func NewMongoDBClient(ctx context.Context, config *Config) (*mongo.Client, error) {
+func NewMongoDB(ctx context.Context, config *Config) (*mongo.Client, error) {
 	uri := utils.BuildMongoURI(
 		config.Host,
 		config.Port,

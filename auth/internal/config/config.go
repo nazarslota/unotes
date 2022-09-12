@@ -26,6 +26,14 @@ type Config struct {
 		Password string `mapstructure:"password"`
 		Database string `mapstructure:"database"`
 	} `mapstructure:"mongodb"`
+	PostgreSQL struct {
+		Host     string `mapstructure:"host"`
+		Port     string `mapstructure:"port"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+		DBName   string `mapstructure:"dbname"`
+		SSLMode  string `mapstructure:"ssl_mode"`
+	} `mapstructure:"postgresql"`
 	Redis struct {
 		Addr     string `mapstructure:"addr"`
 		Password string `mapstructure:"password"`

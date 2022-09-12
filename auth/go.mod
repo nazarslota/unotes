@@ -7,7 +7,9 @@ require (
 	github.com/go-redis/redis/v9 v9.0.0-beta.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/labstack/echo/v4 v4.8.0
+	github.com/lib/pq v1.10.7
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/viper v1.12.0
 	go.mongodb.org/mongo-driver v1.10.1
