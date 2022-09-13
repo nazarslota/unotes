@@ -29,7 +29,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Filed to connect to PostgreSQL.")
 	}
 
-	redisDB, err := newRedisDB()
+	redisDB, err := newRedis()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Filed to connect to Redis.")
 	}
@@ -101,7 +101,7 @@ func newPostgreSQL() (*sqlx.DB, error) {
 	})
 }
 
-func newRedisDB() (*redisdriver.Client, error) {
+func newRedis() (*redisdriver.Client, error) {
 	return redis.NewRedis(context.Background(), &redis.Config{
 		Addr:     config.C().Redis.Addr,
 		Password: config.C().Redis.Password,

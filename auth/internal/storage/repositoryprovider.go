@@ -27,6 +27,8 @@ func NewRepositoryProvider(options ...RepositoryProviderOption) *RepositoryProvi
 	return s
 }
 
+// user.Repository.
+
 func WithMemoryUserRepository() RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {
 		rp.UserRepository = memory.NewUserRepository()
@@ -44,6 +46,8 @@ func WithPostgreSQLUserRepository(db *sqlx.DB) RepositoryProviderOption {
 		rp.UserRepository = postgres.NewUserRepository(db)
 	}
 }
+
+// refreshtoken.Repository.
 
 func WithMemoryRefreshTokenRepository() RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {

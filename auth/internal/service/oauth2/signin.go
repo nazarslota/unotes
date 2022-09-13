@@ -69,7 +69,7 @@ func (h *signInRequestHandler) Handle(ctx context.Context, r SignInRequest) (Sig
 		)
 	}
 
-	at, err := func() (string, error) {
+	accessToken, err := func() (string, error) {
 		now := time.Now()
 		claims := jwt.MapClaims{
 			"exp":     now.Add(h.AccessTokenExpiresIn).Unix(),
@@ -83,7 +83,7 @@ func (h *signInRequestHandler) Handle(ctx context.Context, r SignInRequest) (Sig
 		return SignInResult{}, errors.ErrInternalServerError.SetInternal(err)
 	}
 
-	rt, err := func() (string, error) {
+	refreshToken, err := func() (string, error) {
 		now := time.Now()
 		claims := jwt.MapClaims{
 			"exp":     now.Add(h.RefreshTokenExpiresIn).Unix(),
@@ -97,8 +97,12 @@ func (h *signInRequestHandler) Handle(ctx context.Context, r SignInRequest) (Sig
 		return SignInResult{}, errors.ErrInternalServerError.SetInternal(err)
 	}
 
-	if err = h.RefreshTokenRepository.SetRefreshToken(ctx, u.ID, refreshtoken.Token{Token: rt}); err != nil {
+	if err = h.RefreshTokenRepository.SetRefreshToken(ctx, u.ID, refreshtoken.Token{Token: refreshToken}); err != nil {
 		return SignInResult{}, errors.ErrInternalServerError.SetInternal(err)
 	}
-	return SignInResult{AccessToken: at, RefreshToken: rt}, nil
+
+	return SignInResult{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }

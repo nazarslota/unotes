@@ -31,7 +31,7 @@ func NewSignUpRequestHandler(r user.Repository) SignUpRequestHandler {
 func (h *signUpRequestHandler) Handler(ctx context.Context, r SignUpRequest) error {
 	u, err := h.UserRepository.FindOne(ctx, r.Username)
 	if err != nil {
-		return err
+		return errors.ErrInternalServerError.SetInternal(err)
 	} else if u != nil {
 		return errors.NewHTTPError(
 			http.StatusBadRequest,
@@ -53,5 +53,6 @@ func (h *signUpRequestHandler) Handler(ctx context.Context, r SignUpRequest) err
 	if err := h.UserRepository.Create(ctx, *u); err != nil {
 		return errors.ErrInternalServerError.SetInternal(err)
 	}
+
 	return nil
 }
