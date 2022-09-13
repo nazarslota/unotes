@@ -33,7 +33,7 @@ func (h *Handler) InitRoutes() *echo.Echo {
 	router.Use(newLoggerMiddleware())
 	router.Use(newRequestLoggerMiddleware(h.logger))
 
-	router.Debug = true
+	// router.Debug = true
 
 	api := router.Group("/api")
 	{
