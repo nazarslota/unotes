@@ -65,7 +65,7 @@ func newHTTPErrorHandler(e *echo.Echo) echo.HTTPErrorHandler {
 			err = c.NoContent(res["code"].(int))
 		default:
 			err = c.JSON(res["code"].(int), echo.Map{
-				"errors": []echo.Map{res},
+				"error": res,
 			})
 		}
 
@@ -81,7 +81,7 @@ func newLoggerMiddleware() echo.MiddlewareFunc {
 
 func newRequestLoggerMiddleware(logger *zerolog.Logger) echo.MiddlewareFunc {
 	logValuesFunc := func(c echo.Context, v middleware.RequestLoggerValues) error {
-		logger.Info().Msgf("%s\t%s\t%s\t%d", v.Method, v.URI, v.Protocol, v.Status)
+		logger.Info().Msgf("%s %s %s %d", v.Method, v.URI, v.Protocol, v.Status)
 		return nil
 	}
 

@@ -1,0 +1,206 @@
+basePath: /api
+definitions:
+  errors.HTTPError:
+    properties:
+      code:
+        type: integer
+      message: {}
+    type: object
+  handler.oAuth2LogOutModel:
+    properties:
+      access_token:
+        type: string
+    required:
+    - access_token
+    type: object
+  handler.oAuth2RefreshModel:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  handler.oAuth2RefreshResult:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  handler.oAuth2SignInUserModel:
+    properties:
+      password:
+        example: password
+        type: string
+      username:
+        example: username
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  handler.oAuth2SignInUserResult:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  handler.oAuth2SignUpUserModel:
+    properties:
+      password:
+        example: password
+        maxLength: 64
+        minLength: 8
+        type: string
+      username:
+        example: username
+        maxLength: 32
+        minLength: 4
+        type: string
+    required:
+    - password
+    - username
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Authentication service, developed for UNotes(notes system).
+  title: Auth Service
+  version: "1.0"
+paths:
+  /oauth2/refresh:
+    post:
+      consumes:
+      - application/json
+      description: refresh
+      parameters:
+      - description: account info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.oAuth2RefreshModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.oAuth2RefreshResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+      summary: oAuth2 refresh
+      tags:
+      - oAuth2
+  /oauth2/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: sign in
+      parameters:
+      - description: account info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.oAuth2SignInUserModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.oAuth2SignInUserResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+      summary: oAuth2 sign in
+      tags:
+      - oAuth2
+  /oauth2/sign-out:
+    post:
+      consumes:
+      - application/json
+      description: sign out
+      parameters:
+      - description: account info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.oAuth2LogOutModel'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+      summary: oAuth2 sign out
+      tags:
+      - oAuth2
+  /oauth2/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: create account
+      parameters:
+      - description: account info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.oAuth2SignUpUserModel'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+      summary: oAuth2 sign up
+      tags:
+      - oAuth2
+swagger: "2.0"

@@ -7,6 +7,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/udholdenhed/unotes/auth/internal/service"
+
+	swagger "github.com/swaggo/echo-swagger"
+	_ "github.com/udholdenhed/unotes/auth/docs"
 )
 
 type Handler struct {
@@ -20,6 +23,13 @@ func NewHandler(services *service.Service, logger *zerolog.Logger) *Handler {
 		logger:   logger,
 	}
 }
+
+// @title       Auth Service
+// @version     1.0
+// @description Authentication service, developed for UNotes(notes system).
+
+// @host     localhost:8080
+// @BasePath /api
 
 func (h *Handler) InitRoutes() *echo.Echo {
 	router := echo.New()
@@ -35,6 +45,7 @@ func (h *Handler) InitRoutes() *echo.Echo {
 
 	// router.Debug = true
 
+	router.GET("/swagger/*", swagger.WrapHandler)
 	api := router.Group("/api")
 	{
 		oAuth2 := api.Group("/oauth2")
