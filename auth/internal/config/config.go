@@ -11,30 +11,37 @@ import (
 )
 
 type Config struct {
-	Host                  string        `mapstructure:"host" validate:"required"`
-	Port                  string        `mapstructure:"port" validate:"required"`
-	LoggerOutputFile      string        `mapstructure:"logger_output" validate:"required"`
-	AccessTokenSecret     string        `mapstructure:"access_token_secret" validate:"required"`
-	AccessTokenExpiresIn  time.Duration `mapstructure:"access_token_expires_in" validate:"required"`
-	RefreshTokenSecret    string        `mapstructure:"refresh_token_secret" validate:"required"`
-	RefreshTokenExpiresIn time.Duration `mapstructure:"refresh_token_expires_in" validate:"required"`
-	Debug                 bool          `mapstructure:"debug"`
-	MongoDB               struct {
-		Host            string `mapstructure:"host" validate:"required"`
-		Port            string `mapstructure:"port"`
-		Username        string `mapstructure:"username"`
-		Password        string `mapstructure:"password"`
-		Database        string `mapstructure:"database" validate:"required"`
-		UsersCollection string `mapstructure:"users_collection" validate:"required"`
-	} `mapstructure:"mongodb" validate:"required"`
+	Auth struct {
+		Host                  string        `mapstructure:"host"`
+		Port                  string        `mapstructure:"port"`
+		AccessTokenSecret     string        `mapstructure:"access_token_secret"`
+		RefreshTokenSecret    string        `mapstructure:"refresh_token_secret"`
+		AccessTokenExpiresIn  time.Duration `mapstructure:"access_token_expires_in"`
+		RefreshTokenExpiresIn time.Duration `mapstructure:"refresh_token_expires_in"`
+	} `mapstructure:"auth"`
+	MongoDB struct {
+		Host     string `mapstructure:"host"`
+		Port     string `mapstructure:"port"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+		Database string `mapstructure:"database"`
+	} `mapstructure:"mongodb"`
+	PostgreSQL struct {
+		Host     string `mapstructure:"host"`
+		Port     string `mapstructure:"port"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+		DBName   string `mapstructure:"dbname"`
+		SSLMode  string `mapstructure:"ssl_mode"`
+	} `mapstructure:"postgresql"`
 	Redis struct {
-		Addr     string `mapstructure:"addr" validate:"required"`
-		Password string `mapstructure:"password" validate:"required"`
-		Database int    `mapstructure:"database"`
-	} `mapstructure:"redis" validate:"required"`
+		Addr     string `mapstructure:"addr"`
+		Password string `mapstructure:"password"`
+		DB       int    `mapstructure:"db"`
+	} `mapstructure:"redis"`
 }
 
-const File = "./configs/config.json"
+const File = "configs/config.json"
 
 var (
 	once     sync.Once

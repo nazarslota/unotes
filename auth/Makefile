@@ -1,9 +1,9 @@
 .DEFAULT_GOAL := go-run
 
-go-run: go-dep go-vet go-test
-	go run ./cmd/app/
+go-run: go-dep go-vet
+	go run ./cmd/auth/
 
-go-build: go-dep go-vet go-test
+go-build: go-dep go-vet
 	go build -o ./build/ ./cmd/...
 
 go-dep:

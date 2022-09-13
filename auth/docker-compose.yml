@@ -6,4 +6,4 @@ services:
       - '8443:8080/tcp'
     restart: always
     build: .
-    container_name: 'auth-service'
+    container_name: 'auth'

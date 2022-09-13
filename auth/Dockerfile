@@ -1,4 +1,4 @@
-FROM golang:alpine
+FROM golang:1.19-alpine
 
 WORKDIR /app
 
@@ -8,4 +8,4 @@ COPY go.sum ./
 RUN go mod download
 
 COPY . ./
-CMD go run ./cmd/app/
+CMD go run ./cmd/auth/
