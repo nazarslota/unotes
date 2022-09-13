@@ -4,11 +4,10 @@
 
 ## API Methods
 
-- **v1**
-    - `/api/v1/oauth2/sign-in`
-    - `/api/v1/oauth2/sign-up`
-    - `/api/v1/oauth2/sign-out`
-    - `/api/v1/oauth2/refresh`
+- `/api/oauth2/sign-in`
+- `/api/oauth2/sign-up`
+- `/api/oauth2/sign-out`
+- `/api/oauth2/refresh`
 
 ## Run
 
