@@ -42,6 +42,11 @@
         - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' down`
         - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' down`
 
+- The project also uses swagger documentation.
+    - URL `http://localhost:8080/swagger/index.html#/`
+    - If the swagger documentation has been changed, you can use the following command to generate a new one.
+        - `swag init -g ./internal/handler/handler.go`
+
 ## Contributions
 
 If you have **questions**, **ideas**, or you find a **bug**, you can create

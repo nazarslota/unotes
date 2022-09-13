@@ -3,7 +3,7 @@ version: '3'
 services:
   auth:
     ports:
-      - '8443:8080/tcp'
+      - '8080:8080/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
     restart: always
     build: .
     container_name: 'auth'
