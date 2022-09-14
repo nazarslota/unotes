@@ -60,7 +60,7 @@ definitions:
     - password
     - username
     type: object
-host: localhost:8080
+host: localhost:8081
 info:
   contact: {}
   description: Authentication service, developed for UNotes(notes system).

@@ -28,7 +28,7 @@ func NewHandler(services *service.Service, logger *zerolog.Logger) *Handler {
 // @version     1.0
 // @description Authentication service, developed for UNotes(notes system).
 
-// @host     localhost:8080
+// @host     localhost:8081
 // @BasePath /api
 
 func (h *Handler) InitRoutes() *echo.Echo {
