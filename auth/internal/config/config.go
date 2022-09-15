@@ -1,8 +1,6 @@
 package config
 
 import (
-	"path"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -12,50 +10,45 @@ import (
 
 type Config struct {
 	Auth struct {
-		Host                  string        `mapstructure:"host"`
-		Port                  string        `mapstructure:"port"`
-		AccessTokenSecret     string        `mapstructure:"access_token_secret"`
-		RefreshTokenSecret    string        `mapstructure:"refresh_token_secret"`
-		AccessTokenExpiresIn  time.Duration `mapstructure:"access_token_expires_in"`
-		RefreshTokenExpiresIn time.Duration `mapstructure:"refresh_token_expires_in"`
-	} `mapstructure:"auth"`
-	MongoDB struct {
-		Host     string `mapstructure:"host"`
-		Port     string `mapstructure:"port"`
-		Username string `mapstructure:"username"`
-		Password string `mapstructure:"password"`
-		Database string `mapstructure:"database"`
-	} `mapstructure:"mongodb"`
+		Host                  string        `mapstructure:"AUTH_HOST"`
+		Port                  string        `mapstructure:"AUTH_PORT"`
+		AccessTokenSecret     string        `mapstructure:"AUTH_ACCESS_TOKEN_SECRET"`
+		AccessTokenExpiresIn  time.Duration `mapstructure:"AUTH_ACCESS_TOKEN_EXPIRES_IN"`
+		RefreshTokenSecret    string        `mapstructure:"AUTH_REFRESH_TOKEN_SECRET"`
+		RefreshTokenExpiresIn time.Duration `mapstructure:"AUTH_REFRESH_TOKEN_EXPIRES_IN"`
+	} `mapstructure:",squash"`
 	PostgreSQL struct {
-		Host     string `mapstructure:"host"`
-		Port     string `mapstructure:"port"`
-		Username string `mapstructure:"username"`
-		Password string `mapstructure:"password"`
-		DBName   string `mapstructure:"dbname"`
-		SSLMode  string `mapstructure:"ssl_mode"`
-	} `mapstructure:"postgresql"`
+		Host     string `mapstructure:"POSTGRESQL_HOST"`
+		Port     string `mapstructure:"POSTGRESQL_PORT"`
+		Username string `mapstructure:"POSTGRESQL_USERNAME"`
+		Password string `mapstructure:"POSTGRESQL_PASSWORD"`
+		DBName   string `mapstructure:"POSTGRESQL_DBNAME"`
+		SSLMode  string `mapstructure:"POSTGRESQL_SSLMODE"`
+	} `mapstructure:",squash"`
+	MongoDB struct {
+		Host     string `mapstructure:"MONGODB_HOST"`
+		Port     string `mapstructure:"MONGODB_PORT"`
+		Username string `mapstructure:"MONGODB_USERNAME"`
+		Password string `mapstructure:"MONGODB_PASSWORD"`
+		Database string `mapstructure:"MONGODB_DATABASE"`
+	} `mapstructure:",squash"`
 	Redis struct {
-		Addr     string `mapstructure:"addr"`
-		Password string `mapstructure:"password"`
-		DB       int    `mapstructure:"db"`
-	} `mapstructure:"redis"`
+		Addr     string `mapstructure:"REDIS_ADDR"`
+		Password string `mapstructure:"REDIS_PASSWORD"`
+		DB       int    `mapstructure:"REDIS_DB"`
+	} `mapstructure:",squash"`
 }
-
-const File = "configs/config.json"
 
 var (
 	once     sync.Once
-	instance Config
+	instance *Config
 )
 
 func C() *Config {
 	once.Do(func() {
-		filename := path.Base(File)
-		filenameWithoutExt := filename[:len(filename)-len(filepath.Ext(filename))]
-
 		v := viper.New()
-		v.AddConfigPath(path.Dir(File))
-		v.SetConfigName(filenameWithoutExt)
+		v.SetConfigName("app")
+		v.AddConfigPath("configs")
 
 		if err := v.ReadInConfig(); err != nil {
 			panic(err)
@@ -65,9 +58,9 @@ func C() *Config {
 			panic(err)
 		}
 
-		if err := validator.New().Struct(&instance); err != nil {
+		if err := validator.New().Struct(instance); err != nil {
 			panic(err)
 		}
 	})
-	return &instance
+	return instance
 }
