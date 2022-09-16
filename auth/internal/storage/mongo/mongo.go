@@ -18,7 +18,7 @@ type Config struct {
 	Database string
 }
 
-func NewMongoDB(ctx context.Context, config *Config) (*mongo.Client, error) {
+func NewMongoDB(ctx context.Context, config *Config) (*mongo.Database, error) {
 	uri := utils.BuildMongoURI(
 		config.Host,
 		config.Port,
@@ -39,5 +39,5 @@ func NewMongoDB(ctx context.Context, config *Config) (*mongo.Client, error) {
 		return nil, fmt.Errorf("failed to ping mongodb client: %w", err)
 	}
 
-	return client, nil
+	return client.Database(config.Database), nil
 }
