@@ -1,11 +1,22 @@
-FROM golang:1.19-alpine
+FROM golang:1.19.1-alpine AS builder
 
-WORKDIR /app
+WORKDIR /go/src/github.com/udholdenhed/unotes/auth/
 
-COPY go.mod ./
-COPY go.sum ./
+COPY go.mod .
+COPY go.sum .
 
 RUN go mod download
 
 COPY . ./
-CMD go run ./cmd/auth/
+RUN CGO_ENABLED=0 GOOS=linux go build -o ./build/ ./cmd/...
+
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth/configs/ ./configs/
+COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth/build/auth ./
+
+CMD ["./auth"]
