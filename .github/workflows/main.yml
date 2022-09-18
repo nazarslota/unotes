@@ -63,18 +63,4 @@ jobs:
             docker stop $(echo $AUTH_SERVICE_CONTAINER_NAME)
             docker rm $(echo $AUTH_SERVICE_CONTAINER_NAME)
             
-            docker run \
-            -e POSTGRESQL_HOST \
-            -e POSTGRESQL_PORT \
-            -e POSTGRESQL_USERNAME \
-            -e POSTGRESQL_PASSWORD \
-            -e POSTGRESQL_DBNAME \
-            -e POSTGRESQL_SSLMODE \
-            -e REDIS_ADDR \
-            -e REDIS_PASSWORD \
-            -e REDIS_DB \
-            -d \
-            --restart always \
-            --publish 80:8081 \
-            --name $(echo $CONTAINER_NAME) \
-            $(echo $DIGITALOCEAN_REGISTRY)/$(echo $AUTH_SERVICE_IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
+            echo OK!!!
