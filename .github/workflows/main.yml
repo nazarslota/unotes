@@ -46,6 +46,7 @@ jobs:
           host: ${{ secrets.DIGITALOCEAN_AUTH_SERVICE_HOST }}
           username: ${{ secrets.DIGITALOCEAN_AUTH_SERVICE_USERNAME }}
           key: ${{ secrets.DIGITALOCEAN_AUTH_SERVICE_SSHKEY }}
+          envs: DIGITALOCEAN_REGISTRY, AUTH_SERVICE_IMAGE_NAME, AUTH_SERVICE_CONTAINER_NAME, GITHUB_SHA,
           script: |
             docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} $(echo $DIGITALOCEAN_REGISTRY)
             
@@ -55,14 +56,14 @@ jobs:
             export POSTGRESQL_PASSWORD=${{ secrets.AUTH_SERVICE_POSTGRESQL_PASSWORD }}
             export POSTGRESQL_DBNAME=${{ secrets.AUTH_SERVICE_POSTGRESQL_DBNAME }}
             export POSTGRESQL_SSLMODE=${{ secrets.AUTH_SERVICE_POSTGRESQL_SSLMODE }}
-            
+
             export REDIS_ADDR=${{ secrets.AUTH_SERVICE_REDIS_ADDR }}
             export REDIS_PASSWORD=${{ secrets.AUTH_SERVICE_REDIS_PASSWORD }}
             export REDIS_DB=${{ secrets.AUTH_SERVICE_REDIS_DB }}
-            
+
             docker stop $(echo $AUTH_SERVICE_CONTAINER_NAME)
             docker rm $(echo $AUTH_SERVICE_CONTAINER_NAME)
-            
+
             docker run \
             -e POSTGRESQL_HOST \
             -e POSTGRESQL_PORT \
