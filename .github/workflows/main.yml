@@ -48,7 +48,7 @@ jobs:
           key: ${{ secrets.DIGITALOCEAN_AUTH_SERVICE_SSHKEY }}
           envs: DIGITALOCEAN_REGISTRY, AUTH_SERVICE_IMAGE_NAME, AUTH_SERVICE_CONTAINER_NAME, GITHUB_SHA,
           script: |
-            docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} $(echo $DIGITALOCEAN_REGISTRY)
+                        docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} $(echo $DIGITALOCEAN_REGISTRY)
             
             export POSTGRESQL_HOST=${{ secrets.AUTH_SERVICE_POSTGRESQL_HOST }}
             export POSTGRESQL_PORT=${{ secrets.AUTH_SERVICE_POSTGRESQL_PORT }}
