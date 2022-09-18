@@ -1,6 +1,5 @@
 name: CI
 
-
 on:
   push:
     branches: [ "master" ]
@@ -20,7 +19,9 @@ jobs:
 
       - name: Build container image
         run: |
-          docker build -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7) .
+          docker build \ 
+          -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7) .
+          -f auth/Dockerfile
       
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
