@@ -33,7 +33,7 @@ jobs:
         run: doctl registry login --expiry-seconds 600
 
       - name: Push auth service image to DigitalOcean Container Registry
-        run: docker push $(echo $DIGITALOCEAN_REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
+        run: docker push $(echo $DIGITALOCEAN_REGISTRY)/$(echo $AUTH_SERVICE_IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
 
   deploy:
     runs-on: ubuntu-latest
