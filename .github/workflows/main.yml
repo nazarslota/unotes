@@ -47,7 +47,7 @@ jobs:
           username: ${{ secrets.DIGITALOCEAN_AUTH_SERVICE_USERNAME }}
           key: ${{ secrets.DIGITALOCEAN_AUTH_SERVICE_SSHKEY }}
           script: |
-            docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} $(echo $DIGITALOCEAN_REGISTRY)
+                        docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} $(echo $DIGITALOCEAN_REGISTRY)
             
             export POSTGRESQL_HOST=${{ secrets.AUTH_SERVICE_POSTGRESQL_HOST }}
             export POSTGRESQL_PORT=${{ secrets.AUTH_SERVICE_POSTGRESQL_PORT }}
@@ -55,12 +55,26 @@ jobs:
             export POSTGRESQL_PASSWORD=${{ secrets.AUTH_SERVICE_POSTGRESQL_PASSWORD }}
             export POSTGRESQL_DBNAME=${{ secrets.AUTH_SERVICE_POSTGRESQL_DBNAME }}
             export POSTGRESQL_SSLMODE=${{ secrets.AUTH_SERVICE_POSTGRESQL_SSLMODE }}
-            
+
             export REDIS_ADDR=${{ secrets.AUTH_SERVICE_REDIS_ADDR }}
             export REDIS_PASSWORD=${{ secrets.AUTH_SERVICE_REDIS_PASSWORD }}
             export REDIS_DB=${{ secrets.AUTH_SERVICE_REDIS_DB }}
-            
+
             docker stop $(echo $AUTH_SERVICE_CONTAINER_NAME)
             docker rm $(echo $AUTH_SERVICE_CONTAINER_NAME)
-            
-            echo OK!!!
+
+            docker run \
+            -e POSTGRESQL_HOST \
+            -e POSTGRESQL_PORT \
+            -e POSTGRESQL_USERNAME \
+            -e POSTGRESQL_PASSWORD \
+            -e POSTGRESQL_DBNAME \
+            -e POSTGRESQL_SSLMODE \
+            -e REDIS_ADDR \
+            -e REDIS_PASSWORD \
+            -e REDIS_DB \
+            -d \
+            --restart always \
+            --publish 80:8081 \
+            --name $(echo $CONTAINER_NAME) \
+            $(echo $DIGITALOCEAN_REGISTRY)/$(echo $AUTH_SERVICE_IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
