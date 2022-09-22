@@ -81,7 +81,7 @@ func newLoggerMiddleware() echo.MiddlewareFunc {
 
 func newRequestLoggerMiddleware(logger *zerolog.Logger) echo.MiddlewareFunc {
 	logValuesFunc := func(c echo.Context, v middleware.RequestLoggerValues) error {
-		logger.Info().Msgf("%s %s %s %d", v.Method, v.URI, v.Protocol, v.Status)
+		logger.Info().Msgf("\"%s %s %s\" %d", v.Method, v.URI, v.Protocol, v.Status)
 		return nil
 	}
 
