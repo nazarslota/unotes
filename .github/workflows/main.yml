@@ -2,15 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "ci-cd" ]
   pull_request:
-    branches: [ "master" ]
-
+    branches: [ "ci-cd" ]
+    
 env:
   AUTH_SERVICE_DIGITALOCEAN_REGISTRY: registry.digitalocean.com/unotes
   AUTH_SERVICE_IMAGE_NAME           : unotes-auth-service
   AUTH_SERVICE_CONTAINER_NAME       : unotes-auth-service
-
+    
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -61,7 +61,6 @@ jobs:
             
             docker login ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }} -u ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }}
             
-            docker stop ${{ env.AUTH_SERVICE_CONTAINER_NAME }} || true && docker rm ${{ env.AUTH_SERVICE_CONTAINER_NAME }} || true
-            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_SERVICE_CONTAINER_NAME }} \ 
+            docker stop ${{ env.AUTH_SERVICE_CONTAINER_NAME }} | true && docker rm ${{ env.AUTH_SERVICE_CONTAINER_NAME }} | true
+            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_SERVICE_CONTAINER_NAME }} --publish 80:8081 \
               ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_CONTAINER_NAME }}:${{ github.sha }}
-            
