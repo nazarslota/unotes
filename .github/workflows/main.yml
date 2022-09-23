@@ -5,12 +5,12 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-    
+
 env:
   AUTH_SERVICE_DIGITALOCEAN_REGISTRY: registry.digitalocean.com/unotes
   AUTH_SERVICE_IMAGE_NAME           : unotes-auth-service
   AUTH_SERVICE_CONTAINER_NAME       : unotes-auth-service
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,13 +24,13 @@ jobs:
         
       - name: Building the "auth-service"
         working-directory: auth-service
-        run: docker build -t ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE_NAME }}:$(echo $GITHUB_SHA | head -c7) .
+        run: docker build -t ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE_NAME }}:${{ github.sha }} .
         
       - name: Login to the "DigitalOcean Container Registry"
         run: doctl registry login --expiry-seconds 600
         
       - name: Pushing "auth-service" to the "DigitalOcean Container Registry"
-        run: docker push ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE_NAME }}:$(echo $GITHUB_SHA | head -c7)
+        run: docker push ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE_NAME }}:${{ github.sha }}
         
   deploy:
     runs-on: ubuntu-latest
@@ -62,4 +62,6 @@ jobs:
             docker login ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }} -u ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }}
             
             docker stop ${{ env.AUTH_SERVICE_CONTAINER_NAME }} || true && docker rm ${{ env.AUTH_SERVICE_CONTAINER_NAME }} || true
-            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_SERVICE_CONTAINER_NAME }} ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_CONTAINER_NAME }}:${{ github.sha }}
+            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_SERVICE_CONTAINER_NAME }} \ 
+              ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_CONTAINER_NAME }}:${{ github.sha }}
+            
