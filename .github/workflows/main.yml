@@ -43,19 +43,25 @@ jobs:
           username: ${{ secrets.UNOTES_DROPLET_USERNAME }}
           password: ${{ secrets.UNOTES_DROPLET_PASSWORD }}
           script: |
-            rm -r .env && touch .env
+            rm -r ~/.env && touch ~/.env
             
-            echo "AUTH_SERVICE_ACCESS_TOKEN_SECRET=${{ secrets.AUTH_SERVICE_ACCESS_TOKEN_SECRET }}" >> .env
-            echo "AUTH_SERVICE_REFRESH_TOKEN_SECRET=${{ secrets.AUTH_SERVICE_REFRESH_TOKEN_SECRET }}" >> .env
+            echo "AUTH_SERVICE_ACCESS_TOKEN_SECRET=${{ secrets.AUTH_SERVICE_ACCESS_TOKEN_SECRET }}" >> ~/.env
+            echo "AUTH_SERVICE_REFRESH_TOKEN_SECRET=${{ secrets.AUTH_SERVICE_REFRESH_TOKEN_SECRET }}" >> ~/.env
             
-            echo "AUTH_SERVICE_POSTGRESQL_HOST=${{ secrets.AUTH_SERVICE_POSTGRESQL_HOST }}" >> .env
-            echo "AUTH_SERVICE_POSTGRESQL_PORT=${{ secrets.AUTH_SERVICE_POSTGRESQL_PORT }}" >> .env
-            echo "AUTH_SERVICE_POSTGRESQL_USERNAME=${{ secrets.AUTH_SERVICE_POSTGRESQL_USERNAME }}" >> .env
-            echo "AUTH_SERVICE_POSTGRESQL_PASSWORD=${{ secrets.AUTH_SERVICE_POSTGRESQL_PASSWORD }}" >> .env
-            echo "AUTH_SERVICE_POSTGRESQL_DBNAME=${{ secrets.AUTH_SERVICE_POSTGRESQL_DBNAME }}" >> .env
-            echo "AUTH_SERVICE_POSTGRESQL_SSLMODE=${{ secrets.AUTH_SERVICE_POSTGRESQL_SSLMODE }}" >> .env
+            echo "AUTH_SERVICE_POSTGRESQL_HOST=${{ secrets.AUTH_SERVICE_POSTGRESQL_HOST }}" >> ~/.env
+            echo "AUTH_SERVICE_POSTGRESQL_PORT=${{ secrets.AUTH_SERVICE_POSTGRESQL_PORT }}" >> ~/.env
+            echo "AUTH_SERVICE_POSTGRESQL_USERNAME=${{ secrets.AUTH_SERVICE_POSTGRESQL_USERNAME }}" >> ~/.env
+            echo "AUTH_SERVICE_POSTGRESQL_PASSWORD=${{ secrets.AUTH_SERVICE_POSTGRESQL_PASSWORD }}" >> ~/.env
+            echo "AUTH_SERVICE_POSTGRESQL_DBNAME=${{ secrets.AUTH_SERVICE_POSTGRESQL_DBNAME }}" >> ~/.env
+            echo "AUTH_SERVICE_POSTGRESQL_SSLMODE=${{ secrets.AUTH_SERVICE_POSTGRESQL_SSLMODE }}" >> ~/.env
             
-            echo "AUTH_SERVICE_REDIS_ADDR=${{ secrets.AUTH_SERVICE_REDIS_ADDR }}" >> .env
-            echo "AUTH_SERVICE_REDIS_PASSWORD=${{ secrets.AUTH_SERVICE_REDIS_PASSWORD }}" >> .env
-            echo "AUTH_SERVICE_REDIS_DB=${{ secrets.AUTH_SERVICE_REDIS_DB }}" >> .env
+            echo "AUTH_SERVICE_REDIS_ADDR=${{ secrets.AUTH_SERVICE_REDIS_ADDR }}" >> ~/.env
+            echo "AUTH_SERVICE_REDIS_PASSWORD=${{ secrets.AUTH_SERVICE_REDIS_PASSWORD }}" >> ~/.env
+            echo "AUTH_SERVICE_REDIS_DB=${{ secrets.AUTH_SERVICE_REDIS_DB }}" >> ~/.env
             
+            docker login ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }} -u ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }}
+            
+            docker stop ${{ env.AUTH_SERVICE_CONTAINER_NAME }} || true && docker rm ${{ env.AUTH_SERVICE_CONTAINER_NAME }} || true
+            
+            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_SERVICE_CONTAINER_NAME }} --publish 80:8081 \
+              ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_CONTAINER_NAME }}:${{ github.sha }}
