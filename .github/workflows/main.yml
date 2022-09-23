@@ -62,6 +62,4 @@ jobs:
             docker login ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }} -u ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }}
             
             docker stop ${{ env.AUTH_SERVICE_CONTAINER_NAME }} || true && docker rm ${{ env.AUTH_SERVICE_CONTAINER_NAME }} || true
-            
-            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_SERVICE_CONTAINER_NAME }} --publish 80:8081 \
-              ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_CONTAINER_NAME }}:${{ github.sha }}
+            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_SERVICE_CONTAINER_NAME }} ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_CONTAINER_NAME }}:${{ github.sha }}
