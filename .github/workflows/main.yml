@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "ci-cd" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "ci-cd" ]
+    branches: [ "master" ]
     
 env:
   AUTH_SERVICE_DIGITALOCEAN_REGISTRY: registry.digitalocean.com/unotes
