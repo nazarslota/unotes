@@ -49,8 +49,21 @@ func C() *Config {
 	once.Do(func() {
 		v := viper.New()
 		v.AddConfigPath("configs")
-		if os.Getenv("ENVIRONMENT") == "DEVELOPMENT" {
+
+		environment := os.Getenv("ENVIRONMENT")
+		if environment == "DEVELOPMENT" {
+			v.AutomaticEnv()
 			v.SetConfigName("development")
+
+			bindEnvAuthService(v)
+			if err := v.ReadInConfig(); err != nil {
+				panic(err)
+			}
+		} else if environment == "STAGE" {
+			v.AutomaticEnv()
+			v.SetConfigName("stage")
+
+			bindEnvAuthService(v)
 			if err := v.ReadInConfig(); err != nil {
 				panic(err)
 			}
