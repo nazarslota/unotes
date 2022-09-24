@@ -1,5 +1,5 @@
 # UNotes
 
-[![Build Status](https://github.com/udholdenhed/github-tag-action/workflows/CI/badge.svg)](https://github.com/udholdenhed/github-tag-action/workflows/CI/badge.svg)
+[![CI](https://github.com/udholdenhed/unotes/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/udholdenhed/unotes/actions/workflows/main.yml)
 
 **UNotes** - notes system written using Golang, Python and microservices architecture.
