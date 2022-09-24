@@ -14,8 +14,8 @@
 1) You need to install [Docker](https://docs.docker.com/get-docker)
    and [Docker Compose](https://docs.docker.com/compose/install).
 2) Open terminal.
-3) `cd <folder with the project>/unotes/auth-service`
-4) Setting up config [config.json](https://github.com/udholdenhed/unotes/blob/master/auth-service/configs/config.json).
+3) `cd /unotes/auth-service/`
+4) Create an `.env` file and set the necessary environment variables.
 5) `docker-compose up -d --build --remove-orphans`
 
 ## Development
