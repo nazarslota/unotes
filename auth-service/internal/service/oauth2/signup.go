@@ -29,7 +29,7 @@ func NewSignUpRequestHandler(r user.Repository) SignUpRequestHandler {
 }
 
 func (h *signUpRequestHandler) Handler(ctx context.Context, r SignUpRequest) error {
-	u, err := h.UserRepository.FindOne(ctx, r.Username)
+	u, err := h.UserRepository.FindByUsername(ctx, r.Username)
 	if err != nil {
 		return errors.ErrInternalServerError.SetInternal(err)
 	} else if u != nil {

@@ -52,7 +52,7 @@ func NewSignInRequestHandler(
 }
 
 func (h *signInRequestHandler) Handle(ctx context.Context, r SignInRequest) (SignInResult, error) {
-	u, err := h.UserRepository.FindOne(ctx, r.Username)
+	u, err := h.UserRepository.FindByUsername(ctx, r.Username)
 	if err != nil {
 		return SignInResult{}, errors.ErrInternalServerError.SetInternal(err)
 	} else if u == nil {

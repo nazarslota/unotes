@@ -27,7 +27,7 @@ func (r *userRepository) Create(ctx context.Context, u user.User) error {
 	return nil
 }
 
-func (r *userRepository) FindOne(ctx context.Context, username string) (*user.User, error) {
+func (r *userRepository) FindByUsername(ctx context.Context, username string) (*user.User, error) {
 	result := r.collection.FindOne(ctx, bson.M{"username": username})
 	if result.Err() != nil {
 		if errors.Is(result.Err(), mongo.ErrNoDocuments) {

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"io"
+	"net/http"
 
 	valid "github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -31,22 +32,22 @@ func NewHandler(services *service.Service, logger *zerolog.Logger) *Handler {
 // @host     localhost:8081
 // @BasePath /api
 
-func (h *Handler) InitRoutes() *echo.Echo {
-	router := echo.New()
+func (h *Handler) H() http.Handler {
+	e := echo.New()
 
-	router.Logger.SetOutput(io.Discard)
-	router.StdLogger.SetOutput(io.Discard)
+	e.Logger.SetOutput(io.Discard)
+	e.StdLogger.SetOutput(io.Discard)
 
-	router.Validator = newValidator(valid.New())
-	router.HTTPErrorHandler = newHTTPErrorHandler(router)
+	e.Validator = newValidator(valid.New())
+	e.HTTPErrorHandler = newHTTPErrorHandler(e)
 
-	router.Use(newLoggerMiddleware())
-	router.Use(newRequestLoggerMiddleware(h.logger))
+	e.Use(newLoggerMiddleware())
+	e.Use(newRequestLoggerMiddleware(h.logger))
 
-	// router.Debug = true
+	// e.Debug = true
 
-	router.GET("/swagger/*", swagger.WrapHandler)
-	api := router.Group("/api")
+	e.GET("/swagger/*", swagger.WrapHandler)
+	api := e.Group("/api")
 	{
 		oAuth2 := api.Group("/oauth2")
 		{
@@ -56,6 +57,5 @@ func (h *Handler) InitRoutes() *echo.Echo {
 			oAuth2.POST("/refresh", h.oAuth2Refresh)
 		}
 	}
-
-	return router
+	return e
 }

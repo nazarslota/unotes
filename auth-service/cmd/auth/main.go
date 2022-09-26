@@ -48,18 +48,21 @@ func main() {
 		RefreshTokenRepository: repos.RefreshTokenRepository,
 	})
 
-	handlers := handler.NewHandler(services, &log.Logger)
 	server := &http.Server{
 		Addr:           net.JoinHostPort(config.C().Auth.Host, config.C().Auth.Port),
-		Handler:        handlers.InitRoutes(),
+		Handler:        handler.NewHandler(services, &log.Logger).H(),
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20, // 1 MB
+		MaxHeaderBytes: http.DefaultMaxHeaderBytes, // 1 MB
 	}
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatal().Err(err).Msg("Error occurred while running HTTP server.")
+		if err := server.ListenAndServe(); err != nil {
+			switch {
+			case errors.Is(err, http.ErrServerClosed):
+			default:
+				log.Fatal().Err(err).Msg("Error occurred while running HTTP server.")
+			}
 		}
 	}()
 

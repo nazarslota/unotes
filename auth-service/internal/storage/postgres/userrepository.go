@@ -28,7 +28,7 @@ func (r *userRepository) Create(ctx context.Context, u user.User) error {
 	return nil
 }
 
-func (r *userRepository) FindOne(ctx context.Context, username string) (*user.User, error) {
+func (r *userRepository) FindByUsername(ctx context.Context, username string) (*user.User, error) {
 	query := fmt.Sprintf(`SELECT * FROM users WHERE username = $1`)
 
 	u := &user.User{}
