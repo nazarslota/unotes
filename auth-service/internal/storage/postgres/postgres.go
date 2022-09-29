@@ -22,11 +22,11 @@ func NewPostgreSQL(ctx context.Context, config *Config) (*sqlx.DB, error) {
 		config.Host, config.Port, config.Username, config.Password, config.DBName, config.SSLMode)
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open postgres connection: %w", err)
+		return nil, fmt.Errorf("postgres.NewPostgreSQL: %w", err)
 	}
 
 	if err := db.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("failed to ping postgres connection: %w", err)
+		return nil, fmt.Errorf("postgres.NewPostgreSQL: %w", err)
 	}
 
 	return db, nil

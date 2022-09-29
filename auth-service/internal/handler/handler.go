@@ -43,6 +43,7 @@ func (h *Handler) H() http.Handler {
 
 	e.Use(newLoggerMiddleware())
 	e.Use(newRequestLoggerMiddleware(h.logger))
+	e.Use(newCORSMiddleware())
 
 	// e.Debug = true
 
@@ -57,5 +58,6 @@ func (h *Handler) H() http.Handler {
 			oAuth2.POST("/refresh", h.oAuth2Refresh)
 		}
 	}
+
 	return e
 }

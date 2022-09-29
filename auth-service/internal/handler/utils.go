@@ -96,3 +96,7 @@ func newRequestLoggerMiddleware(logger *zerolog.Logger) echo.MiddlewareFunc {
 		LogStatus:     true,
 	})
 }
+
+func newCORSMiddleware() echo.MiddlewareFunc {
+	return middleware.CORS()
+}

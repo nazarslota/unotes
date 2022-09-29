@@ -35,9 +35,9 @@ func WithMemoryUserRepository() RepositoryProviderOption {
 	}
 }
 
-func WithMongoDBUserRepository(collection *mongodriver.Collection) RepositoryProviderOption {
+func WithMongoDBUserRepository(db *mongodriver.Database) RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {
-		rp.UserRepository = mongo.NewUserRepository(collection)
+		rp.UserRepository = mongo.NewUserRepository(db)
 	}
 }
 

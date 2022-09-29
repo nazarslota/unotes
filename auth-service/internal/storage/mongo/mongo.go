@@ -28,15 +28,15 @@ func NewMongoDB(ctx context.Context, config *Config) (*mongo.Database, error) {
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create mongodb client: %w", err)
+		return nil, fmt.Errorf("mongo.NewMongoDB: %w", err)
 	}
 
 	if err := client.Connect(ctx); err != nil {
-		return nil, fmt.Errorf("failed to connect to mongodb client: %w", err)
+		return nil, fmt.Errorf("mongo.NewMongoDB: %w", err)
 	}
 
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		return nil, fmt.Errorf("failed to ping mongodb client: %w", err)
+		return nil, fmt.Errorf("mongo.NewMongoDB: %w", err)
 	}
 
 	return client.Database(config.Database), nil
