@@ -30,7 +30,7 @@ func NewHandler(services *service.Service, logger *zerolog.Logger) *Handler {
 // @description Authentication service, developed for UNotes(notes system).
 
 // @host     localhost:8081
-// @BasePath /api
+// @BasePath /api/auth
 
 func (h *Handler) H() http.Handler {
 	e := echo.New()
@@ -48,7 +48,7 @@ func (h *Handler) H() http.Handler {
 	// e.Debug = true
 
 	e.GET("/swagger/*", swagger.WrapHandler)
-	api := e.Group("/api")
+	api := e.Group("/api/auth")
 	{
 		oAuth2 := api.Group("/oauth2")
 		{

@@ -4,10 +4,10 @@
 
 ## API Methods
 
-- `/api/oauth2/sign-in`
-- `/api/oauth2/sign-up`
-- `/api/oauth2/sign-out`
-- `/api/oauth2/refresh`
+- `/api/auth/oauth2/sign-in`
+- `/api/auth/oauth2/sign-up`
+- `/api/auth/oauth2/sign-out`
+- `/api/auth/oauth2/refresh`
 
 ## Run
 
@@ -46,9 +46,3 @@
     - URL `http://localhost:8081/swagger/index.html#/`
     - If the swagger documentation has been changed, you can use the following command to generate a new one.
         - `swag init -g ./internal/handler/handler.go`
-
-## Contributions
-
-If you have **questions**, **ideas**, or you find a **bug**, you can create
-an [issue,](https://github.com/udholdenhed/unotes/issues) and it will be reviewed. If you want to contribute to
-the source code, fork this repository (`master`), realize your ideas and then create a new pull request. **Feel free!**

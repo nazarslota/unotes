@@ -40,16 +40,16 @@ func main() {
 	)
 
 	services := service.NewService(&service.OAuth2ServiceOptions{
-		AccessTokenSecret:      config.C().Auth.AccessTokenSecret,
-		RefreshTokenSecret:     config.C().Auth.RefreshTokenSecret,
-		AccessTokenExpiresIn:   config.C().Auth.AccessTokenExpiresIn,
-		RefreshTokenExpiresIn:  config.C().Auth.RefreshTokenExpiresIn,
+		AccessTokenSecret:      config.C().AuthService.AccessTokenSecret,
+		RefreshTokenSecret:     config.C().AuthService.RefreshTokenSecret,
+		AccessTokenExpiresIn:   config.C().AuthService.AccessTokenExpiresIn,
+		RefreshTokenExpiresIn:  config.C().AuthService.RefreshTokenExpiresIn,
 		UserRepository:         repos.UserRepository,
 		RefreshTokenRepository: repos.RefreshTokenRepository,
 	})
 
 	server := &http.Server{
-		Addr:           net.JoinHostPort(config.C().Auth.Host, config.C().Auth.Port),
+		Addr:           net.JoinHostPort(config.C().AuthService.Host, config.C().AuthService.Port),
 		Handler:        handler.NewHandler(services, &log.Logger).H(),
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,

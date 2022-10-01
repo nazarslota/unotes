@@ -321,7 +321,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8081",
-	BasePath:         "/api",
+	BasePath:         "/api/auth",
 	Schemes:          []string{},
 	Title:            "Auth Service",
 	Description:      "Authentication service, developed for UNotes(notes system).",

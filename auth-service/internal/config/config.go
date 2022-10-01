@@ -10,7 +10,7 @@ import (
 )
 
 type Config struct {
-	Auth struct {
+	AuthService struct {
 		Host                  string        `mapstructure:"AUTH_SERVICE_HOST"`
 		Port                  string        `mapstructure:"AUTH_SERVICE_PORT"`
 		AccessTokenSecret     string        `mapstructure:"AUTH_SERVICE_ACCESS_TOKEN_SECRET"`
