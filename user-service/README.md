@@ -5,8 +5,8 @@
 ## API Methods
 
 - `/api/user/create`
-- `/api/user/find-id`
-- `/api/user/find-username`
+- `/api/user/i/{id}`
+- `/api/user/u/{username}`
 
 ## Run
 
