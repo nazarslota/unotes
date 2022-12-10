@@ -11,12 +11,48 @@
 
 ## Run
 
-1) You need to install [Docker](https://docs.docker.com/get-docker)
-   and [Docker Compose](https://docs.docker.com/compose/install).
-2) Open terminal.
-3) `cd /unotes/auth-service/`
-4) Create an `.env` file and set the necessary environment variables.
-5) `docker-compose up -d --build --remove-orphans`
+### Docker
+
+1) You need to install [Docker](https://docs.docker.com/get-docker).
+2) In the root directory "auth-service" you need to create a new file named ".env".
+3) In the ".env" file you need to add the following environment variables:
+    - Auth Service:
+        - AUTH_SERVICE_ACCESS_TOKEN_SECRET
+        - AUTH_SERVICE_REFRESH_TOKEN_SECRET
+    - PostgreSQL:
+        - AUTH_SERVICE_POSTGRESQL_HOST
+        - AUTH_SERVICE_POSTGRESQL_PORT
+        - AUTH_SERVICE_POSTGRESQL_USERNAME
+        - AUTH_SERVICE_POSTGRESQL_PASSWORD
+        - AUTH_SERVICE_POSTGRESQL_DBNAME
+        - AUTH_SERVICE_POSTGRESQL_SSLMODE
+    - RedisDB:
+        - AUTH_SERVICE_REDIS_ADDR
+        - AUTH_SERVICE_REDIS_PASSWORD
+        - AUTH_SERVICE_REDIS_DB
+4) Now run the following command: `docker run --detach --restart always --env-file ./.env`.
+
+### Docker Compose
+
+1) You need to install [Docker](https://docs.docker.com/get-docker).
+2) And install [Docker Compose](https://docs.docker.com/compose/install).
+3) In the root directory "auth-service" you need to create a new file named ".env".
+4) In the ".env" file you need to add the following environment variables:
+    - Auth Service:
+        - AUTH_SERVICE_ACCESS_TOKEN_SECRET
+        - AUTH_SERVICE_REFRESH_TOKEN_SECRET
+    - PostgreSQL:
+        - AUTH_SERVICE_POSTGRESQL_HOST
+        - AUTH_SERVICE_POSTGRESQL_PORT
+        - AUTH_SERVICE_POSTGRESQL_USERNAME
+        - AUTH_SERVICE_POSTGRESQL_PASSWORD
+        - AUTH_SERVICE_POSTGRESQL_DBNAME
+        - AUTH_SERVICE_POSTGRESQL_SSLMODE
+    - RedisDB:
+        - AUTH_SERVICE_REDIS_ADDR
+        - AUTH_SERVICE_REDIS_PASSWORD
+        - AUTH_SERVICE_REDIS_DB
+5) Now run the following command: `docker-compose up -d --build --remove-orphans`.
 
 ## Development
 
@@ -28,8 +64,36 @@
 
 ### Dependencies
 
-1) `cd <folder with the project>/unotes/auth-service`
-2) `go mod download` or `make go-dep`
+Run one of the following commands:
+
+- `go mod download`
+- `make go-dep`
+
+### Environment
+
+You must configure the environment variables:
+
+- Auth Service:
+    - AUTH_SERVICE_ACCESS_TOKEN_SECRET
+    - AUTH_SERVICE_REFRESH_TOKEN_SECRET
+- PostgreSQL:
+    - AUTH_SERVICE_POSTGRESQL_HOST
+    - AUTH_SERVICE_POSTGRESQL_PORT
+    - AUTH_SERVICE_POSTGRESQL_USERNAME
+    - AUTH_SERVICE_POSTGRESQL_PASSWORD
+    - AUTH_SERVICE_POSTGRESQL_DBNAME
+    - AUTH_SERVICE_POSTGRESQL_SSLMODE
+- RedisDB:
+    - AUTH_SERVICE_REDIS_ADDR
+    - AUTH_SERVICE_REDIS_PASSWORD
+    - AUTH_SERVICE_REDIS_DB
+
+### Run
+
+Run one of the following commands:
+
+- `go run ./cmd/auth/`
+- `go-run`
 
 ### Other
 
@@ -46,3 +110,7 @@
     - URL `http://localhost:8081/swagger/index.html#/`
     - If the swagger documentation has been changed, you can use the following command to generate a new one.
         - `swag init -g ./internal/handler/handler.go`
+
+- If you want to change the config that is used (by default "production.env") you can use the environment variable
+  named "ENVIRONMENT". To use "stage.env" use "ENVIRONMENT=STAGE", to use "development.env" use "
+  ENVIRONMENT=DEVELOPMENT", for use in production, this variable may not be set.
