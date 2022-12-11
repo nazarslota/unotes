@@ -30,7 +30,10 @@
         - AUTH_SERVICE_REDIS_ADDR
         - AUTH_SERVICE_REDIS_PASSWORD
         - AUTH_SERVICE_REDIS_DB
-4) Now run the following command: `docker run --detach --restart always --env-file ./.env`.
+4) Now run the following commands:
+
+- `docker build --tag auth-service .`
+- `docker run --publish 8081:8081 --name auth-service --detach --restart always --env-file ./.env auth-service`
 
 ### Docker Compose
 
