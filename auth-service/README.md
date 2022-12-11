@@ -96,7 +96,8 @@ You must configure the environment variables:
 Run one of the following commands:
 
 - `go run ./cmd/auth/`
-- `go-run`
+- `make go-run`
+- `make`
 
 ### Other
 
