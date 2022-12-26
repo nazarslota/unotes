@@ -147,26 +147,39 @@ make build
 #### For easy management of database migrations, it is recommended to use the [Migrate](https://github.com/golang-migrate/migrate) tool.
 
 - Up
-    - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' up`
-    - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' up`
+
+    ````
+    migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' up
+    migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' up
+    ````
+
 - Down
-    - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' down`
-    - `migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' down`
 
-#### The project also uses swagger documentation. [Swag](https://github.com/swaggo/swag).
+    ````
+    migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' down
+    migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' down`
+    ````
 
-- URL [http://localhost:8081/swagger/index.html](http://localhost:8081/swagger/index.html)
-- If the swagger documentation has been changed, you can use the following command to generate a new
-  one - `make swagger`
+#### Project also uses swagger documentation. [Swag](https://github.com/swaggo/swag).
 
-#### In order to generate proto files, just run the following command. [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation) required.
+URL [http://localhost:8081/swagger/index.html](http://localhost:8081/swagger/index.html). If the swagger documentation
+has been changed, you can use the following command to generate a new one.
 
-- `.proto` and `.pb.go` files are stored in the `/api/proto` folder.
-- If the proto files have been changed, you can use the following command - `make proto`. It will generate files in
-  `/api/proto folder`.
+````
+make swagger
+````
+
+#### Generation of proto files. [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation) required.
+
+`.proto` and `.pb.go` files are stored in the `/api/proto` folder. If the proto files have been changed, you can use the
+following command. It will generate files in `/api/proto` folder.
+
+````
+make proto
+````
 
 #### Environment
 
 If you want to change the config that is used (by default `production.env`) you can use the environment variable
-named `ENVIRONMENT`. To use "stage.env" use `ENVIRONMENT=STAGE`, to use `development.env` use `ENVIRONMENT=DEVELOPMENT`,
-for use in production, this variable may not be set.
+named `ENVIRONMENT`. To use `stage.env` use `ENVIRONMENT=STAGE`, to use `development.env`
+use `ENVIRONMENT=DEVELOPMENT`, for use in production, this variable may not be set.
