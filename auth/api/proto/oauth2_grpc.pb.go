@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type OAuth2ServiceClient interface {
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
 	SignIn(ctx context.Context, in *SignInRequest, opts ...grpc.CallOption) (*SignInResponse, error)
+	SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*SignOutResponse, error)
+	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error)
 }
 
 type oAuth2ServiceClient struct {
@@ -52,12 +54,32 @@ func (c *oAuth2ServiceClient) SignIn(ctx context.Context, in *SignInRequest, opt
 	return out, nil
 }
 
+func (c *oAuth2ServiceClient) SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*SignOutResponse, error) {
+	out := new(SignOutResponse)
+	err := c.cc.Invoke(ctx, "/OAuth2Service/SignOut", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *oAuth2ServiceClient) Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error) {
+	out := new(RefreshResponse)
+	err := c.cc.Invoke(ctx, "/OAuth2Service/Refresh", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OAuth2ServiceServer is the server API for OAuth2Service service.
 // All implementations must embed UnimplementedOAuth2ServiceServer
 // for forward compatibility
 type OAuth2ServiceServer interface {
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
 	SignIn(context.Context, *SignInRequest) (*SignInResponse, error)
+	SignOut(context.Context, *SignOutRequest) (*SignOutResponse, error)
+	Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error)
 	mustEmbedUnimplementedOAuth2ServiceServer()
 }
 
@@ -70,6 +92,12 @@ func (UnimplementedOAuth2ServiceServer) SignUp(context.Context, *SignUpRequest) 
 }
 func (UnimplementedOAuth2ServiceServer) SignIn(context.Context, *SignInRequest) (*SignInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignIn not implemented")
+}
+func (UnimplementedOAuth2ServiceServer) SignOut(context.Context, *SignOutRequest) (*SignOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignOut not implemented")
+}
+func (UnimplementedOAuth2ServiceServer) Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Refresh not implemented")
 }
 func (UnimplementedOAuth2ServiceServer) mustEmbedUnimplementedOAuth2ServiceServer() {}
 
@@ -120,6 +148,42 @@ func _OAuth2Service_SignIn_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OAuth2Service_SignOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignOutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OAuth2ServiceServer).SignOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/OAuth2Service/SignOut",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OAuth2ServiceServer).SignOut(ctx, req.(*SignOutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OAuth2Service_Refresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OAuth2ServiceServer).Refresh(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/OAuth2Service/Refresh",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OAuth2ServiceServer).Refresh(ctx, req.(*RefreshRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OAuth2Service_ServiceDesc is the grpc.ServiceDesc for OAuth2Service service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +198,14 @@ var OAuth2Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SignIn",
 			Handler:    _OAuth2Service_SignIn_Handler,
+		},
+		{
+			MethodName: "SignOut",
+			Handler:    _OAuth2Service_SignOut_Handler,
+		},
+		{
+			MethodName: "Refresh",
+			Handler:    _OAuth2Service_Refresh_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

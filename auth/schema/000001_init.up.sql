@@ -5,5 +5,5 @@ CREATE TABLE "users"
     "password_hash" varchar(255) NOT NULL,
     CONSTRAINT "users_pk" PRIMARY KEY ("id")
 ) WITH (
-      OIDS= FALSE
-    );
+      OIDS = FALSE
+      );

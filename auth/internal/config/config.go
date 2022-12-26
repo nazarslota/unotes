@@ -12,8 +12,8 @@ import (
 type Config struct {
 	Auth struct {
 		HostHTTP              string        `mapstructure:"AUTH_HOST_HTTP"`
-		HostGRPC              string        `mapstructure:"AUTH_HOST_GRPC"`
 		PortHTTP              string        `mapstructure:"AUTH_PORT_HTTP"`
+		HostGRPC              string        `mapstructure:"AUTH_HOST_GRPC"`
 		PortGRPC              string        `mapstructure:"AUTH_PORT_GRPC"`
 		AccessTokenSecret     string        `mapstructure:"AUTH_ACCESS_TOKEN_SECRET"`
 		AccessTokenExpiresIn  time.Duration `mapstructure:"AUTH_ACCESS_TOKEN_EXPIRES_IN"`

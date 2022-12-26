@@ -25,7 +25,7 @@ func NewUserRepository(db *mongo.Database, collection ...string) user.Repository
 
 func (r *userRepository) Create(ctx context.Context, u user.User) error {
 	if _, err := r.collection.InsertOne(ctx, u); err != nil {
-		return fmt.Errorf("mongo.userRepository.Create: %w", err)
+		return fmt.Errorf("mongo: %w", err)
 	}
 	return nil
 }
@@ -36,12 +36,12 @@ func (r *userRepository) FindByUsername(ctx context.Context, username string) (*
 		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("mongo.userRepository.FindByUsername: %w", result.Err())
+		return nil, fmt.Errorf("mongo: %w", result.Err())
 	}
 
 	u := new(user.User)
 	if err := result.Decode(&u); err != nil {
-		return nil, fmt.Errorf("mongo.userRepository.FindByUsername: %w", err)
+		return nil, fmt.Errorf("mongo: %w", err)
 	}
 	return u, nil
 }
