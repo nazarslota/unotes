@@ -6,60 +6,79 @@
 
 ### Docker
 
-#### 1) You need to install [Docker](https://docs.docker.com/get-docker).
+1) You need to install [Docker](https://docs.docker.com/get-docker).
 
-#### 2) In the root directory "auth" you need to create a new file named ".env".
+2) In the root directory "auth" you need to create a new file named ".env".
 
-#### 3) In the ".env" file you need to add the following environment variables:
+3) In the ".env" file you need to add the following environment variables:
 
-    Auth
-        AUTH_SERVICE_ACCESS_TOKEN_SECRET
-        AUTH_SERVICE_REFRESH_TOKEN_SECRET
+   Auth
 
-    PostgreSQL:
-        AUTH_SERVICE_POSTGRESQL_HOST
-        AUTH_SERVICE_POSTGRESQL_PORT
-        AUTH_SERVICE_POSTGRESQL_USERNAME
-        AUTH_SERVICE_POSTGRESQL_PASSWORD
-        AUTH_SERVICE_POSTGRESQL_DBNAME
-        AUTH_SERVICE_POSTGRESQL_SSLMODE
+    ````
+    AUTH_SERVICE_ACCESS_TOKEN_SECRET
+    AUTH_SERVICE_REFRESH_TOKEN_SECRET
+    ````
+   PostgreSQL
 
-    RedisDB:
-        AUTH_SERVICE_REDIS_ADDR
-        AUTH_SERVICE_REDIS_PASSWORD
-        AUTH_SERVICE_REDIS_DB
+   ````
+    AUTH_SERVICE_POSTGRESQL_HOST
+    AUTH_SERVICE_POSTGRESQL_PORT
+    AUTH_SERVICE_POSTGRESQL_USERNAME
+    AUTH_SERVICE_POSTGRESQL_PASSWORD
+    AUTH_SERVICE_POSTGRESQL_DBNAME
+    AUTH_SERVICE_POSTGRESQL_SSLMODE
+    ````
+   RedisDB
 
-#### 4) Now run the following commands:
+    ````
+    AUTH_SERVICE_REDIS_ADDR
+    AUTH_SERVICE_REDIS_PASSWORD
+    AUTH_SERVICE_REDIS_DB
+    ````
 
+4) Now run the following commands.
+    ```
     docker build --tag auth .
     docker run --publish 8081:8081 --name auth --detach --restart always --env-file ./.env auth
+    ```
 
 ### Docker Compose
 
-#### 1) You need to install [Docker](https://docs.docker.com/get-docker) and [Docker Compose](https://docs.docker.com/compose/install).
+1) You need to install [Docker](https://docs.docker.com/get-docker)
+   and [Docker Compose](https://docs.docker.com/compose/install).
 
-#### 2) In the root directory "auth" you need to create a new file named ".env".
+2) In the root directory "auth" you need to create a new file named ".env".
 
-#### 3) In the ".env" file you need to add the following environment variables:
+3) In the ".env" file you need to add the following environment variables.
 
-    Auth
-        AUTH_SERVICE_ACCESS_TOKEN_SECRET
-        AUTH_SERVICE_REFRESH_TOKEN_SECRET
+   Auth
 
-    PostgreSQL:
-        AUTH_SERVICE_POSTGRESQL_HOST
-        AUTH_SERVICE_POSTGRESQL_PORT
-        AUTH_SERVICE_POSTGRESQL_USERNAME
-        AUTH_SERVICE_POSTGRESQL_PASSWORD
-        AUTH_SERVICE_POSTGRESQL_DBNAME
-        AUTH_SERVICE_POSTGRESQL_SSLMODE
+    ````
+    AUTH_SERVICE_ACCESS_TOKEN_SECRET
+    AUTH_SERVICE_REFRESH_TOKEN_SECRET
+    ````
+   PostgreSQL
 
-    RedisDB:
-        AUTH_SERVICE_REDIS_ADDR
-        AUTH_SERVICE_REDIS_PASSWORD
-        AUTH_SERVICE_REDIS_DB
+   ````
+    AUTH_SERVICE_POSTGRESQL_HOST
+    AUTH_SERVICE_POSTGRESQL_PORT
+    AUTH_SERVICE_POSTGRESQL_USERNAME
+    AUTH_SERVICE_POSTGRESQL_PASSWORD
+    AUTH_SERVICE_POSTGRESQL_DBNAME
+    AUTH_SERVICE_POSTGRESQL_SSLMODE
+    ````
+   RedisDB
 
-#### 3) Now run the following command - `docker-compose up -d --build --remove-orphans`.
+    ````
+    AUTH_SERVICE_REDIS_ADDR
+    AUTH_SERVICE_REDIS_PASSWORD
+    AUTH_SERVICE_REDIS_DB
+    ````
+
+4) Now run the following command.
+   ````
+   docker-compose up -d --build --remove-orphans
+   ````
 
 ## Development
 
@@ -68,45 +87,60 @@
 - [GoLang](https://go.dev/dl) (1.19.4 recommended).
 - [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation) (v3.15.8 recommended).
 
-#### Utilities
+- Tools
 
-- [Swag](https://github.com/swaggo/swag) (1.8.9 recommended).
-- [Migrate](https://github.com/golang-migrate/migrate) (4.15.2 recommended).
+    - [Swag](https://github.com/swaggo/swag) (1.8.9 recommended).
+    - [Migrate](https://github.com/golang-migrate/migrate) (4.15.2 recommended).
 
-#### Recommended IDEs
+- Recommended IDEs
 
-- [GoLand](https://www.jetbrains.com/go) (2022.2.2 and above).
-- [Visual Studio Code](https://code.visualstudio.com) (1.70 and above).
+    - [GoLand](https://www.jetbrains.com/go) (2022.2.2 and above).
+    - [Visual Studio Code](https://code.visualstudio.com) (1.70 and above).
 
 ### Dependencies
 
-#### Run the following command - `make dependencies`
+Run the following command
+
+````
+make dependencies
+````
 
 ### Environment
 
-    Auth:
-        AUTH_ACCESS_TOKEN_SECRET
-        AUTH_REFRESH_TOKEN_SECRET
+Auth
 
-    PostgreSQL:
-        AUTH_POSTGRESQL_HOST
-        AUTH_POSTGRESQL_PORT
-        AUTH_POSTGRESQL_USERNAME
-        AUTH_POSTGRESQL_PASSWORD
-        AUTH_POSTGRESQL_DBNAME
-        AUTH_POSTGRESQL_SSLMODE
+````
+AUTH_SERVICE_ACCESS_TOKEN_SECRET
+AUTH_SERVICE_REFRESH_TOKEN_SECRET
+````
 
-    RedisDB
-        AUTH_REDIS_ADDR
-        AUTH_REDIS_PASSWORD
-        AUTH_REDIS_DB
+PostgreSQL
+
+````
+AUTH_SERVICE_POSTGRESQL_HOST
+AUTH_SERVICE_POSTGRESQL_PORT
+AUTH_SERVICE_POSTGRESQL_USERNAME
+AUTH_SERVICE_POSTGRESQL_PASSWORD
+AUTH_SERVICE_POSTGRESQL_DBNAME
+AUTH_SERVICE_POSTGRESQL_SSLMODE
+````
+
+RedisDB
+
+````
+AUTH_SERVICE_REDIS_ADDR
+AUTH_SERVICE_REDIS_PASSWORD
+AUTH_SERVICE_REDIS_DB
+````
 
 ### Run
 
-#### Run the following commands
+Run the following commands.
 
-    make build
-    ./bin/auth
+````
+make build
+./bin/auth
+````
 
 ### Other
 
