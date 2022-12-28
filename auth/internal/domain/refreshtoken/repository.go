@@ -3,8 +3,8 @@ package refreshtoken
 import "context"
 
 type Repository interface {
-	SetRefreshToken(ctx context.Context, userID string, token Token) error
-	GetRefreshToken(ctx context.Context, userID string, token Token) (*Token, error)
-	DeleteRefreshToken(ctx context.Context, userID string, token Token) error
-	GetAllRefreshTokens(ctx context.Context, userID string) ([]Token, error)
+	SaveOne(ctx context.Context, userID string, token *Token) error
+	FindOne(ctx context.Context, userID string, token *Token) (*Token, error)
+	DeleteOne(ctx context.Context, userID string, token *Token) error
+	FindMany(ctx context.Context, userID string) ([]Token, error)
 }

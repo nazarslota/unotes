@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/oauth2/refresh": {
+        "/serviceoauth2/refresh": {
             "post": {
                 "description": "refresh",
                 "consumes": [
@@ -68,7 +68,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/oauth2/sign-in": {
+        "/serviceoauth2/sign-in": {
             "post": {
                 "description": "sign in",
                 "consumes": [
@@ -126,7 +126,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/oauth2/sign-out": {
+        "/serviceoauth2/sign-out": {
             "post": {
                 "description": "sign out",
                 "consumes": [
@@ -175,7 +175,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/oauth2/sign-up": {
+        "/serviceoauth2/sign-up": {
             "post": {
                 "description": "create account",
                 "consumes": [

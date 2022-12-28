@@ -2,18 +2,21 @@ package oauth2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
-	"github.com/udholdenhed/unotes/auth/pkg/errors"
 )
 
-type LogOutRequest struct {
+type SignOutRequest struct {
 	AccessToken string `json:"access_token"`
 }
 
+type SignOutResponse struct {
+}
+
 type LogOutRequestHandler interface {
-	Handle(ctx context.Context, r LogOutRequest) error
+	Handle(ctx context.Context, request *SignOutRequest) (*SignOutResponse, error)
 }
 
 type signOutRequestHandler struct {
@@ -21,41 +24,47 @@ type signOutRequestHandler struct {
 	RefreshTokenRepository refreshtoken.Repository
 }
 
-func NewSignOutRequestHandler(accessTokenSecret string, refreshTokenRepository refreshtoken.Repository) LogOutRequestHandler {
+func NewSignOutRequestHandler(
+	accessTokenSecret string, refreshTokenRepository refreshtoken.Repository,
+) LogOutRequestHandler {
 	return &signOutRequestHandler{
 		AccessTokenSecret:      accessTokenSecret,
 		RefreshTokenRepository: refreshTokenRepository,
 	}
 }
 
-func (h *signOutRequestHandler) Handle(ctx context.Context, r LogOutRequest) error {
-	claims := make(jwt.MapClaims)
-	if _, err := jwt.ParseWithClaims(r.AccessToken, claims, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrInvalidOrExpiredToken
-		}
-
-		return []byte(h.AccessTokenSecret), nil
-	}); err != nil {
-		return ErrInvalidOrExpiredToken.SetInternal(err)
+func (h *signOutRequestHandler) Handle(ctx context.Context, request *SignOutRequest) (*SignOutResponse, error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("context is done: %w", ctx.Err()) // failed to handle sign out request,
+	default:
 	}
 
-	var userID string
-	if _, ok := claims["user_id"]; !ok {
-		return ErrInvalidOrExpiredToken
-	} else if userID, ok = claims["user_id"].(string); !ok {
-		return ErrInvalidOrExpiredToken
-	}
-
-	allRefreshTokens, err := h.RefreshTokenRepository.GetAllRefreshTokens(ctx, userID)
+	claims, err := tokens{}.ParseHS256(request.AccessToken, h.AccessTokenSecret)
 	if err != nil {
-		return errors.ErrInternalServerError.SetInternal(err)
+		return nil, err
 	}
 
-	for _, token := range allRefreshTokens {
-		if err := h.RefreshTokenRepository.DeleteRefreshToken(ctx, userID, token); err != nil {
-			return errors.ErrInternalServerError.SetInternal(err)
+	userID := ""
+	if _, ok := claims["user_id"]; !ok {
+		return nil, fmt.Errorf("filed to get user id from token")
+	} else if userID, ok = claims["user_id"].(string); !ok {
+		return nil, fmt.Errorf("failed to convert user id to string")
+	}
+
+	tokens, err := h.RefreshTokenRepository.FindMany(ctx, userID)
+	if err != nil {
+		if errors.Is(err, refreshtoken.ErrTokensNotFound) {
+			return nil, fmt.Errorf("failed to find user tokens: %w", ErrInvalidOrExpiredToken)
+		}
+		return nil, fmt.Errorf("failed to find user tokens: %w", err)
+	}
+
+	for _, token := range tokens {
+		err := h.RefreshTokenRepository.DeleteOne(ctx, userID, &token)
+		if err != nil {
+			return nil, fmt.Errorf("failed to delete refresh token: %w", err)
 		}
 	}
-	return nil
+	return &SignOutResponse{}, nil
 }

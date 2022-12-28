@@ -3,6 +3,7 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // HTTPError represents an httpserver error.
@@ -13,11 +14,12 @@ type HTTPError struct {
 }
 
 var (
-	// ErrInternalServerError represents an internal httpserver server error.
-	ErrInternalServerError = NewHTTPError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+	// ErrHTTPInternalServerError represents an internal http server error.
+	ErrHTTPInternalServerError = NewHTTPError(http.StatusInternalServerError,
+		strings.ToLower(http.StatusText(http.StatusInternalServerError)))
 )
 
-// NewHTTPError creates a new HTTPError instance.
+// NewHTTPError creates a new UserError instance.
 func NewHTTPError(code int, message ...any) *HTTPError {
 	e := &HTTPError{Code: code, Message: http.StatusText(code)}
 	if len(message) > 0 {
@@ -39,7 +41,7 @@ func (e *HTTPError) Unwrap() error {
 	return e.Internal
 }
 
-// SetInternal sets error to HTTPError.Internal.
+// SetInternal sets error to UserError.Internal.
 func (e *HTTPError) SetInternal(err error) *HTTPError {
 	e.Internal = err
 	return e

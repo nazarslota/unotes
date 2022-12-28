@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/udholdenhed/unotes/auth/internal/domain/user"
@@ -21,32 +22,34 @@ func NewUserRepository() user.Repository {
 	}
 }
 
-func (r *userRepository) Create(ctx context.Context, u user.User) error {
+func (r *userRepository) SaveOne(ctx context.Context, user *user.User) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("failed to save the user: %w", ctx.Err())
+	default:
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		r.users[u.ID] = u
-	}
+	r.users[user.ID] = *user
 	return nil
 }
 
-func (r *userRepository) FindByUsername(ctx context.Context, username string) (*user.User, error) {
+func (r *userRepository) FindOne(ctx context.Context, username string) (*user.User, error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("failed to find the user: %w", ctx.Err())
+	default:
+	}
+
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-		for _, u := range r.users {
-			if username == u.Username {
-				return &u, nil
-			}
+	for _, u := range r.users {
+		if username == u.Username {
+			return &u, nil
 		}
 	}
-	return nil, nil
+	return nil, user.ErrUserNotFound
 }

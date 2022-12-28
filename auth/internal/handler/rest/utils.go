@@ -21,7 +21,7 @@ func newValidator(v *valid.Validate) *validator {
 
 func (v *validator) Validate(i any) error {
 	if err := v.validator.Struct(i); err != nil {
-		return errors.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return nil
 }

@@ -9,17 +9,12 @@ import (
 )
 
 type Handler struct {
-	services *service.Service
-	logger   *zerolog.Logger
-
-	server *oAuth2ServerGRPC
+	server *oAuth2ServiceServer
 }
 
 func NewHandler(services *service.Service, logger *zerolog.Logger) *Handler {
 	return &Handler{
-		services: services,
-		logger:   logger,
-		server:   &oAuth2ServerGRPC{},
+		server: &oAuth2ServiceServer{services: services, logger: logger},
 	}
 }
 
@@ -29,5 +24,3 @@ func (h *Handler) Init(addr string) *grpc.Server {
 
 	return s
 }
-
-// protoc -Iapi/proto --go_out=. --go_opt=module=github.com/udholdenhed/unotes/auth --go-grpc_out=. --go-grpc_opt=module=github.com/udholdenhed/unotes/auth api/proto/oauth2.proto

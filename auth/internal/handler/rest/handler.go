@@ -46,7 +46,7 @@ func (h *Handler) Init(addr string) *http.Server {
 	e.Use(newRequestLoggerMiddleware(h.logger))
 	e.Use(newCORSMiddleware())
 
-	// e.Debug = true
+	e.Debug = true
 
 	e.GET("/swagger/*", swagger.WrapHandler)
 	api := e.Group("/api/auth")

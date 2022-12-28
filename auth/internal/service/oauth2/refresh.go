@@ -2,24 +2,24 @@ package oauth2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
-	"github.com/udholdenhed/unotes/auth/pkg/errors"
 )
 
 type RefreshRequest struct {
 	RefreshToken string
 }
 
-type RefreshResult struct {
+type RefreshResponse struct {
 	AccessToken  string
 	RefreshToken string
 }
 
 type RefreshRequestHandler interface {
-	Handle(ctx context.Context, r RefreshRequest) (RefreshResult, error)
+	Handle(ctx context.Context, request *RefreshRequest) (*RefreshResponse, error)
 }
 
 type refreshRequestHandler struct {
@@ -44,70 +44,55 @@ func NewRefreshRequestHandler(
 	}
 }
 
-func (h *refreshRequestHandler) Handle(ctx context.Context, r RefreshRequest) (RefreshResult, error) {
-	claims := make(jwt.MapClaims)
-	if _, err := jwt.ParseWithClaims(r.RefreshToken, claims, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrInvalidOrExpiredToken
-		}
-
-		return []byte(h.RefreshTokenSecret), nil
-	}); err != nil {
-		return RefreshResult{}, ErrInvalidOrExpiredToken.SetInternal(err)
+func (h *refreshRequestHandler) Handle(ctx context.Context, request *RefreshRequest) (*RefreshResponse, error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("context is done: %w", ctx.Err()) // failed to handle refresh request,
+	default:
 	}
 
-	var userID string
+	claims, err := tokens{}.ParseHS256(request.RefreshToken, h.RefreshTokenSecret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse the refresh token: %w", ErrInvalidOrExpiredToken)
+	}
+
+	userID := ""
 	if _, ok := claims["user_id"]; !ok {
-		return RefreshResult{}, ErrInvalidOrExpiredToken
+		return nil, fmt.Errorf("filed to get user id from token: %w", ErrInvalidOrExpiredToken)
 	} else if userID, ok = claims["user_id"].(string); !ok {
-		return RefreshResult{}, ErrInvalidOrExpiredToken
+		return nil, fmt.Errorf("failed to convert user id to string: %w", ErrInvalidOrExpiredToken)
 	}
 
-	token, err := h.RefreshTokenRepository.GetRefreshToken(ctx, userID, refreshtoken.Token{Token: r.RefreshToken})
+	token := &refreshtoken.Token{Token: request.RefreshToken}
+	_, err = h.RefreshTokenRepository.FindOne(ctx, userID, token)
 	if err != nil {
-		return RefreshResult{}, ErrInvalidOrExpiredToken.SetInternal(err)
-	} else if token == nil {
-		return RefreshResult{}, ErrInvalidOrExpiredToken
-	}
-
-	if err := h.RefreshTokenRepository.DeleteRefreshToken(ctx, userID, refreshtoken.Token{Token: r.RefreshToken}); err != nil {
-		return RefreshResult{}, errors.ErrInternalServerError.SetInternal(err)
-	}
-
-	accessToken, err := func() (string, error) {
-		now := time.Now()
-		claims := jwt.MapClaims{
-			"exp": now.Add(h.AccessTokenExpiresIn).Unix(),
-			"iat": now.Unix(),
-			"nbf": now.Unix(),
+		if errors.Is(err, refreshtoken.ErrTokenNotFound) {
+			return nil, fmt.Errorf("the refresh token could not be found: %w", ErrInvalidOrExpiredToken)
 		}
-		claims["user_id"] = userID
-		return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(h.AccessTokenSecret))
-	}()
+		return nil, fmt.Errorf("the refresh token could not be found: %w", err)
+	}
+
+	err = h.RefreshTokenRepository.DeleteOne(ctx, userID, token)
 	if err != nil {
-		return RefreshResult{}, errors.ErrInternalServerError.SetInternal(err)
+		return nil, fmt.Errorf("failed to delete refresh token: %w", err)
 	}
 
-	refreshToken, err := func() (string, error) {
-		now := time.Now()
-		claims := jwt.MapClaims{
-			"exp": now.Add(h.RefreshTokenExpiresIn).Unix(),
-			"iat": now.Unix(),
-			"nbf": now.Unix(),
-		}
-		claims["user_id"] = userID
-		return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(h.RefreshTokenSecret))
-	}()
+	response := new(RefreshResponse)
+	access, err := tokens{}.NewHS256(h.AccessTokenSecret, h.AccessTokenExpiresIn, userID)
 	if err != nil {
-		return RefreshResult{}, errors.ErrInternalServerError.SetInternal(err)
+		return nil, fmt.Errorf("failed to create an access token: %w", err)
 	}
+	response.AccessToken = access
 
-	if err := h.RefreshTokenRepository.SetRefreshToken(ctx, userID, refreshtoken.Token{Token: refreshToken}); err != nil {
-		return RefreshResult{}, errors.ErrInternalServerError.SetInternal(err)
+	refresh, err := tokens{}.NewHS256(h.RefreshTokenSecret, h.RefreshTokenExpiresIn, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create a refresh token: %w", err)
 	}
+	response.RefreshToken = refresh
 
-	return RefreshResult{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
+	err = h.RefreshTokenRepository.SaveOne(ctx, userID, &refreshtoken.Token{Token: refresh})
+	if err != nil {
+		return nil, fmt.Errorf("failed to save the refresh token: %w", err)
+	}
+	return response, nil
 }

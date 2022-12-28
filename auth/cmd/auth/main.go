@@ -27,19 +27,19 @@ import (
 func main() {
 	InitLogger()
 
-	postgresDB, err := NewPostgreSQL()
-	if err != nil {
-		log.Fatal().Err(err).Msg("Filed to connect to PostgreSQL.")
-	}
-
-	redisDB, err := NewRedisDB()
-	if err != nil {
-		log.Fatal().Err(err).Msg("Filed to connect to Redis.")
-	}
+	//postgresDB, err := NewPostgreSQL()
+	//if err != nil {
+	//	log.Fatal().Err(err).Msg("Filed to connect to PostgreSQL.")
+	//}
+	//
+	//redisDB, err := NewRedisDB()
+	//if err != nil {
+	//	log.Fatal().Err(err).Msg("Filed to connect to Redis.")
+	//}
 
 	repositories := storage.NewRepositoryProvider(
-		storage.WithPostgreSQLUserRepository(postgresDB),
-		storage.WithRedisRefreshTokenRepository(redisDB),
+		storage.WithMemoryUserRepository(),
+		storage.WithMemoryRefreshTokenRepository(),
 	)
 
 	services := service.NewService(&service.OAuth2ServiceOptions{
@@ -96,8 +96,8 @@ func main() {
 	ShutdownHTTPServer(serverHTTP)
 	ShutdownGRPCServer(serverGRPC)
 
-	ClosePostgreSQL(postgresDB)
-	CloseRedisDB(redisDB)
+	//ClosePostgreSQL(postgresDB)
+	//CloseRedisDB(redisDB)
 
 	log.Info().Msg("Shutdown completed.")
 }

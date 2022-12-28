@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
@@ -21,67 +22,74 @@ func NewRefreshTokenRepository() refreshtoken.Repository {
 	}
 }
 
-func (r *refreshTokenRepository) SetRefreshToken(ctx context.Context, userID string, token refreshtoken.Token) error {
+func (r *refreshTokenRepository) SaveOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("failed to save the refresh token: %w", ctx.Err())
+	default:
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	if r.tokens[userID] == nil {
+		r.tokens[userID] = make([]refreshtoken.Token, 0)
+	}
+	r.tokens[userID] = append(r.tokens[userID], *token)
+
+	return nil
+}
+
+func (r *refreshTokenRepository) FindOne(
+	ctx context.Context, userID string, token *refreshtoken.Token,
+) (*refreshtoken.Token, error) {
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return nil, fmt.Errorf("failed to find the refresh token: %w", ctx.Err())
 	default:
-		if r.tokens[userID] == nil {
-			r.tokens[userID] = make([]refreshtoken.Token, 0)
+	}
+
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	for _, t := range r.tokens[userID] {
+		if t == *token {
+			return &t, nil
 		}
-		r.tokens[userID] = append(r.tokens[userID], token)
+	}
+	return nil, refreshtoken.ErrTokenNotFound
+}
+
+func (r *refreshTokenRepository) DeleteOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("failed to delete the refresh token: %w", ctx.Err())
+	default:
+	}
+
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	for i, t := range r.tokens[userID] {
+		if t == *token {
+			r.tokens[userID] = append(r.tokens[userID][:i], r.tokens[userID][i+1:]...)
+		}
 	}
 	return nil
 }
 
-func (r *refreshTokenRepository) GetRefreshToken(ctx context.Context, userID string, token refreshtoken.Token) (*refreshtoken.Token, error) {
+func (r *refreshTokenRepository) FindMany(ctx context.Context, userID string) ([]refreshtoken.Token, error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("failed to find the refresh tokens: %w", ctx.Err())
+	default:
+	}
+
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-		for _, t := range r.tokens[userID] {
-			if t == token {
-				return &t, nil
-			}
-		}
+	if len(r.tokens[userID]) == 0 {
+		return nil, refreshtoken.ErrTokensNotFound
 	}
-	return nil, nil
-}
-
-func (r *refreshTokenRepository) DeleteRefreshToken(ctx context.Context, userID string, token refreshtoken.Token) error {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		for i, t := range r.tokens[userID] {
-			if t == token {
-				r.tokens[userID] = append(r.tokens[userID][:i], r.tokens[userID][i+1:]...)
-			}
-		}
-	}
-	return nil
-}
-
-func (r *refreshTokenRepository) GetAllRefreshTokens(ctx context.Context, userID string) ([]refreshtoken.Token, error) {
-	r.mutex.RLock()
-	defer r.mutex.RUnlock()
-
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-		if len(r.tokens[userID]) == 0 {
-			return nil, nil
-		}
-		return r.tokens[userID], nil
-	}
+	return r.tokens[userID], nil
 }

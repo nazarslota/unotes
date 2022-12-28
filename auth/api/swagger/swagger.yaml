@@ -67,7 +67,7 @@ info:
   title: Auth
   version: "1.0"
 paths:
-  /oauth2/refresh:
+  /serviceoauth2/refresh:
     post:
       consumes:
       - application/json
@@ -101,7 +101,7 @@ paths:
       summary: oAuth2 refresh
       tags:
       - oAuth2
-  /oauth2/sign-in:
+  /serviceoauth2/sign-in:
     post:
       consumes:
       - application/json
@@ -139,7 +139,7 @@ paths:
       summary: oAuth2 sign in
       tags:
       - oAuth2
-  /oauth2/sign-out:
+  /serviceoauth2/sign-out:
     post:
       consumes:
       - application/json
@@ -171,7 +171,7 @@ paths:
       summary: oAuth2 sign out
       tags:
       - oAuth2
-  /oauth2/sign-up:
+  /serviceoauth2/sign-up:
     post:
       consumes:
       - application/json

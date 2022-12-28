@@ -2,14 +2,12 @@ package oauth2
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
 	"github.com/udholdenhed/unotes/auth/internal/domain/user"
-	"github.com/udholdenhed/unotes/auth/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,13 +16,13 @@ type SignInRequest struct {
 	Password string
 }
 
-type SignInResult struct {
+type SignInResponse struct {
 	AccessToken  string
 	RefreshToken string
 }
 
 type SignInRequestHandler interface {
-	Handle(ctx context.Context, r SignInRequest) (SignInResult, error)
+	Handle(ctx context.Context, request *SignInRequest) (*SignInResponse, error)
 }
 
 type signInRequestHandler struct {
@@ -51,58 +49,41 @@ func NewSignInRequestHandler(
 	}
 }
 
-func (h *signInRequestHandler) Handle(ctx context.Context, r SignInRequest) (SignInResult, error) {
-	u, err := h.UserRepository.FindByUsername(ctx, r.Username)
+func (h *signInRequestHandler) Handle(ctx context.Context, request *SignInRequest) (*SignInResponse, error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("context is done: %w", ctx.Err()) // failed to handle sign in request,
+	default:
+	}
+
+	u, err := h.UserRepository.FindOne(ctx, request.Username)
 	if err != nil {
-		return SignInResult{}, errors.ErrInternalServerError.SetInternal(err)
-	} else if u == nil {
-		return SignInResult{}, errors.NewHTTPError(
-			http.StatusNotFound,
-			fmt.Sprintf("user with this username does not exist"),
-		)
+		return nil, fmt.Errorf("failed to find the user: %w", err)
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(r.Password)); err != nil {
-		return SignInResult{}, errors.NewHTTPError(
-			http.StatusBadRequest,
-			fmt.Sprintf("incorrect user password"),
-		)
-	}
-
-	accessToken, err := func() (string, error) {
-		now := time.Now()
-		claims := jwt.MapClaims{
-			"exp":     now.Add(h.AccessTokenExpiresIn).Unix(),
-			"iat":     now.Unix(),
-			"nbf":     now.Unix(),
-			"user_id": u.ID,
+	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(request.Password)); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return nil, fmt.Errorf("invalid password: %w", ErrInvalidPassword)
 		}
-		return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(h.AccessTokenSecret))
-	}()
+		return nil, fmt.Errorf("failed to compare passwords: %w", err)
+	}
+
+	response := new(SignInResponse)
+	access, err := tokens{}.NewHS256(h.AccessTokenSecret, h.AccessTokenExpiresIn, u.ID)
 	if err != nil {
-		return SignInResult{}, errors.ErrInternalServerError.SetInternal(err)
+		return nil, fmt.Errorf("failed to create an access token: %w", err)
 	}
+	response.AccessToken = access
 
-	refreshToken, err := func() (string, error) {
-		now := time.Now()
-		claims := jwt.MapClaims{
-			"exp":     now.Add(h.RefreshTokenExpiresIn).Unix(),
-			"iat":     now.Unix(),
-			"nbf":     now.Unix(),
-			"user_id": u.ID,
-		}
-		return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(h.RefreshTokenSecret))
-	}()
+	refresh, err := tokens{}.NewHS256(h.RefreshTokenSecret, h.RefreshTokenExpiresIn, u.ID)
 	if err != nil {
-		return SignInResult{}, errors.ErrInternalServerError.SetInternal(err)
+		return nil, fmt.Errorf("failed to create a refresh token: %w", err)
 	}
+	response.RefreshToken = refresh
 
-	if err = h.RefreshTokenRepository.SetRefreshToken(ctx, u.ID, refreshtoken.Token{Token: refreshToken}); err != nil {
-		return SignInResult{}, errors.ErrInternalServerError.SetInternal(err)
+	err = h.RefreshTokenRepository.SaveOne(ctx, u.ID, &refreshtoken.Token{Token: refresh})
+	if err != nil {
+		return nil, fmt.Errorf("failed to save the refresh token: %w", err)
 	}
-
-	return SignInResult{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
+	return response, nil
 }

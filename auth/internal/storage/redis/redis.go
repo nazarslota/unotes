@@ -21,7 +21,7 @@ func NewRedis(ctx context.Context, config *Config) (*redis.Client, error) {
 	})
 
 	if err := client.Ping(ctx).Err(); err != nil {
-		return nil, fmt.Errorf("redis: %w", err)
+		return nil, fmt.Errorf("ping failed: %w", err)
 	}
 
 	return client, nil

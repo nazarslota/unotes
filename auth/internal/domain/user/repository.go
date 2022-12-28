@@ -1,8 +1,15 @@
 package user
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 type Repository interface {
-	Create(ctx context.Context, u User) error
-	FindByUsername(ctx context.Context, username string) (*User, error)
+	SaveOne(ctx context.Context, user *User) error
+	FindOne(ctx context.Context, username string) (*User, error)
 }
+
+var (
+	ErrUserNotFound = errors.New("user not found")
+)

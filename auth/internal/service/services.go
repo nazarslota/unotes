@@ -5,5 +5,7 @@ type Service struct {
 }
 
 func NewService(oAuth2Options *OAuth2ServiceOptions) *Service {
-	return &Service{OAuth2Service: NewOAuth2Service(oAuth2Options)}
+	return &Service{
+		OAuth2Service: NewOAuth2Service(oAuth2Options),
+	}
 }

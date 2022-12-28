@@ -2,12 +2,11 @@ package oauth2
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/udholdenhed/unotes/auth/internal/domain/user"
-	"github.com/udholdenhed/unotes/auth/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -16,43 +15,49 @@ type SignUpRequest struct {
 	Password string
 }
 
+type SignUpResponse struct {
+}
+
 type SignUpRequestHandler interface {
-	Handler(ctx context.Context, r SignUpRequest) error
+	Handler(ctx context.Context, request *SignUpRequest) (*SignUpResponse, error)
 }
 
 type signUpRequestHandler struct {
 	UserRepository user.Repository
 }
 
-func NewSignUpRequestHandler(r user.Repository) SignUpRequestHandler {
-	return &signUpRequestHandler{UserRepository: r}
+func NewSignUpRequestHandler(userRepository user.Repository) SignUpRequestHandler {
+	return &signUpRequestHandler{UserRepository: userRepository}
 }
 
-func (h *signUpRequestHandler) Handler(ctx context.Context, r SignUpRequest) error {
-	u, err := h.UserRepository.FindByUsername(ctx, r.Username)
+func (h *signUpRequestHandler) Handler(ctx context.Context, request *SignUpRequest) (*SignUpResponse, error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("context is done: %w", ctx.Err()) // failed to handle sign out request,
+	default:
+	}
+
+	_, err := h.UserRepository.FindOne(ctx, request.Username)
+	if !errors.Is(err, user.ErrUserNotFound) {
+		return nil, fmt.Errorf("a user with this user name already exists: %w", ErrUserAlreadyExist)
+	} else if err != nil && !errors.Is(err, user.ErrUserNotFound) {
+		return nil, fmt.Errorf("failed to find the user: %w", err)
+	}
+
+	u := &user.User{
+		ID:       uuid.New().String(),
+		Username: request.Username,
+	}
+
+	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.ErrInternalServerError.SetInternal(err)
-	} else if u != nil {
-		return errors.NewHTTPError(
-			http.StatusBadRequest,
-			fmt.Sprintf("user with this username already exists"),
-		)
+		return nil, fmt.Errorf("failed to generate password hash: %w", err)
 	}
+	u.PasswordHash = string(password)
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
+	err = h.UserRepository.SaveOne(ctx, u)
 	if err != nil {
-		return errors.ErrInternalServerError.SetInternal(err)
+		return nil, fmt.Errorf("failed to save the user: %w", err)
 	}
-
-	u = &user.User{
-		ID:           uuid.New().String(),
-		Username:     r.Username,
-		PasswordHash: string(passwordHash),
-	}
-
-	if err := h.UserRepository.Create(ctx, *u); err != nil {
-		return errors.ErrInternalServerError.SetInternal(err)
-	}
-
-	return nil
+	return &SignUpResponse{}, nil
 }
