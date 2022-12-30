@@ -34,6 +34,11 @@ type signInRequestHandler struct {
 	RefreshTokenRepository refreshtoken.Repository
 }
 
+var (
+	ErrSignInUserNotFound    = errors.New("user not found")
+	ErrSignInInvalidPassword = errors.New("invalid user password")
+)
+
 func NewSignInRequestHandler(
 	accessTokenSecret, refreshTokenSecret string,
 	accessTokenExpiresIn, refreshTokenExpiresIn time.Duration,
@@ -50,38 +55,32 @@ func NewSignInRequestHandler(
 }
 
 func (h *signInRequestHandler) Handle(ctx context.Context, request *SignInRequest) (*SignInResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("context is done: %w", ctx.Err()) // failed to handle sign in request,
-	default:
-	}
-
 	u, err := h.UserRepository.FindOne(ctx, request.Username)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find the user: %w", err)
+	if errors.Is(err, user.ErrUserNotFound) {
+		return nil, fmt.Errorf("the user is not signed up: %w", ErrSignInUserNotFound)
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to verify the user sign up: %w", err)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(request.Password)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return nil, fmt.Errorf("invalid password: %w", ErrInvalidPassword)
+			return nil, fmt.Errorf("invalid user password: %w", ErrSignInInvalidPassword)
 		}
 		return nil, fmt.Errorf("failed to compare passwords: %w", err)
 	}
 
 	response := new(SignInResponse)
-	access, err := tokens{}.NewHS256(h.AccessTokenSecret, h.AccessTokenExpiresIn, u.ID)
+	response.AccessToken, err = newHS256(h.AccessTokenSecret, h.AccessTokenExpiresIn, u.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create an access token: %w", err)
 	}
-	response.AccessToken = access
 
-	refresh, err := tokens{}.NewHS256(h.RefreshTokenSecret, h.RefreshTokenExpiresIn, u.ID)
+	response.RefreshToken, err = newHS256(h.RefreshTokenSecret, h.RefreshTokenExpiresIn, u.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a refresh token: %w", err)
 	}
-	response.RefreshToken = refresh
 
-	err = h.RefreshTokenRepository.SaveOne(ctx, u.ID, &refreshtoken.Token{Token: refresh})
+	err = h.RefreshTokenRepository.SaveOne(ctx, u.ID, &refreshtoken.Token{Token: response.RefreshToken})
 	if err != nil {
 		return nil, fmt.Errorf("failed to save the refresh token: %w", err)
 	}

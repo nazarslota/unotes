@@ -41,7 +41,7 @@ func (e *HTTPError) Unwrap() error {
 	return e.Internal
 }
 
-// SetInternal sets error to UserError.Internal.
+// SetInternal sets error to HTTPError.Internal.
 func (e *HTTPError) SetInternal(err error) *HTTPError {
 	e.Internal = err
 	return e

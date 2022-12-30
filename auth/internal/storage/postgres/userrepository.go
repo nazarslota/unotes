@@ -8,7 +8,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/udholdenhed/unotes/auth/internal/domain/user"
-	"github.com/udholdenhed/unotes/auth/internal/service/oauth2"
 )
 
 type userRepository struct {
@@ -47,7 +46,7 @@ func (r *userRepository) FindOne(ctx context.Context, username string) (*user.Us
 	u := &user.User{}
 	if err := r.db.GetContext(ctx, u, query, username); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, oauth2.ErrUserNotFound
+			return nil, user.ErrUserNotFound
 		}
 		return nil, fmt.Errorf("failed to fetch the user from the database: %w", err)
 	}

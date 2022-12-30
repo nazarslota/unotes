@@ -37,17 +37,17 @@ func newHTTPErrorHandler(e *echo.Echo) echo.HTTPErrorHandler {
 		case *echo.HTTPError:
 			res = echo.Map{"code": err.Code, "message": err.Message}
 			if s, ok := err.Message.(string); ok {
-				res["message"] = strings.ToLower(s)
+				res["message"] = s
 				if e.Debug && err.Internal != nil {
-					res["debug"] = strings.ToLower(err.Internal.Error())
+					res["debug"] = err.Internal.Error()
 				}
 			}
 		case *errors.HTTPError:
 			res = echo.Map{"code": err.Code, "message": err.Message}
 			if s, ok := err.Message.(string); ok {
-				res["message"] = strings.ToLower(s)
+				res["message"] = s
 				if e.Debug && err.Internal != nil {
-					res["debug"] = strings.ToLower(err.Internal.Error())
+					res["debug"] = err.Internal.Error()
 				}
 			}
 		default:

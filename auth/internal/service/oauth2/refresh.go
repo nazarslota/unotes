@@ -30,6 +30,10 @@ type refreshRequestHandler struct {
 	RefreshTokenRepository refreshtoken.Repository
 }
 
+var (
+	ErrRefreshInvalidOrExpiredToken = errors.New("invalid or expired token")
+)
+
 func NewRefreshRequestHandler(
 	accessTokenSecret, refreshTokenSecret string,
 	accessTokenExpiresIn, refreshTokenExpiresIn time.Duration,
@@ -45,53 +49,44 @@ func NewRefreshRequestHandler(
 }
 
 func (h *refreshRequestHandler) Handle(ctx context.Context, request *RefreshRequest) (*RefreshResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("context is done: %w", ctx.Err()) // failed to handle refresh request,
-	default:
-	}
-
-	claims, err := tokens{}.ParseHS256(request.RefreshToken, h.RefreshTokenSecret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse the refresh token: %w", ErrInvalidOrExpiredToken)
+	claims, err := parseHS256(request.RefreshToken, h.RefreshTokenSecret)
+	if errors.Is(err, ErrJWTInvalidOrExpiredToken) {
+		return nil, fmt.Errorf("failed to parse the access token: %w", ErrRefreshInvalidOrExpiredToken)
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to parse the access token: %w", err)
 	}
 
 	userID := ""
 	if _, ok := claims["user_id"]; !ok {
-		return nil, fmt.Errorf("filed to get user id from token: %w", ErrInvalidOrExpiredToken)
+		return nil, fmt.Errorf("failed to get the user ID from the token: %w", ErrRefreshInvalidOrExpiredToken)
 	} else if userID, ok = claims["user_id"].(string); !ok {
-		return nil, fmt.Errorf("failed to convert user id to string: %w", ErrInvalidOrExpiredToken)
+		return nil, fmt.Errorf("failed to convert user ID to string: %w", ErrRefreshInvalidOrExpiredToken)
 	}
 
 	token := &refreshtoken.Token{Token: request.RefreshToken}
+
 	_, err = h.RefreshTokenRepository.FindOne(ctx, userID, token)
-	if err != nil {
-		if errors.Is(err, refreshtoken.ErrTokenNotFound) {
-			return nil, fmt.Errorf("the refresh token could not be found: %w", ErrInvalidOrExpiredToken)
-		}
-		return nil, fmt.Errorf("the refresh token could not be found: %w", err)
+	if errors.Is(err, refreshtoken.ErrTokenNotFound) {
+		return nil, fmt.Errorf("there is no such refreshtoken: %w", ErrRefreshInvalidOrExpiredToken)
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to get the refresh token from the repository: %w", err)
 	}
 
-	err = h.RefreshTokenRepository.DeleteOne(ctx, userID, token)
-	if err != nil {
-		return nil, fmt.Errorf("failed to delete refresh token: %w", err)
+	if err := h.RefreshTokenRepository.DeleteOne(ctx, userID, token); err != nil {
+		return nil, fmt.Errorf("failed to delete the refresh token: %w", err)
 	}
 
 	response := new(RefreshResponse)
-	access, err := tokens{}.NewHS256(h.AccessTokenSecret, h.AccessTokenExpiresIn, userID)
-	if err != nil {
+	if response.AccessToken, err = newHS256(h.AccessTokenSecret, h.AccessTokenExpiresIn, userID); err != nil {
 		return nil, fmt.Errorf("failed to create an access token: %w", err)
 	}
-	response.AccessToken = access
 
-	refresh, err := tokens{}.NewHS256(h.RefreshTokenSecret, h.RefreshTokenExpiresIn, userID)
-	if err != nil {
+	if response.RefreshToken, err = newHS256(h.RefreshTokenSecret, h.RefreshTokenExpiresIn, userID); err != nil {
 		return nil, fmt.Errorf("failed to create a refresh token: %w", err)
 	}
-	response.RefreshToken = refresh
 
-	err = h.RefreshTokenRepository.SaveOne(ctx, userID, &refreshtoken.Token{Token: refresh})
-	if err != nil {
+	token = &refreshtoken.Token{Token: response.RefreshToken}
+	if err := h.RefreshTokenRepository.SaveOne(ctx, userID, token); err != nil {
 		return nil, fmt.Errorf("failed to save the refresh token: %w", err)
 	}
 	return response, nil

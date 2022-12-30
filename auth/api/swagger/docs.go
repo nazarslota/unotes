@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/serviceoauth2/refresh": {
+        "/oauth2/refresh": {
             "post": {
                 "description": "refresh",
                 "consumes": [
@@ -68,7 +68,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/serviceoauth2/sign-in": {
+        "/oauth2/sign-in": {
             "post": {
                 "description": "sign in",
                 "consumes": [
@@ -126,7 +126,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/serviceoauth2/sign-out": {
+        "/oauth2/sign-out": {
             "post": {
                 "description": "sign out",
                 "consumes": [
@@ -175,7 +175,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/serviceoauth2/sign-up": {
+        "/oauth2/sign-up": {
             "post": {
                 "description": "create account",
                 "consumes": [
@@ -205,6 +205,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/errors.HTTPError"
                         }
@@ -242,7 +248,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "access_token": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                 }
             }
         },
@@ -250,7 +257,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "refresh_token": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                 }
             }
         },
@@ -274,10 +282,14 @@ const docTemplate = `{
             "properties": {
                 "password": {
                     "type": "string",
+                    "maxLength": 64,
+                    "minLength": 8,
                     "example": "password"
                 },
                 "username": {
                     "type": "string",
+                    "maxLength": 32,
+                    "minLength": 4,
                     "example": "username"
                 }
             }

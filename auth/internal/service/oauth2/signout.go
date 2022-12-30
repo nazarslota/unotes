@@ -24,6 +24,10 @@ type signOutRequestHandler struct {
 	RefreshTokenRepository refreshtoken.Repository
 }
 
+var (
+	ErrSignOutInvalidOrExpiredToken = errors.New("invalid or expired token")
+)
+
 func NewSignOutRequestHandler(
 	accessTokenSecret string, refreshTokenRepository refreshtoken.Repository,
 ) LogOutRequestHandler {
@@ -34,36 +38,30 @@ func NewSignOutRequestHandler(
 }
 
 func (h *signOutRequestHandler) Handle(ctx context.Context, request *SignOutRequest) (*SignOutResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("context is done: %w", ctx.Err()) // failed to handle sign out request,
-	default:
-	}
-
-	claims, err := tokens{}.ParseHS256(request.AccessToken, h.AccessTokenSecret)
-	if err != nil {
-		return nil, err
+	claims, err := parseHS256(request.AccessToken, h.AccessTokenSecret)
+	if errors.Is(err, ErrJWTInvalidOrExpiredToken) {
+		return nil, fmt.Errorf("failed to parse the access token: %w", ErrSignOutInvalidOrExpiredToken)
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to parse the access token: %w", err)
 	}
 
 	userID := ""
 	if _, ok := claims["user_id"]; !ok {
-		return nil, fmt.Errorf("filed to get user id from token")
+		return nil, fmt.Errorf("failed to get the user ID from the token: %w", ErrSignOutInvalidOrExpiredToken)
 	} else if userID, ok = claims["user_id"].(string); !ok {
-		return nil, fmt.Errorf("failed to convert user id to string")
+		return nil, fmt.Errorf("failed to convert user ID to string: %w", ErrSignOutInvalidOrExpiredToken)
 	}
 
 	tokens, err := h.RefreshTokenRepository.FindMany(ctx, userID)
-	if err != nil {
-		if errors.Is(err, refreshtoken.ErrTokensNotFound) {
-			return nil, fmt.Errorf("failed to find user tokens: %w", ErrInvalidOrExpiredToken)
-		}
-		return nil, fmt.Errorf("failed to find user tokens: %w", err)
+	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
+		return &SignOutResponse{}, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to search for the user's refresh tokens: %w", err)
 	}
 
 	for _, token := range tokens {
-		err := h.RefreshTokenRepository.DeleteOne(ctx, userID, &token)
-		if err != nil {
-			return nil, fmt.Errorf("failed to delete refresh token: %w", err)
+		if err := h.RefreshTokenRepository.DeleteOne(ctx, userID, &token); err != nil {
+			return nil, fmt.Errorf("failed to delete the refresh token: %w", err)
 		}
 	}
 	return &SignOutResponse{}, nil

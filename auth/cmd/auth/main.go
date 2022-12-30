@@ -27,15 +27,15 @@ import (
 func main() {
 	InitLogger()
 
-	//postgresDB, err := NewPostgreSQL()
-	//if err != nil {
-	//	log.Fatal().Err(err).Msg("Filed to connect to PostgreSQL.")
-	//}
-	//
-	//redisDB, err := NewRedisDB()
-	//if err != nil {
-	//	log.Fatal().Err(err).Msg("Filed to connect to Redis.")
-	//}
+	postgresDB, err := NewPostgreSQL()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Filed to connect to PostgreSQL.")
+	}
+
+	redisDB, err := NewRedisDB()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Filed to connect to Redis.")
+	}
 
 	repositories := storage.NewRepositoryProvider(
 		storage.WithMemoryUserRepository(),
@@ -72,7 +72,7 @@ func main() {
 		config.C().Auth.HostGRPC,
 		config.C().Auth.PortGRPC,
 	)
-	serverGRPC := handlerrest.NewHandler(services, &log.Logger).Init(addrGRPC)
+	serverGRPC := handlerrest.NewHandler(services, &log.Logger).Init()
 
 	go func() {
 		listener, err := net.Listen("tcp", addrGRPC)
@@ -96,8 +96,8 @@ func main() {
 	ShutdownHTTPServer(serverHTTP)
 	ShutdownGRPCServer(serverGRPC)
 
-	//ClosePostgreSQL(postgresDB)
-	//CloseRedisDB(redisDB)
+	ClosePostgreSQL(postgresDB)
+	CloseRedisDB(redisDB)
 
 	log.Info().Msg("Shutdown completed.")
 }
@@ -124,6 +124,15 @@ func NewPostgreSQL() (*sqlx.DB, error) {
 	return p, nil
 }
 
+func ClosePostgreSQL(client *sqlx.DB) {
+	log.Info().Msg("Disconnecting from PostgreSQL.")
+	if err := client.Close(); err != nil {
+		log.Error().Err(err).Msg("Error occurred when disconnecting from PostgreSQL.")
+		return
+	}
+	log.Info().Msg("Successfully disconnected from PostgreSQL.")
+}
+
 func NewRedisDB() (*redisdriver.Client, error) {
 	r, err := redis.NewRedis(context.Background(), &redis.Config{
 		Addr:     config.C().Redis.Addr,
@@ -134,6 +143,15 @@ func NewRedisDB() (*redisdriver.Client, error) {
 		return nil, fmt.Errorf("main: %w", err)
 	}
 	return r, nil
+}
+
+func CloseRedisDB(client *redisdriver.Client) {
+	log.Info().Msg("Disconnecting from RedisDB.")
+	if err := client.Close(); err != nil {
+		log.Error().Err(err).Msg("Error occurred when disconnecting from RedisDB.")
+		return
+	}
+	log.Info().Msg("Successfully disconnected from RedisDB.")
 }
 
 func ShutdownHTTPServer(server *http.Server) {
@@ -150,22 +168,4 @@ func ShutdownGRPCServer(server *grpc.Server) {
 	server.GracefulStop()
 
 	log.Info().Msg("gRPC server has successfully shut down.")
-}
-
-func ClosePostgreSQL(client *sqlx.DB) {
-	log.Info().Msg("Disconnecting from PostgreSQL.")
-	if err := client.Close(); err != nil {
-		log.Error().Err(err).Msg("Error occurred when disconnecting from PostgreSQL.")
-		return
-	}
-	log.Info().Msg("Successfully disconnected from PostgreSQL.")
-}
-
-func CloseRedisDB(client *redisdriver.Client) {
-	log.Info().Msg("Disconnecting from RedisDB.")
-	if err := client.Close(); err != nil {
-		log.Error().Err(err).Msg("Error occurred when disconnecting from RedisDB.")
-		return
-	}
-	log.Info().Msg("Successfully disconnected from RedisDB.")
 }

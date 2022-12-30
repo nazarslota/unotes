@@ -10,6 +10,4 @@ type Repository interface {
 	FindOne(ctx context.Context, username string) (*User, error)
 }
 
-var (
-	ErrUserNotFound = errors.New("user not found")
-)
+var ErrUserNotFound = errors.New("user not found")

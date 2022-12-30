@@ -26,38 +26,53 @@ type signUpRequestHandler struct {
 	UserRepository user.Repository
 }
 
+var (
+	ErrSignUpUserAlreadyExist = errors.New("user already exist")
+)
+
 func NewSignUpRequestHandler(userRepository user.Repository) SignUpRequestHandler {
 	return &signUpRequestHandler{UserRepository: userRepository}
 }
 
 func (h *signUpRequestHandler) Handler(ctx context.Context, request *SignUpRequest) (*SignUpResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("context is done: %w", ctx.Err()) // failed to handle sign out request,
-	default:
-	}
-
-	_, err := h.UserRepository.FindOne(ctx, request.Username)
-	if !errors.Is(err, user.ErrUserNotFound) {
-		return nil, fmt.Errorf("a user with this user name already exists: %w", ErrUserAlreadyExist)
-	} else if err != nil && !errors.Is(err, user.ErrUserNotFound) {
-		return nil, fmt.Errorf("failed to find the user: %w", err)
-	}
-
-	u := &user.User{
-		ID:       uuid.New().String(),
-		Username: request.Username,
-	}
-
-	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	signup, err := h.isSignUp(ctx, request.Username)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate password hash: %w", err)
+		return nil, fmt.Errorf("failed to verify the user sign up: %w", err)
+	} else if signup {
+		return nil, fmt.Errorf("the user is already signed up: %w", ErrSignUpUserAlreadyExist)
 	}
-	u.PasswordHash = string(password)
 
-	err = h.UserRepository.SaveOne(ctx, u)
+	err = h.signUp(ctx, request.Username, request.Password)
 	if err != nil {
-		return nil, fmt.Errorf("failed to save the user: %w", err)
+		return nil, fmt.Errorf("failed to sign up the user: %w", err)
 	}
 	return &SignUpResponse{}, nil
+}
+
+func (h *signUpRequestHandler) isSignUp(ctx context.Context, username string) (bool, error) {
+	if _, err := h.UserRepository.FindOne(ctx, username); err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to fetch the user from the repository: %w", err)
+	}
+	return true, nil
+}
+
+func (h *signUpRequestHandler) signUp(ctx context.Context, username string, password string) error {
+	u := &user.User{
+		ID:       uuid.New().String(),
+		Username: username,
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to generate password hash: %w", err)
+	}
+	u.PasswordHash = string(hash)
+
+	if err := h.UserRepository.SaveOne(ctx, u); err != nil {
+		return fmt.Errorf("failed to save the user: %w", err)
+	}
+	return nil
 }

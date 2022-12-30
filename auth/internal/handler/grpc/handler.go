@@ -18,7 +18,7 @@ func NewHandler(services *service.Service, logger *zerolog.Logger) *Handler {
 	}
 }
 
-func (h *Handler) Init(addr string) *grpc.Server {
+func (h *Handler) Init() *grpc.Server {
 	s := grpc.NewServer()
 	pb.RegisterOAuth2ServiceServer(s, h.server)
 

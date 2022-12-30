@@ -9,6 +9,7 @@ definitions:
   rest.oAuth2LogOutModel:
     properties:
       access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
     required:
     - access_token
@@ -16,6 +17,7 @@ definitions:
   rest.oAuth2RefreshModel:
     properties:
       refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
     type: object
   rest.oAuth2RefreshResult:
@@ -29,9 +31,13 @@ definitions:
     properties:
       password:
         example: password
+        maxLength: 64
+        minLength: 8
         type: string
       username:
         example: username
+        maxLength: 32
+        minLength: 4
         type: string
     required:
     - password
@@ -67,7 +73,7 @@ info:
   title: Auth
   version: "1.0"
 paths:
-  /serviceoauth2/refresh:
+  /oauth2/refresh:
     post:
       consumes:
       - application/json
@@ -101,7 +107,7 @@ paths:
       summary: oAuth2 refresh
       tags:
       - oAuth2
-  /serviceoauth2/sign-in:
+  /oauth2/sign-in:
     post:
       consumes:
       - application/json
@@ -139,7 +145,7 @@ paths:
       summary: oAuth2 sign in
       tags:
       - oAuth2
-  /serviceoauth2/sign-out:
+  /oauth2/sign-out:
     post:
       consumes:
       - application/json
@@ -171,7 +177,7 @@ paths:
       summary: oAuth2 sign out
       tags:
       - oAuth2
-  /serviceoauth2/sign-up:
+  /oauth2/sign-up:
     post:
       consumes:
       - application/json
@@ -190,6 +196,10 @@ paths:
           description: No Content
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.HTTPError'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/errors.HTTPError'
         "500":
