@@ -39,7 +39,7 @@
 4) Now run the following commands.
     ```
     docker build --tag auth .
-    docker run --publish 8081:8081 --name auth --detach --restart always --env-file ./.env auth
+    docker run --publish 8081:8081 --publish 8091:8091 --name auth --detach --restart always --env-file ./.env auth
     ```
 
 ### Docker Compose
