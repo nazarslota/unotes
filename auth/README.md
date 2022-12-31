@@ -1,6 +1,6 @@
-# AuthService - authentication web service.
+# Auth - authentication web service.
 
-**Auth** - authentication service, developed for UNotes(notes system).
+**Auth** - authentication service.
 
 ## Run
 
