@@ -1,6 +1,6 @@
 FROM golang:1.19.1-alpine AS builder
 
-WORKDIR /go/src/github.com/udholdenhed/unotes/auth-service/
+WORKDIR /go/src/github.com/udholdenhed/unotes/auth/
 
 COPY go.mod .
 COPY go.sum .
@@ -14,11 +14,12 @@ FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
+EXPOSE 8081
+EXPOSE 8091
+
 WORKDIR /root/
 
-EXPOSE 8081, 8091
-
-COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth-service/configs/ ./configs/
-COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth-service/build/auth ./
+COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth/configs/ ./configs/
+COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth/build/auth ./
 
 CMD ["./auth"]
