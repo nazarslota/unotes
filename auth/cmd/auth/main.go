@@ -38,8 +38,8 @@ func main() {
 	}
 
 	repositories := storage.NewRepositoryProvider(
-		storage.WithMemoryUserRepository(),
-		storage.WithMemoryRefreshTokenRepository(),
+		storage.WithPostgreSQLUserRepository(postgresDB),
+		storage.WithRedisRefreshTokenRepository(redisDB),
 	)
 
 	services := service.NewService(&service.OAuth2ServiceOptions{
