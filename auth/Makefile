@@ -36,6 +36,8 @@ build: clean test ## Generate build.
 	go build -o ./${BIN_DIR}/ ./cmd/...
 
 clean: ## Clean generated files.
+	${RM_RF_COMMAND} ./${BIN_DIR}/
+	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.go
 	${RM_F_COMMAND} ./${SWAGGER_DIR}/*
 
 test: dependencies proto swagger ## Launch tests.
