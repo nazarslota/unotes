@@ -16,6 +16,8 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 
+EXPOSE 8081, 8091
+
 COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth-service/configs/ ./configs/
 COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth-service/build/auth ./
 
