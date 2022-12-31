@@ -24,15 +24,21 @@ else
 	GO_PACKAGE := $(shell head -1 go.mod | awk '{print $$2}')
     HELP_COMMAND := grep -E '^[a-zA-Z_-]+:.*?\#\# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?\#\# "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-#    RM_F_COMMAND = rm -f
-#    RM_RF_COMMAND = ${RM_F_CMD} -r
+    RM_F_COMMAND = rm -f
+    RM_RF_COMMAND = ${RM_F_COMMAND} -r
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: build test swagger proto about help
+.PHONY: clean build test swagger proto about help
 
-build: test ## Generate build.
+
+build: clean test ## Generate build.
 	go build -o ./${BIN_DIR}/ ./cmd/...
+
+clean: ## Clean generated files.
+	${RM_RF_COMMAND} ./${BIN_DIR}/
+	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.go
+	${RM_F_COMMAND} ./${SWAGGER_DIR}/*
 
 test: dependencies proto swagger ## Launch tests.
 	go test ./...
@@ -44,7 +50,7 @@ proto: ## Generate protocol buffer.
 	protoc -I${PROTO_DIR} --go_out=. --go_opt=module=${GO_PACKAGE} --go-grpc_out=. --go-grpc_opt=module=${GO_PACKAGE} ${PROTO_DIR}/*.proto
 
 swagger: ## Generate swagger doc.
-	swag init -q -o ${SWAGGER_DIR} -g internal/handler/rest/handler.go
+	swag init -q -o ${SWAGGER_DIR} -g ./internal/handler/rest/handler.go
 
 about: ## Display info related to the build.
 	@echo "OS:              ${OS}"
