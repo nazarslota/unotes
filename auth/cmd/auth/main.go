@@ -119,7 +119,7 @@ func NewPostgreSQL() (*sqlx.DB, error) {
 		SSLMode:  config.C().PostgreSQL.SSLMode,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("main: %w", err)
+		return nil, fmt.Errorf("failed to create a postgres client: %w", err)
 	}
 	return p, nil
 }
@@ -140,7 +140,7 @@ func NewRedisDB() (*redisdriver.Client, error) {
 		DB:       config.C().Redis.DB,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("main: %w", err)
+		return nil, fmt.Errorf("failed to create a redis client: %w", err)
 	}
 	return r, nil
 }
