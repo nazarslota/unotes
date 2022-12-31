@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v9"
@@ -29,7 +30,9 @@ func (r *refreshTokenRepository) SaveOne(ctx context.Context, userID string, tok
 	}
 
 	tokens, err := r.FindMany(ctx, userID)
-	if err != nil {
+	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
+		tokens = make([]refreshtoken.Token, 0)
+	} else if err != nil {
 		return fmt.Errorf("failed to receive all tokens: %w", err)
 	}
 	tokens = append(tokens, *token)
@@ -55,7 +58,9 @@ func (r *refreshTokenRepository) FindOne(
 	}
 
 	tokens, err := r.FindMany(ctx, userID)
-	if err != nil {
+	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
+		return nil, refreshtoken.ErrTokenNotFound
+	} else if err != nil {
 		return nil, fmt.Errorf("failed to receive all tokens: %w", err)
 	}
 
@@ -77,7 +82,9 @@ func (r *refreshTokenRepository) DeleteOne(
 	}
 
 	tokens, err := r.FindMany(ctx, userID)
-	if err != nil {
+	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
+		return nil
+	} else if err != nil {
 		return fmt.Errorf("failed to receive all tokens: %w", err)
 	}
 
