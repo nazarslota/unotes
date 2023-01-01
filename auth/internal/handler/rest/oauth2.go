@@ -1,10 +1,8 @@
 package rest
 
 import (
-	"context"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/udholdenhed/unotes/auth/internal/service/oauth2"
@@ -42,12 +40,9 @@ func (h *Handler) oAuth2SignUp(c echo.Context) error {
 		Password: input.Password,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err := h.services.OAuth2Service.SignUpRequestHandler.Handler(ctx, request)
+	_, err := h.services.OAuth2Service.SignUpRequestHandler.Handler(c.Request().Context(), request)
 	if errors.Is(err, oauth2.ErrSignUpUserAlreadyExist) {
-		return echo.NewHTTPError(http.StatusConflict, "A user with this username already exists!").SetInternal(err)
+		return echo.NewHTTPError(http.StatusConflict, "A user with this username already exists.").SetInternal(err)
 	} else if err != nil {
 		return echo.ErrInternalServerError.SetInternal(err)
 	}
@@ -92,10 +87,7 @@ func (h *Handler) oAuth2SignIn(c echo.Context) error {
 		Password: input.Password,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	result, err := h.services.OAuth2Service.SingInRequestHandler.Handle(ctx, request)
+	result, err := h.services.OAuth2Service.SingInRequestHandler.Handle(c.Request().Context(), request)
 	if errors.Is(err, oauth2.ErrSignInUserNotFound) {
 		return echo.NewHTTPError(http.StatusNotFound, "User with that username was not found.")
 	} else if errors.Is(err, oauth2.ErrSignInInvalidPassword) {
@@ -139,10 +131,7 @@ func (h *Handler) oAuth2SignOut(c echo.Context) error {
 		AccessToken: input.AccessToken,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err := h.services.OAuth2Service.SignOutRequestHandler.Handle(ctx, request)
+	_, err := h.services.OAuth2Service.SignOutRequestHandler.Handle(c.Request().Context(), request)
 	if errors.Is(err, oauth2.ErrSignOutInvalidOrExpiredToken) {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid or expired token.")
 	} else if err != nil {
@@ -186,10 +175,7 @@ func (h *Handler) oAuth2Refresh(c echo.Context) error {
 		RefreshToken: input.RefreshToken,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	result, err := h.services.OAuth2Service.RefreshRequestHandler.Handle(ctx, request)
+	result, err := h.services.OAuth2Service.RefreshRequestHandler.Handle(c.Request().Context(), request)
 	if errors.Is(err, oauth2.ErrRefreshInvalidOrExpiredToken) {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid or expired token.")
 	} else if err != nil {
