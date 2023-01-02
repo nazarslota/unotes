@@ -36,7 +36,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.oAuth2RefreshModel"
+                            "$ref": "#/definitions/http.oAuth2RefreshModel"
                         }
                     }
                 ],
@@ -44,7 +44,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.oAuth2RefreshResult"
+                            "$ref": "#/definitions/http.oAuth2RefreshResult"
                         }
                     },
                     "400": {
@@ -88,7 +88,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.oAuth2SignInUserModel"
+                            "$ref": "#/definitions/http.oAuth2SignInUserModel"
                         }
                     }
                 ],
@@ -96,7 +96,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.oAuth2SignInUserResult"
+                            "$ref": "#/definitions/http.oAuth2SignInUserResult"
                         }
                     },
                     "400": {
@@ -146,7 +146,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.oAuth2LogOutModel"
+                            "$ref": "#/definitions/http.oAuth2LogOutModel"
                         }
                     }
                 ],
@@ -195,7 +195,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.oAuth2SignUpUserModel"
+                            "$ref": "#/definitions/http.oAuth2SignUpUserModel"
                         }
                     }
                 ],
@@ -241,7 +241,7 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "rest.oAuth2LogOutModel": {
+        "http.oAuth2LogOutModel": {
             "type": "object",
             "required": [
                 "access_token"
@@ -253,7 +253,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.oAuth2RefreshModel": {
+        "http.oAuth2RefreshModel": {
             "type": "object",
             "properties": {
                 "refresh_token": {
@@ -262,7 +262,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.oAuth2RefreshResult": {
+        "http.oAuth2RefreshResult": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -273,7 +273,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.oAuth2SignInUserModel": {
+        "http.oAuth2SignInUserModel": {
             "type": "object",
             "required": [
                 "password",
@@ -294,7 +294,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.oAuth2SignInUserResult": {
+        "http.oAuth2SignInUserResult": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -305,7 +305,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.oAuth2SignUpUserModel": {
+        "http.oAuth2SignUpUserModel": {
             "type": "object",
             "required": [
                 "password",

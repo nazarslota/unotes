@@ -3,26 +3,25 @@ package grpc
 import (
 	"context"
 
-	"github.com/rs/zerolog"
 	pb "github.com/udholdenhed/unotes/auth/api/proto"
 	"github.com/udholdenhed/unotes/auth/internal/service"
 	"github.com/udholdenhed/unotes/auth/internal/service/oauth2"
 )
 
 type oAuth2ServiceServer struct {
+	logger   Logger
 	services *service.Service
-	logger   *zerolog.Logger
 
 	pb.OAuth2ServiceServer
 }
 
-func (h *oAuth2ServiceServer) SignUp(ctx context.Context, in *pb.SignUpRequest) (*pb.SignUpResponse, error) {
+func (s *oAuth2ServiceServer) SignUp(ctx context.Context, in *pb.SignUpRequest) (*pb.SignUpResponse, error) {
 	request := &oauth2.SignUpRequest{
 		Username: in.Username,
 		Password: in.Password,
 	}
 
-	_, err := h.services.OAuth2Service.SignUpRequestHandler.Handler(ctx, request)
+	_, err := s.services.OAuth2Service.SignUpRequestHandler.Handler(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -30,13 +29,13 @@ func (h *oAuth2ServiceServer) SignUp(ctx context.Context, in *pb.SignUpRequest) 
 	return &pb.SignUpResponse{}, nil
 }
 
-func (h *oAuth2ServiceServer) SignIn(ctx context.Context, in *pb.SignInRequest) (*pb.SignInResponse, error) {
+func (s *oAuth2ServiceServer) SignIn(ctx context.Context, in *pb.SignInRequest) (*pb.SignInResponse, error) {
 	request := &oauth2.SignInRequest{
 		Username: in.Username,
 		Password: in.Password,
 	}
 
-	response, err := h.services.OAuth2Service.SingInRequestHandler.Handle(ctx, request)
+	response, err := s.services.OAuth2Service.SingInRequestHandler.Handle(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +46,12 @@ func (h *oAuth2ServiceServer) SignIn(ctx context.Context, in *pb.SignInRequest) 
 	}, nil
 }
 
-func (h *oAuth2ServiceServer) SignOut(ctx context.Context, in *pb.SignOutRequest) (*pb.SignOutResponse, error) {
+func (s *oAuth2ServiceServer) SignOut(ctx context.Context, in *pb.SignOutRequest) (*pb.SignOutResponse, error) {
 	request := &oauth2.SignOutRequest{
 		AccessToken: in.AccessToken,
 	}
 
-	_, err := h.services.OAuth2Service.SignOutRequestHandler.Handle(ctx, request)
+	_, err := s.services.OAuth2Service.SignOutRequestHandler.Handle(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +59,12 @@ func (h *oAuth2ServiceServer) SignOut(ctx context.Context, in *pb.SignOutRequest
 	return &pb.SignOutResponse{}, nil
 }
 
-func (h *oAuth2ServiceServer) Refresh(ctx context.Context, in *pb.RefreshRequest) (*pb.RefreshResponse, error) {
+func (s *oAuth2ServiceServer) Refresh(ctx context.Context, in *pb.RefreshRequest) (*pb.RefreshResponse, error) {
 	request := &oauth2.RefreshRequest{
 		RefreshToken: in.RefreshToken,
 	}
 
-	response, err := h.services.OAuth2Service.RefreshRequestHandler.Handle(ctx, request)
+	response, err := s.services.OAuth2Service.RefreshRequestHandler.Handle(ctx, request)
 	if err != nil {
 		return nil, err
 	}
