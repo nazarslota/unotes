@@ -1,6 +1,8 @@
 import React, {FC, FormEvent, useState} from 'react';
 import axios from 'axios';
 
+import './SignIn.css';
+
 type SignInUserModel = {
     username: string;
     password: string;
@@ -50,6 +52,7 @@ const SignIn: FC<SignInProps> = () => {
     return (
         <>
             <div className="sign-in-form">
+                <h1 className="sign-in-form__title">Sign In</h1>
                 <div className="sign-in-form__username">
                     <label className="sign-in-form__username__label">Username</label>
                     <input

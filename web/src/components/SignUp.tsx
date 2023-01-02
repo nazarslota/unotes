@@ -1,6 +1,7 @@
 import React, {FC, FormEvent, useState} from 'react';
-import axios from "axios";
+import axios from 'axios';
 
+import './SignUp.css'
 
 type SignUpUserModel = {
     username: string;
@@ -54,6 +55,7 @@ const SignUp: FC<SignUpProps> = () => {
     return (
         <>
             <div className="sign-up-form">
+                <h1 className="sign-up-form__title">Sign Up</h1>
                 <div className="sign-up-form__username">
                     <label className="sign-up-form__username__label">Username</label>
                     <input

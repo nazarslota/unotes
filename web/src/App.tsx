@@ -1,14 +1,14 @@
 import React from 'react';
 import './App.css';
 
+import NavigationBar from "./components/NavigationBar";
 import SignUp from "./components/SignUp";
-import SignIn from "./components/SignIn";
 
 const App = () => {
     return (
         <>
+            <NavigationBar/>
             <SignUp/>
-            <SignIn/>
         </>
     );
 }
