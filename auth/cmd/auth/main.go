@@ -13,8 +13,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 	"github.com/udholdenhed/unotes/auth/internal/config"
-	handlergrpc "github.com/udholdenhed/unotes/auth/internal/handler/grpc"
-	handlerhttp "github.com/udholdenhed/unotes/auth/internal/handler/http"
+	grpchandler "github.com/udholdenhed/unotes/auth/internal/handler/grpc"
+	httphandler "github.com/udholdenhed/unotes/auth/internal/handler/rest"
 	"github.com/udholdenhed/unotes/auth/internal/service"
 	"github.com/udholdenhed/unotes/auth/internal/storage"
 	"github.com/udholdenhed/unotes/auth/internal/storage/postgres"
@@ -53,10 +53,10 @@ func main() {
 		config.C().Auth.HostHTTP,
 		config.C().Auth.PortHTTP,
 	)
-	serverHTTP := handlerhttp.NewHandler(
-		handlerhttp.WithAddress(addrHTTP),
-		handlerhttp.WithService(services),
-		handlerhttp.WithLogger(log.StandardLogger()),
+	serverHTTP := httphandler.NewHandler(
+		httphandler.WithAddress(addrHTTP),
+		httphandler.WithService(services),
+		httphandler.WithLogger(log.StandardLogger()),
 	).S()
 
 	go func() {
@@ -70,10 +70,10 @@ func main() {
 		config.C().Auth.HostGRPC,
 		config.C().Auth.PortGRPC,
 	)
-	serverGRPC := handlergrpc.NewHandler(
-		handlergrpc.WithAddress(addrGRPC),
-		handlergrpc.WithService(services),
-		handlergrpc.WithLogger(log.StandardLogger()),
+	serverGRPC := grpchandler.NewHandler(
+		grpchandler.WithAddress(addrGRPC),
+		grpchandler.WithService(services),
+		grpchandler.WithLogger(log.StandardLogger()),
 	).S()
 
 	go func() {
@@ -148,7 +148,7 @@ func CloseRedisDB(client *redisdriver.Client) {
 	log.Info("Successfully disconnected from RedisDB.")
 }
 
-func ShutdownHTTPServer(server *handlerhttp.Server) {
+func ShutdownHTTPServer(server *httphandler.Server) {
 	log.Info("HTTP server shutting down.")
 	if err := server.Shutdown(context.Background()); err != nil {
 		log.WithError(err).Warn("Error occurred on HTTP server shutting down.")
@@ -157,7 +157,7 @@ func ShutdownHTTPServer(server *handlerhttp.Server) {
 	log.Info("HTTP server has successfully shut down.")
 }
 
-func ShutdownGRPCServer(server *handlergrpc.Server) {
+func ShutdownGRPCServer(server *grpchandler.Server) {
 	log.Info("gRPC server shutting down.")
 	if err := server.Shutdown(context.Background()); err != nil {
 		log.WithError(err).Warn("Error occurred on gRPC server shutting down.")
