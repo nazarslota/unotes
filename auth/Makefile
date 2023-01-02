@@ -5,7 +5,16 @@ PROTO_DIR := api/proto
 SWAGGER_DIR := api/swagger
 
 ifeq ($(OS), Windows_NT)
-    $(Error OS not supported by this Makefile.)
+	SHELL := powershell.exe
+	SHELL_VERSION := $(shell (Get-Host | Select-Object Version | Format-Table -HideTableHeaders | Out-String).Trim())
+
+	OS := $(shell "{0} {1}" -f "Windows", (Get-ComputerInfo -Property OsVersion, OsArchitecture | Format-Table -HideTableHeaders | Out-String).Trim())
+
+	GO_PACKAGE := $(shell (Get-Content go.mod -head 1).Split(" ")[1])
+	HELP_COMMAND := Select-String "^[a-zA-Z_-]+:.*?\#\# .*$$" "./Makefile" | Foreach-Object { $$_data = $$_.matches -split ":.*?\#\# "; $$obj = New-Object PSCustomObject; Add-Member -InputObject $$obj -NotePropertyName ('Command') -NotePropertyValue $$_data[0]; Add-Member -InputObject $$obj -NotePropertyName ('Description') -NotePropertyValue $$_data[1]; $$obj } | Format-Table -HideTableHeaders @{Expression={ $$e = [char]27; "$$e[36m$$($$_.Command)$${e}[0m" }}, Description
+
+	RM_F_COMMAND := Remove-Item -erroraction silentlycontinue -Force
+	RM_RF_COMMAND := ${RM_F_COMMAND} -Recurse
 else
     SHELL := bash
     SHELL_VERSION := $(shell echo $$BASH_VERSION)
