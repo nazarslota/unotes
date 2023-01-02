@@ -56,7 +56,7 @@ dependencies: ## Download all golang dependencies.
 	go mod download
 
 proto: ## Generate protocol buffer.
-	protoc -I${PROTO_DIR} --go_out=. --go_opt=module=${GO_PACKAGE} --go-grpc_out=. --go-grpc_opt=module=${GO_PACKAGE} ${PROTO_DIR}/*.proto
+	protoc -I${PROTO_DIR} --validate_out=lang=go:. --validate_opt=module=${GO_PACKAGE} --go_out=. --go_opt=module=${GO_PACKAGE} --go-grpc_out=. --go-grpc_opt=module=${GO_PACKAGE} ${PROTO_DIR}/*.proto
 
 swagger: ## Generate swagger doc.
 	swag init -q -o ${SWAGGER_DIR} -g ./internal/handler/rest/handler.go

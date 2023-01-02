@@ -42,7 +42,7 @@ func (h *Handler) oAuth2SignUp(c echo.Context) error {
 
 	_, err := h.services.OAuth2Service.SignUpRequestHandler.Handler(c.Request().Context(), request)
 	if errors.Is(err, oauth2.ErrSignUpUserAlreadyExist) {
-		return echo.NewHTTPError(http.StatusConflict, "A user with this username already exists.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusConflict, "A user with this username already exists").SetInternal(err)
 	} else if err != nil {
 		return echo.ErrInternalServerError.SetInternal(err)
 	}
@@ -89,9 +89,9 @@ func (h *Handler) oAuth2SignIn(c echo.Context) error {
 
 	result, err := h.services.OAuth2Service.SingInRequestHandler.Handle(c.Request().Context(), request)
 	if errors.Is(err, oauth2.ErrSignInUserNotFound) {
-		return echo.NewHTTPError(http.StatusNotFound, "User with that username was not found.")
+		return echo.NewHTTPError(http.StatusNotFound, "User with that username was not found")
 	} else if errors.Is(err, oauth2.ErrSignInInvalidPassword) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Incorrect user password.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid password")
 	} else if err != nil {
 		return echo.ErrInternalServerError.SetInternal(err)
 	}
@@ -133,7 +133,7 @@ func (h *Handler) oAuth2SignOut(c echo.Context) error {
 
 	_, err := h.services.OAuth2Service.SignOutRequestHandler.Handle(c.Request().Context(), request)
 	if errors.Is(err, oauth2.ErrSignOutInvalidOrExpiredToken) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid or expired token.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid or expired token")
 	} else if err != nil {
 		return echo.ErrInternalServerError.SetInternal(err)
 	}
@@ -177,7 +177,7 @@ func (h *Handler) oAuth2Refresh(c echo.Context) error {
 
 	result, err := h.services.OAuth2Service.RefreshRequestHandler.Handle(c.Request().Context(), request)
 	if errors.Is(err, oauth2.ErrRefreshInvalidOrExpiredToken) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid or expired token.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid or expired token")
 	} else if err != nil {
 		return echo.ErrInternalServerError.SetInternal(err)
 	}

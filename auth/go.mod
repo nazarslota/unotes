@@ -3,6 +3,7 @@ module github.com/udholdenhed/unotes/auth
 go 1.19
 
 require (
+	github.com/envoyproxy/protoc-gen-validate v0.9.1
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-redis/redis/v9 v9.0.0-beta.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
