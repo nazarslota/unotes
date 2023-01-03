@@ -4,8 +4,7 @@ type SignInProps = {};
 
 const CreateNote: FC<SignInProps> = () => {
     return (
-        <>
-        </>
+        <>Create Note Page</>
     );
 }
 

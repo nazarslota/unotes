@@ -19,7 +19,18 @@
     color: #ffffff;
 }
 
+
 .navigation-bar__button:hover {
+    color: #a6a6a6;
+}
+
+.navigation-bar__button__link {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.navigation-bar__button__link:hover {
+    text-decoration: none;
     color: #a6a6a6;
 }
 
