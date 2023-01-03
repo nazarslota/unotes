@@ -3,9 +3,9 @@ package service
 import (
 	"time"
 
-	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
-	"github.com/udholdenhed/unotes/auth/internal/domain/user"
-	"github.com/udholdenhed/unotes/auth/internal/service/oauth2"
+	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
+	"github.com/nazarslota/unotes/auth/internal/domain/user"
+	"github.com/nazarslota/unotes/auth/internal/service/oauth2"
 )
 
 type OAuth2Service struct {

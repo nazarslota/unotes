@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
+	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
 )
 
 type SignOutRequest struct {

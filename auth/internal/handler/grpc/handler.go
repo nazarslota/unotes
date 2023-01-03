@@ -3,8 +3,8 @@ package grpc
 import (
 	"context"
 
-	pb "github.com/udholdenhed/unotes/auth/api/proto"
-	"github.com/udholdenhed/unotes/auth/internal/service"
+	pb "github.com/nazarslota/unotes/auth/api/proto"
+	"github.com/nazarslota/unotes/auth/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )

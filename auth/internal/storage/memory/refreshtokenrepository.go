@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
+	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
 )
 
 type refreshTokenRepository struct {

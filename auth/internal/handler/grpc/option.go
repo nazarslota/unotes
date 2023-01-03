@@ -1,6 +1,6 @@
 package grpc
 
-import "github.com/udholdenhed/unotes/auth/internal/service"
+import "github.com/nazarslota/unotes/auth/internal/service"
 
 type HandlerOption func(h *Handler)
 

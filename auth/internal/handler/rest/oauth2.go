@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/udholdenhed/unotes/auth/internal/service/oauth2"
+	"github.com/nazarslota/unotes/auth/internal/service/oauth2"
 )
 
 type oAuth2SignUpUserModel struct {

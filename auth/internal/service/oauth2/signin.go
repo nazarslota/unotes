@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
-	"github.com/udholdenhed/unotes/auth/internal/domain/user"
+	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
+	"github.com/nazarslota/unotes/auth/internal/domain/user"
 	"golang.org/x/crypto/bcrypt"
 )
 

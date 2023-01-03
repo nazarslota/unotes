@@ -11,15 +11,15 @@ import (
 
 	redisdriver "github.com/go-redis/redis/v9"
 	"github.com/jmoiron/sqlx"
+	"github.com/nazarslota/unotes/auth/internal/config"
+	grpchandler "github.com/nazarslota/unotes/auth/internal/handler/grpc"
+	httphandler "github.com/nazarslota/unotes/auth/internal/handler/rest"
+	"github.com/nazarslota/unotes/auth/internal/service"
+	"github.com/nazarslota/unotes/auth/internal/storage"
+	"github.com/nazarslota/unotes/auth/internal/storage/postgres"
+	"github.com/nazarslota/unotes/auth/internal/storage/redis"
+	"github.com/nazarslota/unotes/auth/pkg/utils"
 	log "github.com/sirupsen/logrus"
-	"github.com/udholdenhed/unotes/auth/internal/config"
-	grpchandler "github.com/udholdenhed/unotes/auth/internal/handler/grpc"
-	httphandler "github.com/udholdenhed/unotes/auth/internal/handler/rest"
-	"github.com/udholdenhed/unotes/auth/internal/service"
-	"github.com/udholdenhed/unotes/auth/internal/storage"
-	"github.com/udholdenhed/unotes/auth/internal/storage/postgres"
-	"github.com/udholdenhed/unotes/auth/internal/storage/redis"
-	"github.com/udholdenhed/unotes/auth/pkg/utils"
 )
 
 func main() {

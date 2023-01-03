@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/udholdenhed/unotes/auth/internal/domain/user"
+	"github.com/nazarslota/unotes/auth/internal/domain/user"
 )
 
 type userRepository struct {

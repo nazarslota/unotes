@@ -1,4 +1,4 @@
-module github.com/udholdenhed/unotes/auth
+module github.com/nazarslota/unotes/auth
 
 go 1.19
 

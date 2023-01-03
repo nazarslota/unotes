@@ -9,11 +9,11 @@ import (
 	valid "github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/udholdenhed/unotes/auth/internal/service"
-	"github.com/udholdenhed/unotes/auth/pkg/errors"
+	"github.com/nazarslota/unotes/auth/internal/service"
+	"github.com/nazarslota/unotes/auth/pkg/errors"
 
+	_ "github.com/nazarslota/unotes/auth/api/swagger"
 	swagger "github.com/swaggo/echo-swagger"
-	_ "github.com/udholdenhed/unotes/auth/api/swagger"
 )
 
 type Handler struct {

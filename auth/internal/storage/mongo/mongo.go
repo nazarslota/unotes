@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/udholdenhed/unotes/auth/pkg/utils"
+	"github.com/nazarslota/unotes/auth/pkg/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"

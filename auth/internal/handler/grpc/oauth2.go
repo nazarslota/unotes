@@ -6,9 +6,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/udholdenhed/unotes/auth/api/proto"
-	"github.com/udholdenhed/unotes/auth/internal/service"
-	"github.com/udholdenhed/unotes/auth/internal/service/oauth2"
+	pb "github.com/nazarslota/unotes/auth/api/proto"
+	"github.com/nazarslota/unotes/auth/internal/service"
+	"github.com/nazarslota/unotes/auth/internal/service/oauth2"
 )
 
 type oAuth2ServiceServer struct {

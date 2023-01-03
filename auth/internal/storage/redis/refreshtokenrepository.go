@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis/v9"
-	"github.com/udholdenhed/unotes/auth/internal/domain/refreshtoken"
+	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
 )
 
 type refreshTokenRepository struct {

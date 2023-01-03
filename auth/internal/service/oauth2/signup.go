@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/udholdenhed/unotes/auth/internal/domain/user"
+	"github.com/nazarslota/unotes/auth/internal/domain/user"
 	"golang.org/x/crypto/bcrypt"
 )
 

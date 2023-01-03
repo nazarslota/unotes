@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/udholdenhed/unotes/auth/internal/domain/user"
+	"github.com/nazarslota/unotes/auth/internal/domain/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
