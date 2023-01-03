@@ -1,35 +1,17 @@
 import React, {FC, FormEvent, useState} from 'react';
+import {Navigate, useLocation} from 'react-router-dom';
 import axios from 'axios';
 
-import './SignUp.css'
-
-type SignUpUserModel = {
-    username: string;
-    password: string;
-};
-
-type SignUpUserResponse = {};
-
-const signUpUser = async (model: SignUpUserModel): Promise<SignUpUserResponse> => {
-    const {data} = await axios.post<SignUpUserResponse>(
-        `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/auth/oauth2/sign-up`,
-        {
-            "username": model.username,
-            "password": model.password,
-        },
-        {
-            "headers": {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        },
-    );
-    return data;
-};
+import './SignUp.css';
 
 type SignUpProps = {};
 
 const SignUp: FC<SignUpProps> = () => {
+    const location = useLocation();
+
+    const [error, setError] = useState<string>("");
+    const [redirect, setRedirect] = useState<boolean>(false);
+
     const [username, setUsername] = useState<string>("");
     const usernameOnChange = (e: FormEvent<HTMLInputElement>) => {
         setUsername(e.currentTarget.value);
@@ -46,16 +28,61 @@ const SignUp: FC<SignUpProps> = () => {
     }
 
     const signUpOnClick = async (_: FormEvent<HTMLButtonElement>) => {
-        if (password !== confirmPassword) {
-            return; // TODO
+        if (username.length < 4) {
+            setError('Username is too short.');
+            return;
+        } else if (username.length > 32) {
+            setError('Username is too long.');
+            return;
         }
-        await signUpUser({username: username, password: password}); // TODO
+
+        if (password.length < 8) {
+            setError('Password is too short.');
+            return;
+        } else if (password.length > 64) {
+            setError('Password is too long.');
+            return;
+        } else if (password !== confirmPassword) {
+            setError('The entered passwords do not match.');
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/auth/oauth2/sign-up`,
+                {
+                    "username": username,
+                    "password": password,
+                },
+                {
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                }
+            );
+
+            if (response.status === 204) {
+                setError("");
+                setRedirect(true);
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 409) {
+                    setError('This username is already in use.')
+                } else {
+                    setError('Unknown error.')
+                }
+            }
+        }
     }
 
     return (
         <>
+            {redirect && <Navigate to="/sign-in" state={{from: location}} replace/>}
             <div className="sign-up-form">
                 <h1 className="sign-up-form__title">Sign Up</h1>
+                {error !== "" && <label className="sign-up-form__error">{error}</label>}
                 <div className="sign-up-form__username">
                     <label className="sign-up-form__username__label">Username</label>
                     <input

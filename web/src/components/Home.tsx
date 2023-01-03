@@ -1,6 +1,6 @@
 import React, {FC} from 'react';
 
-import './Home.css'
+import './Home.css';
 
 type HomeProps = {};
 
