@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/udholdenhed/unotes/auth/api/proto";
+option go_package = "github.com/nazarslota/unotes/auth/api/proto";
 
 import "validate/validate.proto";
 
@@ -18,7 +18,7 @@ message SignInRequest {
 }
 
 message SignInResponse {
-  string access_token = 1 ;
+  string access_token = 1;
   string refresh_token = 2;
 }
 
