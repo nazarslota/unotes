@@ -1,7 +1,7 @@
 import React, {FC, useState} from 'react';
+import {Link} from 'react-router-dom';
 
 import './NavigationBar.css';
-import {Link} from "react-router-dom";
 
 type NavigationBarProps = {};
 

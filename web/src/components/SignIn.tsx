@@ -1,38 +1,25 @@
 import React, {FC, FormEvent, useState} from 'react';
+import {Navigate, useLocation} from 'react-router-dom';
+import {useCookies} from 'react-cookie';
 import axios from 'axios';
 
 import './SignIn.css';
-
-type SignInUserModel = {
-    username: string;
-    password: string;
-};
 
 type SignInUserResponse = {
     "access_token": string;
     "refresh_token": string;
 };
 
-const signInUser = async (model: SignInUserModel): Promise<SignInUserResponse> => {
-    const {data} = await axios.post<SignInUserResponse>(
-        `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/auth/oauth2/sign-in`,
-        {
-            "username": model.username,
-            "password": model.password,
-        },
-        {
-            "headers": {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        },
-    );
-    return data;
-}
-
 type SignInProps = {};
 
 const SignIn: FC<SignInProps> = () => {
+    const [, setCookie] = useCookies(['access_token', 'refresh_token'])
+
+    const [error, setError] = useState<string>("");
+
+    const location = useLocation();
+    const [redirectToHome, setRedirectToHome] = useState<boolean>(false);
+
     const [username, setUsername] = useState<string>("");
     const usernameOnChange = (e: FormEvent<HTMLInputElement>) => {
         setUsername(e.currentTarget.value);
@@ -44,15 +31,45 @@ const SignIn: FC<SignInProps> = () => {
     }
 
     const signInOnClick = async (_: FormEvent<HTMLButtonElement>) => {
-        const data = await signInUser({"username": username, "password": password});
-        console.log(data["access_token"]);
-        console.log(data["refresh_token"]);
+        try {
+            const response = await axios.post<SignInUserResponse>(
+                `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/auth/oauth2/sign-in`,
+                {
+                    "username": username,
+                    "password": password,
+                },
+                {
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                },
+            );
+
+            if (response.status === 200) {
+                setError("");
+                setRedirectToHome(true);
+
+                setCookie("access_token", response.data["access_token"], {secure: true, sameSite: 'none'});
+                setCookie("refresh_token", response.data["refresh_token"], {secure: true, sameSite: 'none'});
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                if (error.response.status === 400 || error.response.status === 404) {
+                    setError('Incorrect username or password.');
+                    return;
+                }
+                setError('Unknown error.');
+            }
+        }
     }
 
     return (
         <>
+            {redirectToHome && <Navigate to="/" state={{from: location}} replace/>}
             <div className="sign-in-form">
                 <h1 className="sign-in-form__title">Sign In</h1>
+                {error !== "" && <label className="sign-up-form__error">{error}</label>}
                 <div className="sign-in-form__username">
                     <label className="sign-in-form__username__label">Username</label>
                     <input

@@ -7,10 +7,10 @@ import './SignUp.css';
 type SignUpProps = {};
 
 const SignUp: FC<SignUpProps> = () => {
-    const location = useLocation();
-
     const [error, setError] = useState<string>("");
-    const [redirect, setRedirect] = useState<boolean>(false);
+
+    const location = useLocation();
+    const [redirectToSignIn, setRedirectToSignIn] = useState<boolean>(false);
 
     const [username, setUsername] = useState<string>("");
     const usernameOnChange = (e: FormEvent<HTMLInputElement>) => {
@@ -64,7 +64,7 @@ const SignUp: FC<SignUpProps> = () => {
 
             if (response.status === 204) {
                 setError("");
-                setRedirect(true);
+                setRedirectToSignIn(true);
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -79,7 +79,7 @@ const SignUp: FC<SignUpProps> = () => {
 
     return (
         <>
-            {redirect && <Navigate to="/sign-in" state={{from: location}} replace/>}
+            {redirectToSignIn && <Navigate to="/sign-in" state={{from: location}} replace/>}
             <div className="sign-up-form">
                 <h1 className="sign-up-form__title">Sign Up</h1>
                 {error !== "" && <label className="sign-up-form__error">{error}</label>}
