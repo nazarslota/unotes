@@ -7,25 +7,19 @@ import './SignUp.css';
 type SignUpProps = {};
 
 const SignUp: FC<SignUpProps> = () => {
-    const [error, setError] = useState<string>("");
+    const [error, setError] = useState("");
 
     const location = useLocation();
-    const [redirectToSignIn, setRedirectToSignIn] = useState<boolean>(false);
+    const [redirectToSignIn, setRedirectToSignIn] = useState(false);
 
-    const [username, setUsername] = useState<string>("");
-    const usernameOnChange = (e: FormEvent<HTMLInputElement>) => {
-        setUsername(e.currentTarget.value);
-    }
+    const [username, setUsername] = useState("");
+    const usernameOnChange = (e: FormEvent<HTMLInputElement>) => setUsername(e.currentTarget.value);
 
-    const [password, setPassword] = useState<string>("");
-    const passwordOnChange = (e: FormEvent<HTMLInputElement>) => {
-        setPassword(e.currentTarget.value);
-    }
+    const [password, setPassword] = useState("");
+    const passwordOnChange = (e: FormEvent<HTMLInputElement>) => setPassword(e.currentTarget.value);
 
-    const [confirmPassword, setConfirmPassword] = useState<string>("");
-    const confirmPasswordOnChange = (e: FormEvent<HTMLInputElement>) => {
-        setConfirmPassword(e.currentTarget.value);
-    }
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const confirmPasswordOnChange = (e: FormEvent<HTMLInputElement>) => setConfirmPassword(e.currentTarget.value);
 
     const signUpOnClick = async (_: FormEvent<HTMLButtonElement>) => {
         if (username.length < 4) {

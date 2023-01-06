@@ -1,17 +1,78 @@
 .home {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    background-color: #333;
-    color: #ffffff;
+    flex-direction: row;
+    align-items: flex-start;
 }
 
-.home h1 {
-    font-size: 32px;
+.home__description {
+    width: 30%;
+    margin-right: 2%;
+    font-size: 1.2rem;
+    line-height: 1.5;
 }
 
-.home p {
-    font-size: 18px;
+.home__description-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.home__form {
+    width: 30%;
+    margin-right: 2%;
+}
+
+.home__form-title {
+    display: block;
+    width: 100%;
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+}
+
+.home__form-content {
+    display: block;
+    width: 100%;
+    font-size: 1.6rem;
+    min-height: 10rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+}
+
+.home__form-button {
+    display: block;
+    width: 100%;
+    font-size: 1.6rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    background-color: #eee;
+    cursor: pointer;
+}
+
+.home__list {
+    width: 35%;
+}
+
+.home__list-search {
+    display: block;
+    width: 100%;
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+}
+
+.home__list-item {
+    margin-bottom: 1rem;
+}
+
+.home__list-item-title {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.home__list-item-content {
+    font-size: 1.4rem;
+    line-height: 1.5;
 }

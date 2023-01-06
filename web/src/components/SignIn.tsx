@@ -5,15 +5,10 @@ import axios from 'axios';
 
 import './SignIn.css';
 
-type SignInUserResponse = {
-    "access_token": string;
-    "refresh_token": string;
-};
-
 type SignInProps = {};
 
 const SignIn: FC<SignInProps> = () => {
-    const [, setCookie] = useCookies(['access_token', 'refresh_token'])
+    const [, setCookie] = useCookies(['access_token', 'refresh_token']);
 
     const [error, setError] = useState<string>("");
 
@@ -21,16 +16,17 @@ const SignIn: FC<SignInProps> = () => {
     const [redirectToHome, setRedirectToHome] = useState<boolean>(false);
 
     const [username, setUsername] = useState<string>("");
-    const usernameOnChange = (e: FormEvent<HTMLInputElement>) => {
-        setUsername(e.currentTarget.value);
-    }
+    const usernameOnChange = (e: FormEvent<HTMLInputElement>) => setUsername(e.currentTarget.value);
 
     const [password, setPassword] = useState<string>("");
-    const passwordOnChange = (e: FormEvent<HTMLInputElement>) => {
-        setPassword(e.currentTarget.value);
-    }
+    const passwordOnChange = (e: FormEvent<HTMLInputElement>) => setPassword(e.currentTarget.value);
 
     const signInOnClick = async (_: FormEvent<HTMLButtonElement>) => {
+        type SignInUserResponse = {
+            "access_token": string;
+            "refresh_token": string;
+        };
+
         try {
             const response = await axios.post<SignInUserResponse>(
                 `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/auth/oauth2/sign-in`,
