@@ -1,6 +1,6 @@
 FROM golang:1.19.4-alpine AS builder
 
-WORKDIR /go/src/github.com/udholdenhed/unotes/auth/
+WORKDIR /go/src/github.com/nazarslota/unotes/auth/
 
 COPY go.mod .
 COPY go.sum .
@@ -19,7 +19,7 @@ EXPOSE 8091
 
 WORKDIR /root/
 
-COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth/configs/ ./configs/
-COPY --from=builder /go/src/github.com/udholdenhed/unotes/auth/build/auth ./
+COPY --from=builder /go/src/github.com/nazarslota/unotes/auth/configs/ ./configs/
+COPY --from=builder /go/src/github.com/nazarslota/unotes/auth/build/auth ./
 
 CMD ["./auth"]
