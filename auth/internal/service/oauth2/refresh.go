@@ -9,19 +9,23 @@ import (
 	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
 )
 
+// RefreshRequest represents a refresh request.
 type RefreshRequest struct {
 	RefreshToken string
 }
 
+// RefreshResponse represents a refresh response.
 type RefreshResponse struct {
 	AccessToken  string
 	RefreshToken string
 }
 
+// RefreshRequestHandler is an interface that defines a refresh request handler.
 type RefreshRequestHandler interface {
 	Handle(ctx context.Context, request *RefreshRequest) (*RefreshResponse, error)
 }
 
+// refreshRequestHandler is a refresh request handler that refreshes the access token and refresh token.
 type refreshRequestHandler struct {
 	AccessTokenSecret      string
 	RefreshTokenSecret     string
@@ -30,10 +34,10 @@ type refreshRequestHandler struct {
 	RefreshTokenRepository refreshtoken.Repository
 }
 
-var (
-	ErrRefreshInvalidOrExpiredToken = errors.New("invalid or expired token")
-)
+// ErrRefreshInvalidOrExpiredToken is returned when the refresh token is invalid or expired.
+var ErrRefreshInvalidOrExpiredToken = errors.New("invalid or expired token")
 
+// NewRefreshRequestHandler returns a new refresh request handler.
 func NewRefreshRequestHandler(
 	accessTokenSecret, refreshTokenSecret string,
 	accessTokenExpiresIn, refreshTokenExpiresIn time.Duration,
@@ -48,6 +52,11 @@ func NewRefreshRequestHandler(
 	}
 }
 
+// Handle handles a refresh request and returns a response.
+//
+// It can return the following errors:
+//   - ErrRefreshInvalidOrExpiredToken: if the refresh token is invalid or expired
+//   - other errors: if an error occurred while parsing the refresh token, deleting the refresh token, creating the access or refresh tokens, or saving the refresh token
 func (h *refreshRequestHandler) Handle(ctx context.Context, request *RefreshRequest) (*RefreshResponse, error) {
 	claims, err := parseHS256(request.RefreshToken, h.RefreshTokenSecret)
 	if errors.Is(err, ErrJWTInvalidOrExpiredToken) {

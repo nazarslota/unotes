@@ -1,12 +1,7 @@
 package refreshtoken
 
-import "errors"
-
+// Token represents a token.
 type Token struct {
+	// Token is the token string.
 	Token string `json:"token" bson:"token"`
 }
-
-var (
-	ErrTokenNotFound  = errors.New("token not found")
-	ErrTokensNotFound = errors.New("tokens not found")
-)

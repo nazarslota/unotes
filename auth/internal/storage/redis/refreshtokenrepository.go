@@ -10,18 +10,22 @@ import (
 	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
 )
 
+// refreshTokenRepository is a struct that implements the refreshtoken.Repository interface using a Redis client.
 type refreshTokenRepository struct {
 	client *redis.Client
 }
 
-const RefreshTokensPrefix = "REFRESH_TOKENS_"
+// refreshTokensPrefix is a string prefix used for the keys in Redis where the refresh tokens are stored.
+const refreshTokensPrefix = "REFRESH_TOKENS_"
 
 var _ refreshtoken.Repository = (*refreshTokenRepository)(nil)
 
+// NewRefreshTokenRepository returns a new refreshTokenRepository with the given Redis client.
 func NewRefreshTokenRepository(client *redis.Client) refreshtoken.Repository {
 	return &refreshTokenRepository{client: client}
 }
 
+// SaveOne saves the given refresh token to Redis. If an error occurs, it is returned.
 func (r *refreshTokenRepository) SaveOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
 	select {
 	case <-ctx.Done():
@@ -29,25 +33,31 @@ func (r *refreshTokenRepository) SaveOne(ctx context.Context, userID string, tok
 	default:
 	}
 
+	// Get all tokens belonging to the user.
 	tokens, err := r.FindMany(ctx, userID)
 	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
 		tokens = make([]refreshtoken.Token, 0)
 	} else if err != nil {
 		return fmt.Errorf("failed to receive all tokens: %w", err)
 	}
+
+	// Add the new token to the list.
 	tokens = append(tokens, *token)
 
+	// Marshal the list of tokens.
 	b, err := json.Marshal(tokens)
 	if err != nil {
 		return fmt.Errorf("failed to marshal the received tokens: %w", err)
 	}
 
-	if err := r.client.Set(ctx, RefreshTokensPrefix+userID, string(b), 0).Err(); err != nil {
+	// Save the list of tokens to Redis.
+	if err := r.client.Set(ctx, refreshTokensPrefix+userID, string(b), 0).Err(); err != nil {
 		return fmt.Errorf("failed to save the token: %w", err)
 	}
 	return nil
 }
 
+// FindOne finds the given refresh token in Redis. If the token is not found, it returns an error.
 func (r *refreshTokenRepository) FindOne(
 	ctx context.Context, userID string, token *refreshtoken.Token,
 ) (*refreshtoken.Token, error) {
@@ -57,6 +67,7 @@ func (r *refreshTokenRepository) FindOne(
 	default:
 	}
 
+	// Get all tokens belonging to the user.
 	tokens, err := r.FindMany(ctx, userID)
 	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
 		return nil, refreshtoken.ErrTokenNotFound
@@ -64,6 +75,7 @@ func (r *refreshTokenRepository) FindOne(
 		return nil, fmt.Errorf("failed to receive all tokens: %w", err)
 	}
 
+	// Find the token in the list.
 	for _, t := range tokens {
 		if t == *token {
 			return &t, nil
@@ -72,6 +84,7 @@ func (r *refreshTokenRepository) FindOne(
 	return nil, refreshtoken.ErrTokenNotFound
 }
 
+// DeleteOne deletes the given refresh token from Redis. If an error occurs, it is returned.
 func (r *refreshTokenRepository) DeleteOne(
 	ctx context.Context, userID string, token *refreshtoken.Token,
 ) error {
@@ -81,6 +94,7 @@ func (r *refreshTokenRepository) DeleteOne(
 	default:
 	}
 
+	// Get all tokens belonging to the user.
 	tokens, err := r.FindMany(ctx, userID)
 	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
 		return nil
@@ -88,6 +102,7 @@ func (r *refreshTokenRepository) DeleteOne(
 		return fmt.Errorf("failed to receive all tokens: %w", err)
 	}
 
+	// Remove the token from the list.
 	for i, t := range tokens {
 		if t == *token {
 			tokens = append(tokens[:i], tokens[i+1:]...)
@@ -95,18 +110,20 @@ func (r *refreshTokenRepository) DeleteOne(
 		}
 	}
 
+	// Marshal the updated list of tokens.
 	b, err := json.Marshal(tokens)
 	if err != nil {
 		return fmt.Errorf("failed to marshal the received tokens: %w", err)
 	}
 
-	if err := r.client.Set(ctx, RefreshTokensPrefix+userID, string(b), 0).Err(); err != nil {
+	if err := r.client.Set(ctx, refreshTokensPrefix+userID, string(b), 0).Err(); err != nil {
 		return fmt.Errorf("failed to save the token: %w", err)
 	}
 
 	return nil
 }
 
+// FindMany returns all refresh tokens belonging to the given user from Redis. If an error occurs, it is returned.
 func (r *refreshTokenRepository) FindMany(ctx context.Context, userID string) ([]refreshtoken.Token, error) {
 	select {
 	case <-ctx.Done():
@@ -114,20 +131,18 @@ func (r *refreshTokenRepository) FindMany(ctx context.Context, userID string) ([
 	default:
 	}
 
-	result, err := r.client.Get(ctx, RefreshTokensPrefix+userID).Result()
-	if err != nil && err != redis.Nil {
-		return nil, fmt.Errorf("failed to take the tokens: %w", err)
-	} else if err == redis.Nil {
-		result = "[]"
-	}
-
-	tokens := make([]refreshtoken.Token, 0)
-	if err := json.Unmarshal([]byte(result), &tokens); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal the received tokens: %w", err)
-	}
-
-	if len(tokens) == 0 {
+	// Get the list of tokens from Redis.
+	val, err := r.client.Get(ctx, refreshTokensPrefix+userID).Result()
+	if err == redis.Nil {
 		return nil, refreshtoken.ErrTokensNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to get the tokens: %w", err)
+	}
+
+	// Unmarshal the list of tokens.
+	var tokens []refreshtoken.Token
+	if err := json.Unmarshal([]byte(val), &tokens); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal the received tokens: %w", err)
 	}
 	return tokens, nil
 }

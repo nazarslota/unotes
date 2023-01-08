@@ -3,7 +3,6 @@ package errors
 import (
 	"fmt"
 	"net/http"
-	"strings"
 )
 
 // HTTPError represents an httpserver error.
@@ -15,8 +14,7 @@ type HTTPError struct {
 
 var (
 	// ErrHTTPInternalServerError represents an internal http server error.
-	ErrHTTPInternalServerError = NewHTTPError(http.StatusInternalServerError,
-		strings.ToLower(http.StatusText(http.StatusInternalServerError)))
+	ErrHTTPInternalServerError = NewHTTPError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 )
 
 // NewHTTPError creates a new UserError instance.

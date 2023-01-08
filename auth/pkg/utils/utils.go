@@ -21,7 +21,7 @@ func GracefulShutdown() <-chan struct{} {
 }
 
 // BuildMongoURI builds new MongoDB URI with the given parameters.
-func BuildMongoURI(host, port, username, password string) string {
+func BuildMongoURI(host, port, username, password string) (string, error) {
 	proto := "mongodb"
 	if len(port) == 0 {
 		proto += "+srv"
@@ -43,5 +43,5 @@ func BuildMongoURI(host, port, username, password string) string {
 		User:   userinfo,
 		Host:   host,
 	}
-	return uri.String()
+	return uri.String(), nil
 }

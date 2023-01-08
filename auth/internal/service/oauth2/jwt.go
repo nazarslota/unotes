@@ -8,9 +8,22 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-var ErrJWTInvalidOrExpiredToken = errors.New("invalid or expired token")
+var (
+	ErrJWTInvalidOrExpiredToken = errors.New("invalid or expired token")
+	ErrJWTInvalidSecret         = errors.New("invalid JWT secret")
+	ErrJWTInvalidEXP            = errors.New("invalid JWT exp")
+	ErrJWTInvalidUserID         = errors.New("invalid JWT user id")
+)
 
 func newHS256(secret string, exp time.Duration, userID string) (string, error) {
+	if len(secret) == 0 {
+		return "", fmt.Errorf("failed to generate a token: %w", ErrJWTInvalidSecret)
+	} else if exp == 0 {
+		return "", fmt.Errorf("failed to generate a token: %w", ErrJWTInvalidEXP)
+	} else if len(userID) == 0 {
+		return "", fmt.Errorf("failed to generate a token: %w", ErrJWTInvalidUserID)
+	}
+
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"exp":     now.Add(exp).Unix(),

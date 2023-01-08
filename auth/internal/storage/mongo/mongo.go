@@ -19,7 +19,7 @@ type Config struct {
 }
 
 func NewMongoDB(ctx context.Context, config *Config) (*mongo.Database, error) {
-	uri := utils.BuildMongoURI(
+	uri, _ := utils.BuildMongoURI(
 		config.Host,
 		config.Port,
 		config.Username,
