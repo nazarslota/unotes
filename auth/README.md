@@ -169,7 +169,7 @@ has been changed, you can use the following command to generate a new one.
 make swagger
 ````
 
-#### Generation of proto files. [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation) required.
+#### Generation of proto files. [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation) and [protoc-gen-validate (PGV)](https://github.com/bufbuild/protoc-gen-validate) required.
 
 `.proto` and `.pb.go` files are stored in the `/api/proto` folder. If the proto files have been changed, you can use the
 following command. It will generate files in `/api/proto` folder.
