@@ -175,7 +175,7 @@ make swagger
 following command. It will generate files in `/api/proto` folder.
 
 ````
-make proto
+make protobuf
 ````
 
 #### Environment
