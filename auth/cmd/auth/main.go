@@ -27,7 +27,7 @@ func main() {
 
 	postgresDB, err := NewPostgreSQL()
 	if err != nil {
-		log.Info("Filed to connect to PostgreSQL.")
+		log.WithError(err).Error("Filed to connect to PostgreSQL.")
 	}
 
 	redisDB, err := NewRedisDB()
