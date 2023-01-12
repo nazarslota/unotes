@@ -8,9 +8,9 @@ import (
 )
 
 type Logger interface {
-	Infof(format string, args ...any)
-	Warnf(format string, args ...any)
-	Errorf(format string, args ...any)
+	Infof(format string, v ...any)
+	Warnf(format string, v ...any)
+	Errorf(format string, v ...any)
 }
 
 func newLoggerMiddleware(_ Logger) echo.MiddlewareFunc {
