@@ -112,14 +112,17 @@ func newLoggerMiddleware(logger Logger) echo.MiddlewareFunc {
 				"user_agent": req.UserAgent(),
 			}
 
-			start := time.Now()
-			if err := next(c); err != nil {
+			s := time.Now()
+
+			err := next(c)
+			if err != nil {
 				c.Error(err)
 			}
+			dur := time.Since(s)
 
 			fields["status"] = res.Status
-			fields["duration"] = time.Since(start).String()
-			logger.InfoFields("The request has been successfully processed.", fields)
+			fields["duration"] = dur.String()
+			logger.InfoFields("REST, request handled.", fields)
 
 			return nil
 		}

@@ -95,7 +95,7 @@ func main() {
 		grpc.WithLogger(log),
 	).S()
 
-	log.Infof("Starting a REST server... Address: '%s'.", restAddress)
+	log.InfoFields("Starting a REST server...", map[string]any{"address": restAddress})
 	go func() {
 		err := restServer.Serve()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -104,7 +104,7 @@ func main() {
 	}()
 	log.Info("The REST server is successfully started.")
 
-	log.Infof("Starting a gRPC server... Address: '%s'.", grpcAddress)
+	log.InfoFields("Starting a gRPC server...", map[string]any{"address": grpcAddress})
 	go func() {
 		err := grpcServer.Serve()
 		if err != nil {
