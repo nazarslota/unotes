@@ -17,8 +17,8 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/oauth2/refresh": {
-            "post": {
-                "description": "refresh",
+            "get": {
+                "description": "Refresh",
                 "consumes": [
                     "application/json"
                 ],
@@ -28,16 +28,14 @@ const docTemplate = `{
                 "tags": [
                     "oAuth2"
                 ],
-                "summary": "oAuth2 refresh",
+                "summary": "oAuth2 Refresh",
                 "parameters": [
                     {
-                        "description": "account info",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/rest.oAuth2RefreshModel"
-                        }
+                        "type": "string",
+                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                        "name": "t",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -70,7 +68,7 @@ const docTemplate = `{
         },
         "/oauth2/sign-in": {
             "post": {
-                "description": "sign in",
+                "description": "Sign in",
                 "consumes": [
                     "application/json"
                 ],
@@ -80,10 +78,10 @@ const docTemplate = `{
                 "tags": [
                     "oAuth2"
                 ],
-                "summary": "oAuth2 sign in",
+                "summary": "oAuth2 Sign In",
                 "parameters": [
                     {
-                        "description": "account info",
+                        "description": "Account info",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -128,7 +126,7 @@ const docTemplate = `{
         },
         "/oauth2/sign-out": {
             "post": {
-                "description": "sign out",
+                "description": "Sign out",
                 "consumes": [
                     "application/json"
                 ],
@@ -138,15 +136,15 @@ const docTemplate = `{
                 "tags": [
                     "oAuth2"
                 ],
-                "summary": "oAuth2 sign out",
+                "summary": "oAuth2 Sign Out",
                 "parameters": [
                     {
-                        "description": "account info",
+                        "description": "Access token",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.oAuth2LogOutModel"
+                            "$ref": "#/definitions/rest.oAuth2SignOutModel"
                         }
                     }
                 ],
@@ -177,7 +175,7 @@ const docTemplate = `{
         },
         "/oauth2/sign-up": {
             "post": {
-                "description": "create account",
+                "description": "Create account",
                 "consumes": [
                     "application/json"
                 ],
@@ -187,10 +185,10 @@ const docTemplate = `{
                 "tags": [
                     "oAuth2"
                 ],
-                "summary": "oAuth2 sign up",
+                "summary": "oAuth2 Sign Up",
                 "parameters": [
                     {
-                        "description": "account info",
+                        "description": "Account info",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -241,30 +239,6 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "rest.oAuth2LogOutModel": {
-            "type": "object",
-            "required": [
-                "access_token"
-            ],
-            "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-                }
-            }
-        },
-        "rest.oAuth2RefreshModel": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-                }
-            }
-        },
         "rest.oAuth2RefreshResult": {
             "type": "object",
             "properties": {
@@ -308,6 +282,18 @@ const docTemplate = `{
                 }
             }
         },
+        "rest.oAuth2SignOutModel": {
+            "type": "object",
+            "required": [
+                "access_token"
+            ],
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                }
+            }
+        },
         "rest.oAuth2SignUpUserModel": {
             "type": "object",
             "required": [
@@ -339,7 +325,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Auth",
-	Description:      "Authentication service, developed for UNotes(notes system).",
+	Description:      "Authentication service",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

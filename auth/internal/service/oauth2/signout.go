@@ -49,10 +49,8 @@ func NewSignOutRequestHandler(
 func (h *signOutRequestHandler) Handle(ctx context.Context, request *SignOutRequest) (*SignOutResponse, error) {
 	// Parse the access token to get the user ID.
 	claims, err := parseHS256(request.AccessToken, h.AccessTokenSecret)
-	if errors.Is(err, ErrJWTInvalidOrExpiredToken) {
+	if err != nil {
 		return nil, fmt.Errorf("failed to parse the access token: %w", ErrSignOutInvalidOrExpiredToken)
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to parse the access token: %w", err)
 	}
 
 	userID := ""

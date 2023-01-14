@@ -6,22 +6,6 @@ definitions:
         type: integer
       message: {}
     type: object
-  rest.oAuth2LogOutModel:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
-        type: string
-    required:
-    - access_token
-    type: object
-  rest.oAuth2RefreshModel:
-    properties:
-      refresh_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
-        type: string
-    required:
-    - refresh_token
-    type: object
   rest.oAuth2RefreshResult:
     properties:
       access_token:
@@ -52,6 +36,14 @@ definitions:
       refresh_token:
         type: string
     type: object
+  rest.oAuth2SignOutModel:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        type: string
+    required:
+    - access_token
+    type: object
   rest.oAuth2SignUpUserModel:
     properties:
       password:
@@ -71,22 +63,21 @@ definitions:
 host: localhost:8081
 info:
   contact: {}
-  description: Authentication service, developed for UNotes(notes system).
+  description: Authentication service
   title: Auth
   version: "1.0"
 paths:
   /oauth2/refresh:
-    post:
+    get:
       consumes:
       - application/json
-      description: refresh
+      description: Refresh
       parameters:
-      - description: account info
-        in: body
-        name: input
+      - example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        in: query
+        name: t
         required: true
-        schema:
-          $ref: '#/definitions/rest.oAuth2RefreshModel'
+        type: string
       produces:
       - application/json
       responses:
@@ -106,16 +97,16 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/errors.HTTPError'
-      summary: oAuth2 refresh
+      summary: oAuth2 Refresh
       tags:
       - oAuth2
   /oauth2/sign-in:
     post:
       consumes:
       - application/json
-      description: sign in
+      description: Sign in
       parameters:
-      - description: account info
+      - description: Account info
         in: body
         name: input
         required: true
@@ -144,21 +135,21 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/errors.HTTPError'
-      summary: oAuth2 sign in
+      summary: oAuth2 Sign In
       tags:
       - oAuth2
   /oauth2/sign-out:
     post:
       consumes:
       - application/json
-      description: sign out
+      description: Sign out
       parameters:
-      - description: account info
+      - description: Access token
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/rest.oAuth2LogOutModel'
+          $ref: '#/definitions/rest.oAuth2SignOutModel'
       produces:
       - application/json
       responses:
@@ -176,16 +167,16 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/errors.HTTPError'
-      summary: oAuth2 sign out
+      summary: oAuth2 Sign Out
       tags:
       - oAuth2
   /oauth2/sign-up:
     post:
       consumes:
       - application/json
-      description: create account
+      description: Create account
       parameters:
-      - description: account info
+      - description: Account info
         in: body
         name: input
         required: true
@@ -212,7 +203,7 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/errors.HTTPError'
-      summary: oAuth2 sign up
+      summary: oAuth2 Sign Up
       tags:
       - oAuth2
 swagger: "2.0"

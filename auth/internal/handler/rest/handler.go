@@ -28,12 +28,12 @@ func NewHandler(options ...HandlerOption) *Handler {
 	return h
 }
 
-// @title       Auth
-// @version     1.0
-// @description Authentication service.
+//	@title			Auth
+//	@version		1.0
+//	@description	Authentication service
 
-// @host     localhost:8081
-// @BasePath /api
+//	@host		localhost:8081
+//	@BasePath	/api
 
 func (h *Handler) S() *Server {
 	mux := echo.New()
@@ -58,7 +58,7 @@ func (h *Handler) S() *Server {
 			oAuth2.POST("/sign-up", h.oAuth2SignUp)
 			oAuth2.POST("/sign-in", h.oAuth2SignIn)
 			oAuth2.POST("/sign-out", h.oAuth2SignOut)
-			oAuth2.POST("/refresh", h.oAuth2Refresh)
+			oAuth2.GET("/refresh", h.oAuth2Refresh)
 		}
 	}
 

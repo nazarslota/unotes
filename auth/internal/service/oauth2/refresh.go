@@ -59,10 +59,8 @@ func NewRefreshRequestHandler(
 //   - other errors: if an error occurred while parsing the refresh token, deleting the refresh token, creating the access or refresh tokens, or saving the refresh token
 func (h *refreshRequestHandler) Handle(ctx context.Context, request *RefreshRequest) (*RefreshResponse, error) {
 	claims, err := parseHS256(request.RefreshToken, h.RefreshTokenSecret)
-	if errors.Is(err, ErrJWTInvalidOrExpiredToken) {
+	if err != nil {
 		return nil, fmt.Errorf("failed to parse the access token: %w", ErrRefreshInvalidOrExpiredToken)
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to parse the access token: %w", err)
 	}
 
 	userID := ""

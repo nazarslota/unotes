@@ -31,9 +31,9 @@ func (s *oAuth2ServiceServer) SignUp(ctx context.Context, in *pb.SignUpRequest) 
 
 	_, err := s.services.OAuth2Service.SignUpRequestHandler.Handler(ctx, request)
 	if errors.Is(err, oauth2.ErrSignUpUserAlreadyExist) {
-		return nil, status.Error(codes.AlreadyExists, "A user with this username already exists")
+		return nil, status.Error(codes.AlreadyExists, "a user with this username already exists")
 	} else if err != nil {
-		return nil, status.Error(codes.Internal, "Internal")
+		return nil, status.Error(codes.Internal, "internal")
 	}
 
 	return &pb.SignUpResponse{}, nil
@@ -51,11 +51,11 @@ func (s *oAuth2ServiceServer) SignIn(ctx context.Context, in *pb.SignInRequest) 
 
 	response, err := s.services.OAuth2Service.SingInRequestHandler.Handle(ctx, request)
 	if errors.Is(err, oauth2.ErrSignInUserNotFound) {
-		return nil, status.Error(codes.NotFound, "User with that username was not found")
+		return nil, status.Error(codes.NotFound, "user with that username was not found")
 	} else if errors.Is(err, oauth2.ErrSignInInvalidPassword) {
-		return nil, status.Error(codes.InvalidArgument, "Invalid password")
+		return nil, status.Error(codes.InvalidArgument, "invalid password")
 	} else if err != nil {
-		return nil, status.Error(codes.Internal, "Internal")
+		return nil, status.Error(codes.Internal, "internal")
 	}
 
 	return &pb.SignInResponse{
@@ -75,9 +75,9 @@ func (s *oAuth2ServiceServer) SignOut(ctx context.Context, in *pb.SignOutRequest
 
 	_, err := s.services.OAuth2Service.SignOutRequestHandler.Handle(ctx, request)
 	if errors.Is(err, oauth2.ErrSignOutInvalidOrExpiredToken) {
-		return nil, status.Error(codes.InvalidArgument, "Invalid or expired token")
+		return nil, status.Error(codes.InvalidArgument, "invalid or expired token")
 	} else if err != nil {
-		return nil, status.Error(codes.Internal, "Internal")
+		return nil, status.Error(codes.Internal, "internal")
 	}
 
 	return &pb.SignOutResponse{}, nil
@@ -94,9 +94,9 @@ func (s *oAuth2ServiceServer) Refresh(ctx context.Context, in *pb.RefreshRequest
 
 	response, err := s.services.OAuth2Service.RefreshRequestHandler.Handle(ctx, request)
 	if errors.Is(err, oauth2.ErrRefreshInvalidOrExpiredToken) {
-		return nil, status.Error(codes.InvalidArgument, "Invalid or expired token")
+		return nil, status.Error(codes.InvalidArgument, "invalid or expired token")
 	} else if err != nil {
-		return nil, status.Error(codes.Internal, "Internal")
+		return nil, status.Error(codes.Internal, "internal")
 	}
 
 	return &pb.RefreshResponse{

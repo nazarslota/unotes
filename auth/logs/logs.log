@@ -1,0 +1,19 @@
+{"level":"info","time":"2023-01-14T23:30:59+02:00","message":"The server starts..."}
+{"level":"info","time":"2023-01-14T23:30:59+02:00","message":"Connecting to the PostgreSQL database..."}
+{"level":"info","time":"2023-01-14T23:30:59+02:00","message":"Successfully connected to PostgreSQL database."}
+{"level":"info","time":"2023-01-14T23:30:59+02:00","message":"Connecting to the Redis database..."}
+{"level":"info","time":"2023-01-14T23:31:00+02:00","message":"Successfully connected to Redis database."}
+{"level":"info","address":"0.0.0.0:8081","time":"2023-01-14T23:31:00+02:00","message":"Starting a REST server..."}
+{"level":"info","time":"2023-01-14T23:31:00+02:00","message":"The REST server is successfully started."}
+{"level":"info","address":"0.0.0.0:8091","time":"2023-01-14T23:31:00+02:00","message":"Starting a gRPC server..."}
+{"level":"info","time":"2023-01-14T23:31:00+02:00","message":"The gRPC server is successfully started."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"Shutdown of the server..."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"Shutdown of the REST server..."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"REST server was successfully shut down."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"Shutdown of the gRPC server..."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"gRPC server was successfully shut down."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"Closing the connection to PostgreSQL..."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"The connection to PostgreSQL is successfully closed."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"Closing the connection to Redis..."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"The connection to Redis is successfully closed."}
+{"level":"info","time":"2023-01-14T23:31:12+02:00","message":"The server has been successfully shut down."}
