@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	valid "github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	_ "github.com/nazarslota/unotes/auth/api/swagger"
 	"github.com/nazarslota/unotes/auth/internal/service"
@@ -13,10 +13,11 @@ import (
 )
 
 type Handler struct {
-	address string
-	logger  Logger
+	address  string
+	services *service.Services
 
-	services *service.Service
+	logger Logger
+	debug  bool
 }
 
 func NewHandler(options ...HandlerOption) *Handler {
@@ -29,29 +30,29 @@ func NewHandler(options ...HandlerOption) *Handler {
 
 // @title       Auth
 // @version     1.0
-// @description Authentication service, developed for UNotes(notes system).
+// @description Authentication service.
 
 // @host     localhost:8081
-// @BasePath /api/auth
+// @BasePath /api
 
 func (h *Handler) S() *Server {
-	e := echo.New()
+	mux := echo.New()
 
-	e.Logger.SetOutput(io.Discard)
-	e.StdLogger.SetOutput(io.Discard)
+	mux.Debug = h.debug
 
-	e.Validator = newValidator(valid.New())
-	e.HTTPErrorHandler = newHTTPErrorHandler(e)
+	mux.Logger.SetOutput(io.Discard)
+	mux.StdLogger.SetOutput(io.Discard)
 
-	e.Use(newLoggerMiddleware(h.logger))
-	e.Use(newRequestLoggerMiddleware(h.logger))
-	e.Use(newCORSMiddleware())
+	mux.Validator = newValidate(validator.New())
+	mux.HTTPErrorHandler = newHTTPErrorHandler(mux, h.logger)
 
-	// e.Debug = true
+	mux.Use(newLoggerMiddleware(h.logger))
+	mux.Use(newRequestLoggerMiddleware(h.logger))
+	mux.Use(corsMiddleware())
 
-	e.GET("/swagger/*", swagger.WrapHandler)
-	api := e.Group("/api/auth")
+	api := mux.Group("/api")
 	{
+		api.GET("/swagger/*", swagger.WrapHandler)
 		oAuth2 := api.Group("/oauth2")
 		{
 			oAuth2.POST("/sign-up", h.oAuth2SignUp)
@@ -63,10 +64,11 @@ func (h *Handler) S() *Server {
 
 	s := &http.Server{
 		Addr:           h.address,
-		Handler:        e,
+		Handler:        mux,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: http.DefaultMaxHeaderBytes, // 1 MB
 	}
+
 	return &Server{server: s}
 }

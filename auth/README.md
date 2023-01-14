@@ -162,8 +162,8 @@ make build
 
 #### Project also uses swagger documentation. [Swag](https://github.com/swaggo/swag).
 
-URL [http://localhost:8081/swagger/index.html](http://localhost:8081/swagger/index.html). If the swagger documentation
-has been changed, you can use the following command to generate a new one.
+URL [http://localhost:8081/api/swagger/index.html](http://localhost:8081/api/swagger/index.html). If the swagger
+documentation has been changed, you can use the following command to generate a new one.
 
 ````
 make swagger
@@ -181,5 +181,5 @@ make protobuf
 #### Environment
 
 If you want to change the config that is used (by default `production.env`) you can use the environment variable
-named `ENVIRONMENT`. To use `stage.env` use `ENVIRONMENT=STAGE`, to use `development.env`
-use `ENVIRONMENT=DEVELOPMENT`, for use in production, this variable may not be set.
+named `AUTH_ENVIRONMENT`. To use `stage.env` use `AUTH_ENVIRONMENT=STAGE`, to use `development.env`
+use `AUTH_ENVIRONMENT=DEVELOPMENT`, for use in production, this variable may not be set.

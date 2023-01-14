@@ -8,21 +8,19 @@ import (
 	"github.com/nazarslota/unotes/auth/internal/domain/user"
 )
 
-type userRepository struct {
+type UserRepository struct {
 	users map[string]user.User
 	mutex sync.RWMutex
 }
 
-var _ user.Repository = (*userRepository)(nil)
-
-func NewUserRepository() user.Repository {
-	return &userRepository{
+func NewUserRepository() *UserRepository {
+	return &UserRepository{
 		users: make(map[string]user.User),
 		mutex: sync.RWMutex{},
 	}
 }
 
-func (r *userRepository) SaveOne(ctx context.Context, user *user.User) error {
+func (r *UserRepository) SaveOne(ctx context.Context, user *user.User) error {
 	select {
 	case <-ctx.Done():
 		return fmt.Errorf("failed to save the user: %w", ctx.Err())
@@ -36,7 +34,7 @@ func (r *userRepository) SaveOne(ctx context.Context, user *user.User) error {
 	return nil
 }
 
-func (r *userRepository) FindOne(ctx context.Context, username string) (*user.User, error) {
+func (r *UserRepository) FindOne(ctx context.Context, username string) (*user.User, error) {
 	select {
 	case <-ctx.Done():
 		return nil, fmt.Errorf("failed to find the user: %w", ctx.Err())

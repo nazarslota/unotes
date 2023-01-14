@@ -12,7 +12,7 @@ import (
 type Handler struct {
 	address  string
 	logger   Logger
-	services *service.Service
+	services *service.Services
 
 	oAuth2 *oAuth2ServiceServer
 }

@@ -7,7 +7,7 @@
         "version": "1.0"
     },
     "host": "localhost:8081",
-    "basePath": "/api/auth",
+    "basePath": "/api",
     "paths": {
         "/oauth2/refresh": {
             "post": {
@@ -248,6 +248,9 @@
         },
         "rest.oAuth2RefreshModel": {
             "type": "object",
+            "required": [
+                "refresh_token"
+            ],
             "properties": {
                 "refresh_token": {
                     "type": "string",

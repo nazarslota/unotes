@@ -3,108 +3,44 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
 	"time"
 
-	redisdriver "github.com/go-redis/redis/v9"
-	"github.com/jmoiron/sqlx"
 	"github.com/nazarslota/unotes/auth/internal/config"
-	grpchandler "github.com/nazarslota/unotes/auth/internal/handler/grpc"
-	httphandler "github.com/nazarslota/unotes/auth/internal/handler/rest"
+	"github.com/nazarslota/unotes/auth/internal/handler/grpc"
+	"github.com/nazarslota/unotes/auth/internal/handler/rest"
 	"github.com/nazarslota/unotes/auth/internal/service"
 	"github.com/nazarslota/unotes/auth/internal/storage"
-	"github.com/nazarslota/unotes/auth/internal/storage/postgres"
+	"github.com/nazarslota/unotes/auth/internal/storage/postgresql"
 	"github.com/nazarslota/unotes/auth/internal/storage/redis"
+	"github.com/nazarslota/unotes/auth/pkg/logger"
 	"github.com/nazarslota/unotes/auth/pkg/utils"
-	log "github.com/sirupsen/logrus"
 )
 
+var log logger.Logger
+
+func init() {
+	var logs io.Writer
+	logs, err := os.OpenFile(config.C().Auth.Log, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	if err != nil {
+		logs = io.Discard
+	}
+
+	out := io.MultiWriter(
+		logs,
+		logger.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen},
+	)
+	log = logger.NewLogger(out).With().Timestamp().Logger()
+}
+
 func main() {
-	initLogger()
+	log.Info("The server starts...")
 
-	postgresDB, err := newPostgreSQL()
-	if err != nil {
-		log.WithError(err).Error("Filed to connect to PostgreSQL.")
-	}
-
-	redisDB, err := newRedisDB()
-	if err != nil {
-		log.WithError(err).Error("Filed to connect to Redis.")
-	}
-
-	repositories := storage.NewRepositoryProvider(
-		storage.WithPostgreSQLUserRepository(postgresDB),
-		storage.WithRedisRefreshTokenRepository(redisDB),
-	)
-
-	services := service.NewService(&service.OAuth2ServiceOptions{
-		AccessTokenSecret:      config.C().Auth.AccessTokenSecret,
-		RefreshTokenSecret:     config.C().Auth.RefreshTokenSecret,
-		AccessTokenExpiresIn:   config.C().Auth.AccessTokenExpiresIn,
-		RefreshTokenExpiresIn:  config.C().Auth.RefreshTokenExpiresIn,
-		UserRepository:         repositories.UserRepository,
-		RefreshTokenRepository: repositories.RefreshTokenRepository,
-	})
-
-	addrHTTP := net.JoinHostPort(
-		config.C().Auth.HostHTTP,
-		config.C().Auth.PortHTTP,
-	)
-	serverHTTP := httphandler.NewHandler(
-		httphandler.WithAddress(addrHTTP),
-		httphandler.WithService(services),
-		httphandler.WithLogger(log.StandardLogger()),
-	).S()
-
-	go func() {
-		if err := serverHTTP.Serve(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.WithError(err).Warn("Error occurred while running HTTP server.")
-		}
-	}()
-	log.Info("HTTP server started.")
-
-	addrGRPC := net.JoinHostPort(
-		config.C().Auth.HostGRPC,
-		config.C().Auth.PortGRPC,
-	)
-	serverGRPC := grpchandler.NewHandler(
-		grpchandler.WithAddress(addrGRPC),
-		grpchandler.WithService(services),
-		grpchandler.WithLogger(log.StandardLogger()),
-	).S()
-
-	go func() {
-		if err := serverGRPC.Serve(); err != nil {
-			log.WithError(err).Warn("Error occurred while running gRPC server.")
-		}
-	}()
-	log.Info("gRPC server started.")
-
-	<-utils.GracefulShutdown()
-	log.Info("Shutting down.")
-
-	shutdownHTTPServer(serverHTTP)
-	shutdownGRPCServer(serverGRPC)
-
-	closePostgreSQL(postgresDB)
-	closeRedisDB(redisDB)
-
-	log.Info("Shutdown completed.")
-}
-
-func initLogger() {
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: time.RFC1123,
-	})
-	log.SetOutput(os.Stdout)
-}
-
-func newPostgreSQL() (*sqlx.DB, error) {
-	p, err := postgres.NewPostgreSQL(context.Background(), &postgres.Config{
+	log.Info("Connecting to the PostgreSQL database...")
+	postgresDB, err := postgresql.NewPostgreSQL(context.Background(), postgresql.Config{
 		Host:     config.C().PostgreSQL.Host,
 		Port:     config.C().PostgreSQL.Port,
 		Username: config.C().PostgreSQL.Username,
@@ -113,55 +49,100 @@ func newPostgreSQL() (*sqlx.DB, error) {
 		SSLMode:  config.C().PostgreSQL.SSLMode,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create a postgres client: %w", err)
+		log.FatalFields("Failed to connect to PostgreSQL database.", map[string]any{"error": err})
+	} else {
+		log.Info("Successfully connected to PostgreSQL database.")
 	}
-	return p, nil
-}
 
-func closePostgreSQL(client *sqlx.DB) {
-	log.Info("Disconnecting from PostgreSQL.")
-	if err := client.Close(); err != nil {
-		log.WithError(err).Warn("Error occurred when disconnecting from PostgreSQL.")
-		return
-	}
-	log.Info("Successfully disconnected from PostgreSQL.")
-}
-
-func newRedisDB() (*redisdriver.Client, error) {
-	r, err := redis.NewRedis(context.Background(), &redis.Config{
+	log.Info("Connecting to the Redis database...")
+	redisDB, err := redis.NewRedis(context.Background(), redis.Config{
 		Addr:     config.C().Redis.Addr,
 		Password: config.C().Redis.Password,
 		DB:       config.C().Redis.DB,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create a redis client: %w", err)
+		log.FatalFields("Failed to connect to Redis database.", map[string]any{"error": err})
+	} else {
+		log.Info("Successfully connected to Redis database.")
 	}
-	return r, nil
-}
 
-func closeRedisDB(client *redisdriver.Client) {
-	log.Info("Disconnecting from RedisDB.")
-	if err := client.Close(); err != nil {
-		log.WithError(err).Warn("Error occurred when disconnecting from RedisDB.")
-		return
-	}
-	log.Info("Successfully disconnected from RedisDB.")
-}
+	repositories := storage.NewRepositoryProvider(
+		storage.WithPostgreSQLUserRepository(postgresDB),
+		storage.WithRedisRefreshTokenRepository(redisDB),
+	)
 
-func shutdownHTTPServer(server *httphandler.Server) {
-	log.Info("HTTP server shutting down.")
-	if err := server.Shutdown(context.Background()); err != nil {
-		log.WithError(err).Warn("Error occurred on HTTP server shutting down.")
-		return
-	}
-	log.Info("HTTP server has successfully shut down.")
-}
+	services := service.NewServices(&service.OAuth2ServiceOptions{
+		AccessTokenSecret:      config.C().Auth.AccessTokenSecret,
+		RefreshTokenSecret:     config.C().Auth.RefreshTokenSecret,
+		AccessTokenExpiresIn:   config.C().Auth.AccessTokenExpiresIn,
+		RefreshTokenExpiresIn:  config.C().Auth.RefreshTokenExpiresIn,
+		UserRepository:         repositories.UserRepository,
+		RefreshTokenRepository: repositories.RefreshTokenRepository,
+	})
 
-func shutdownGRPCServer(server *grpchandler.Server) {
-	log.Info("gRPC server shutting down.")
-	if err := server.Shutdown(context.Background()); err != nil {
-		log.WithError(err).Warn("Error occurred on gRPC server shutting down.")
-		return
+	restAddress := net.JoinHostPort(config.C().Auth.HostREST, config.C().Auth.PortREST)
+	restServer := rest.NewHandler(
+		rest.WithServices(services),
+		rest.WithAddress(restAddress),
+		rest.WithLogger(log),
+		rest.WithDebug(config.C().Auth.Debug),
+	).S()
+
+	grpcAddress := net.JoinHostPort(config.C().Auth.HostGRPC, config.C().Auth.PortGRPC)
+	grpcServer := grpc.NewHandler(
+		grpc.WithService(services),
+		grpc.WithAddress(grpcAddress),
+		grpc.WithLogger(log),
+	).S()
+
+	log.Infof("Starting a REST server... Address: '%s'.", restAddress)
+	go func() {
+		err := restServer.Serve()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.FatalFields("Error occurred while running REST server.", map[string]any{"error": err})
+		}
+	}()
+	log.Info("The REST server is successfully started.")
+
+	log.Infof("Starting a gRPC server... Address: '%s'.", grpcAddress)
+	go func() {
+		err := grpcServer.Serve()
+		if err != nil {
+			log.FatalFields("Error occurred while running gRPC server.", map[string]any{"error": err})
+		}
+	}()
+	log.Info("The gRPC server is successfully started.")
+
+	<-utils.GracefulShutdown()
+	log.Info("Shutdown of the server...")
+
+	log.Info("Shutdown of the REST server...")
+	if err := restServer.Shutdown(context.Background()); err != nil {
+		log.ErrorFields("Error during REST server shutdown.", map[string]any{"error": err})
+	} else {
+		log.Info("REST server was successfully shut down.")
 	}
-	log.Info("gRPC server has successfully shut down.")
+
+	log.Info("Shutdown of the gRPC server...")
+	if err := grpcServer.Shutdown(context.Background()); err != nil {
+		log.ErrorFields("Error during gRPC server shutdown.", map[string]any{"error": err})
+	} else {
+		log.Info("gRPC server was successfully shut down.")
+	}
+
+	log.Info("Closing the connection to PostgreSQL...")
+	if err := postgresDB.Close(); err != nil {
+		log.ErrorFields("Failed to close connection to PostgreSQL.", map[string]any{"error": err})
+	} else {
+		log.Info("The connection to PostgreSQL is successfully closed.")
+	}
+
+	log.Info("Closing the connection to Redis...")
+	if err := redisDB.Close(); err != nil {
+		log.ErrorFields("Failed to close connection to Redis.", map[string]any{"error": err})
+	} else {
+		log.Info("The connection to Redis is successfully closed.")
+	}
+
+	log.Info("The server has been successfully shut down.")
 }

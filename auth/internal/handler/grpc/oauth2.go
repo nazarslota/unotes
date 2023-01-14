@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -13,7 +14,7 @@ import (
 
 type oAuth2ServiceServer struct {
 	logger   Logger
-	services *service.Service
+	services *service.Services
 
 	pb.OAuth2ServiceServer
 }

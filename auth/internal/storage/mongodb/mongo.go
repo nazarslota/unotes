@@ -1,4 +1,4 @@
-package mongo
+package mongodb
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type Config struct {
 	Database string
 }
 
-func NewMongoDB(ctx context.Context, config *Config) (*mongo.Database, error) {
+func NewMongoDB(ctx context.Context, config Config) (*mongo.Database, error) {
 	uri, _ := utils.BuildMongoURI(
 		config.Host,
 		config.Port,

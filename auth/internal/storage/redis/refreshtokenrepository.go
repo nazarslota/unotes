@@ -10,29 +10,21 @@ import (
 	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
 )
 
-// refreshTokenRepository is a struct that implements the refreshtoken.Repository interface using a Redis client.
-type refreshTokenRepository struct {
+// RefreshTokenRepository is a struct that implements the refreshtoken.Repository interface using a Redis client.
+type RefreshTokenRepository struct {
 	client *redis.Client
 }
 
 // refreshTokensPrefix is a string prefix used for the keys in Redis where the refresh tokens are stored.
 const refreshTokensPrefix = "REFRESH_TOKENS_"
 
-var _ refreshtoken.Repository = (*refreshTokenRepository)(nil)
-
-// NewRefreshTokenRepository returns a new refreshTokenRepository with the given Redis client.
-func NewRefreshTokenRepository(client *redis.Client) refreshtoken.Repository {
-	return &refreshTokenRepository{client: client}
+// NewRefreshTokenRepository returns a new RefreshTokenRepository with the given Redis client.
+func NewRefreshTokenRepository(client *redis.Client) *RefreshTokenRepository {
+	return &RefreshTokenRepository{client: client}
 }
 
 // SaveOne saves the given refresh token to Redis. If an error occurs, it is returned.
-func (r *refreshTokenRepository) SaveOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
-	select {
-	case <-ctx.Done():
-		return fmt.Errorf("failed to save the refresh token: %w", ctx.Err())
-	default:
-	}
-
+func (r *RefreshTokenRepository) SaveOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
 	// Get all tokens belonging to the user.
 	tokens, err := r.FindMany(ctx, userID)
 	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
@@ -58,15 +50,7 @@ func (r *refreshTokenRepository) SaveOne(ctx context.Context, userID string, tok
 }
 
 // FindOne finds the given refresh token in Redis. If the token is not found, it returns an error.
-func (r *refreshTokenRepository) FindOne(
-	ctx context.Context, userID string, token *refreshtoken.Token,
-) (*refreshtoken.Token, error) {
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("failed to find the refresh token: %w", ctx.Err())
-	default:
-	}
-
+func (r *RefreshTokenRepository) FindOne(ctx context.Context, userID string, token *refreshtoken.Token) (*refreshtoken.Token, error) {
 	// Get all tokens belonging to the user.
 	tokens, err := r.FindMany(ctx, userID)
 	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
@@ -85,7 +69,7 @@ func (r *refreshTokenRepository) FindOne(
 }
 
 // DeleteOne deletes the given refresh token from Redis. If an error occurs, it is returned.
-func (r *refreshTokenRepository) DeleteOne(
+func (r *RefreshTokenRepository) DeleteOne(
 	ctx context.Context, userID string, token *refreshtoken.Token,
 ) error {
 	select {
@@ -124,7 +108,7 @@ func (r *refreshTokenRepository) DeleteOne(
 }
 
 // FindMany returns all refresh tokens belonging to the given user from Redis. If an error occurs, it is returned.
-func (r *refreshTokenRepository) FindMany(ctx context.Context, userID string) ([]refreshtoken.Token, error) {
+func (r *RefreshTokenRepository) FindMany(ctx context.Context, userID string) ([]refreshtoken.Token, error) {
 	select {
 	case <-ctx.Done():
 		return nil, fmt.Errorf("failed to find the refresh tokens: %w", ctx.Err())

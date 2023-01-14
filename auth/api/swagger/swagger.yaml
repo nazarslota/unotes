@@ -1,4 +1,4 @@
-basePath: /api/auth
+basePath: /api
 definitions:
   errors.HTTPError:
     properties:
@@ -19,6 +19,8 @@ definitions:
       refresh_token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
+    required:
+    - refresh_token
     type: object
   rest.oAuth2RefreshResult:
     properties:

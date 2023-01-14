@@ -6,8 +6,8 @@ import (
 	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
 	"github.com/nazarslota/unotes/auth/internal/domain/user"
 	"github.com/nazarslota/unotes/auth/internal/storage/memory"
-	"github.com/nazarslota/unotes/auth/internal/storage/mongo"
-	"github.com/nazarslota/unotes/auth/internal/storage/postgres"
+	"github.com/nazarslota/unotes/auth/internal/storage/mongodb"
+	"github.com/nazarslota/unotes/auth/internal/storage/postgresql"
 	"github.com/nazarslota/unotes/auth/internal/storage/redis"
 	mongodriver "go.mongodb.org/mongo-driver/mongo"
 )
@@ -42,14 +42,14 @@ func WithMemoryUserRepository() RepositoryProviderOption {
 // WithMongoDBUserRepository is a RepositoryProviderOption that sets the UserRepository field to a new MongoDB-based user.Repository.
 func WithMongoDBUserRepository(db *mongodriver.Database) RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {
-		rp.UserRepository = mongo.NewUserRepository(db)
+		rp.UserRepository = mongodb.NewUserRepository(db)
 	}
 }
 
 // WithPostgreSQLUserRepository is a RepositoryProviderOption that sets the UserRepository field to a new PostgreSQL-based user.Repository.
 func WithPostgreSQLUserRepository(db *sqlx.DB) RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {
-		rp.UserRepository = postgres.NewUserRepository(db)
+		rp.UserRepository = postgresql.NewUserRepository(db)
 	}
 }
 

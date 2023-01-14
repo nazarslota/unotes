@@ -4,15 +4,15 @@ import "github.com/nazarslota/unotes/auth/internal/service"
 
 type HandlerOption func(h *Handler)
 
-func WithAddress(address string) HandlerOption {
+func WithService(services *service.Services) HandlerOption {
 	return func(h *Handler) {
-		h.address = address
+		h.services = services
 	}
 }
 
-func WithService(services *service.Service) HandlerOption {
+func WithAddress(address string) HandlerOption {
 	return func(h *Handler) {
-		h.services = services
+		h.address = address
 	}
 }
 

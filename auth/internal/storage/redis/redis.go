@@ -19,7 +19,7 @@ type Config struct {
 
 // NewRedis creates and returns a new Redis client with the given configuration.
 // If the connection to the Redis server fails, an error is returned.
-func NewRedis(ctx context.Context, config *Config) (*redis.Client, error) {
+func NewRedis(ctx context.Context, config Config) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     config.Addr,
 		Password: config.Password,

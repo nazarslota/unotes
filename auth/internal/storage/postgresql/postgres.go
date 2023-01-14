@@ -1,4 +1,4 @@
-package postgres
+package postgresql
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type Config struct {
 	SSLMode  string
 }
 
-func NewPostgreSQL(ctx context.Context, config *Config) (*sqlx.DB, error) {
+func NewPostgreSQL(ctx context.Context, config Config) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		config.Host, config.Port, config.Username, config.Password, config.DBName, config.SSLMode)
 	db, err := sqlx.Open("postgres", dsn)

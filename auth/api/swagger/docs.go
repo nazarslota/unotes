@@ -255,6 +255,9 @@ const docTemplate = `{
         },
         "rest.oAuth2RefreshModel": {
             "type": "object",
+            "required": [
+                "refresh_token"
+            ],
             "properties": {
                 "refresh_token": {
                     "type": "string",
@@ -333,7 +336,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8081",
-	BasePath:         "/api/auth",
+	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Auth",
 	Description:      "Authentication service, developed for UNotes(notes system).",

@@ -8,21 +8,19 @@ import (
 	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
 )
 
-type refreshTokenRepository struct {
+type RefreshTokenRepository struct {
 	tokens map[string][]refreshtoken.Token
 	mutex  sync.RWMutex
 }
 
-var _ refreshtoken.Repository = (*refreshTokenRepository)(nil)
-
-func NewRefreshTokenRepository() refreshtoken.Repository {
-	return &refreshTokenRepository{
+func NewRefreshTokenRepository() *RefreshTokenRepository {
+	return &RefreshTokenRepository{
 		tokens: make(map[string][]refreshtoken.Token),
 		mutex:  sync.RWMutex{},
 	}
 }
 
-func (r *refreshTokenRepository) SaveOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
+func (r *RefreshTokenRepository) SaveOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
 	select {
 	case <-ctx.Done():
 		return fmt.Errorf("failed to save the refresh token: %w", ctx.Err())
@@ -40,7 +38,7 @@ func (r *refreshTokenRepository) SaveOne(ctx context.Context, userID string, tok
 	return nil
 }
 
-func (r *refreshTokenRepository) FindOne(
+func (r *RefreshTokenRepository) FindOne(
 	ctx context.Context, userID string, token *refreshtoken.Token,
 ) (*refreshtoken.Token, error) {
 	select {
@@ -60,7 +58,7 @@ func (r *refreshTokenRepository) FindOne(
 	return nil, refreshtoken.ErrTokenNotFound
 }
 
-func (r *refreshTokenRepository) DeleteOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
+func (r *RefreshTokenRepository) DeleteOne(ctx context.Context, userID string, token *refreshtoken.Token) error {
 	select {
 	case <-ctx.Done():
 		return fmt.Errorf("failed to delete the refresh token: %w", ctx.Err())
@@ -78,7 +76,7 @@ func (r *refreshTokenRepository) DeleteOne(ctx context.Context, userID string, t
 	return nil
 }
 
-func (r *refreshTokenRepository) FindMany(ctx context.Context, userID string) ([]refreshtoken.Token, error) {
+func (r *RefreshTokenRepository) FindMany(ctx context.Context, userID string) ([]refreshtoken.Token, error) {
 	select {
 	case <-ctx.Done():
 		return nil, fmt.Errorf("failed to find the refresh tokens: %w", ctx.Err())

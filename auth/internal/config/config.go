@@ -11,14 +11,16 @@ import (
 
 type Config struct {
 	Auth struct {
-		HostHTTP              string        `mapstructure:"AUTH_HOST_HTTP"`
-		PortHTTP              string        `mapstructure:"AUTH_PORT_HTTP"`
+		HostREST              string        `mapstructure:"AUTH_HOST_REST"`
+		PortREST              string        `mapstructure:"AUTH_PORT_REST"`
 		HostGRPC              string        `mapstructure:"AUTH_HOST_GRPC"`
 		PortGRPC              string        `mapstructure:"AUTH_PORT_GRPC"`
 		AccessTokenSecret     string        `mapstructure:"AUTH_ACCESS_TOKEN_SECRET"`
 		AccessTokenExpiresIn  time.Duration `mapstructure:"AUTH_ACCESS_TOKEN_EXPIRES_IN"`
 		RefreshTokenSecret    string        `mapstructure:"AUTH_REFRESH_TOKEN_SECRET"`
 		RefreshTokenExpiresIn time.Duration `mapstructure:"AUTH_REFRESH_TOKEN_EXPIRES_IN"`
+		Debug                 bool          `mapstructure:"AUTH_DEBUG"`
+		Log                   string        `mapstructure:"AUTH_LOG"`
 	} `mapstructure:",squash"`
 	PostgreSQL struct {
 		Host     string `mapstructure:"AUTH_POSTGRESQL_HOST"`
@@ -52,7 +54,7 @@ func C() *Config {
 		v := viper.New()
 		v.AddConfigPath("configs")
 
-		environment := os.Getenv("ENVIRONMENT")
+		environment := os.Getenv("AUTH_ENVIRONMENT")
 		if environment == "DEVELOPMENT" {
 			v.AutomaticEnv()
 			v.SetConfigName("development")

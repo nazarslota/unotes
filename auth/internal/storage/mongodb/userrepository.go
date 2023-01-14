@@ -1,4 +1,4 @@
-package mongo
+package mongodb
 
 import (
 	"context"
@@ -10,28 +10,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type userRepository struct {
+type UserRepository struct {
 	collection *mongo.Collection
 }
 
-var _ user.Repository = (*userRepository)(nil)
-
-func NewUserRepository(db *mongo.Database, collection ...string) user.Repository {
+func NewUserRepository(db *mongo.Database, collection ...string) *UserRepository {
 	if len(collection) > 0 {
-		return &userRepository{collection: db.Collection(collection[0])}
+		return &UserRepository{collection: db.Collection(collection[0])}
 	}
-	return &userRepository{collection: db.Collection("users")}
+	return &UserRepository{collection: db.Collection("users")}
 }
 
-func (r *userRepository) SaveOne(ctx context.Context, user *user.User) error {
-
+func (r *UserRepository) SaveOne(ctx context.Context, user *user.User) error {
 	if _, err := r.collection.InsertOne(ctx, user); err != nil {
 		return fmt.Errorf("failed to save the user: %w", err)
 	}
 	return nil
 }
 
-func (r *userRepository) FindOne(ctx context.Context, username string) (*user.User, error) {
+func (r *UserRepository) FindOne(ctx context.Context, username string) (*user.User, error) {
 	result := r.collection.FindOne(ctx, bson.M{"username": username})
 	if result.Err() != nil {
 		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
