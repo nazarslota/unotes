@@ -36,5 +36,3 @@ func (h *Handler) S() *Server {
 
 	return &Server{address: h.address, server: s}
 }
-
-// Logger.
