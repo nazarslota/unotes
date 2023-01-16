@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+option go_package = "github.com/nazarslota/unotes/note/api/proto";
+
+// import "validate/validate.proto";
+
+message CreateNoteRequest {
+  string title = 1;
+  string content = 2;
+  string user_id = 3;
+}
+
+message CreateNoteResponse {
+  string id = 1;
+}
+
+message UpdateNoteRequest {
+  string id = 1;
+  string new_title = 2;
+  string new_content = 3;
+  string user_id = 4;
+}
+
+message UpdateNoteResponse {
+}
+
+message DeleteNoteRequest {
+  string id = 1;
+  string user_id = 2;
+}
+
+message DeleteNoteResponse {
+}
+
+message GetNoteRequest {
+  string id = 1;
+  string user_id = 2;
+}
+
+message GetNoteResponse {
+  string title = 1;
+  string content = 2;
+}
+
+message GetNotesRequest {
+  string user_id = 1;
+}
+
+message GetNotesResponse {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+}
+
+service NoteService {
+  rpc CreateNote(CreateNoteRequest) returns (CreateNoteResponse);
+  rpc UpdateNote(UpdateNoteRequest) returns (UpdateNoteResponse);
+  rpc DeleteNote(DeleteNoteRequest) returns (DeleteNoteResponse);
+  rpc GetNote(GetNoteRequest) returns (GetNoteResponse);
+  rpc GetNotes(GetNotesRequest) returns (stream GetNotesResponse);
+}
