@@ -483,8 +483,6 @@ func (m *DeleteNoteRequest) validate(all bool) error {
 
 	// no validation rules for Id
 
-	// no validation rules for UserId
-
 	if len(errors) > 0 {
 		return DeleteNoteRequestMultiError(errors)
 	}
@@ -691,8 +689,6 @@ func (m *GetNoteRequest) validate(all bool) error {
 
 	// no validation rules for Id
 
-	// no validation rules for UserId
-
 	if len(errors) > 0 {
 		return GetNoteRequestMultiError(errors)
 	}
@@ -796,6 +792,8 @@ func (m *GetNoteResponse) validate(all bool) error {
 	// no validation rules for Title
 
 	// no validation rules for Content
+
+	// no validation rules for UserId
 
 	if len(errors) > 0 {
 		return GetNoteResponseMultiError(errors)

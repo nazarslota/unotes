@@ -26,7 +26,6 @@ message UpdateNoteResponse {
 
 message DeleteNoteRequest {
   string id = 1;
-  string user_id = 2;
 }
 
 message DeleteNoteResponse {
@@ -34,12 +33,12 @@ message DeleteNoteResponse {
 
 message GetNoteRequest {
   string id = 1;
-  string user_id = 2;
 }
 
 message GetNoteResponse {
   string title = 1;
   string content = 2;
+  string user_id = 3;
 }
 
 message GetNotesRequest {
