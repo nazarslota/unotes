@@ -2,12 +2,12 @@ syntax = "proto3";
 
 option go_package = "github.com/nazarslota/unotes/note/api/proto";
 
-// import "validate/validate.proto";
+import "validate/validate.proto";
 
 message CreateNoteRequest {
-  string title = 1;
-  string content = 2;
-  string user_id = 3;
+  string title = 1 [(validate.rules).string = {min_len: 4, max_len: 128}];
+  string content = 2 [(validate.rules).string = {min_len: 0, max_len: 1024}];
+  string user_id = 3 [(validate.rules).string.uuid = true];
 }
 
 message CreateNoteResponse {
@@ -15,24 +15,24 @@ message CreateNoteResponse {
 }
 
 message UpdateNoteRequest {
-  string id = 1;
-  string new_title = 2;
-  string new_content = 3;
-  string user_id = 4;
+  string id = 1 [(validate.rules).string.uuid = true];
+  string new_title = 2 [(validate.rules).string = {min_len: 4, max_len: 128}];
+  string new_content = 3 [(validate.rules).string = {min_len: 0, max_len: 1024}];
+  string user_id = 4 [(validate.rules).string.uuid = true];
 }
 
 message UpdateNoteResponse {
 }
 
 message DeleteNoteRequest {
-  string id = 1;
+  string id = 1 [(validate.rules).string.uuid = true];
 }
 
 message DeleteNoteResponse {
 }
 
 message GetNoteRequest {
-  string id = 1;
+  string id = 1 [(validate.rules).string.uuid = true];
 }
 
 message GetNoteResponse {
@@ -42,7 +42,7 @@ message GetNoteResponse {
 }
 
 message GetNotesRequest {
-  string user_id = 1;
+  string user_id = 1 [(validate.rules).string.uuid = true];
 }
 
 message GetNotesResponse {
