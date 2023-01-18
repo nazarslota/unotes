@@ -7,6 +7,7 @@ import (
 
 type Handler struct {
 	address string
+	logger  Logger
 
 	note *noteServiceServer
 }
@@ -21,8 +22,8 @@ func NewHandler(options ...HandlerOption) *Handler {
 
 func (h *Handler) S() *Server {
 	s := grpc.NewServer(
-	// grpc.UnaryInterceptor(),
-	// grpc.StreamInterceptor(),
+		grpc.UnaryInterceptor(newUnaryLoggerInterceptor(h.logger)),
+		grpc.StreamInterceptor(newStreamLoggerInterceptor(h.logger)),
 	)
 	pb.RegisterNoteServiceServer(s, h.note)
 
