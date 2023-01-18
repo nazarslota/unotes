@@ -7,6 +7,7 @@ import (
 )
 
 type noteServiceServer struct {
+	services service.Services
 	pb.NoteServiceServer
 }
 

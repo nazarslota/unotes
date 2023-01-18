@@ -2,6 +2,7 @@ package grpc
 
 import (
 	pb "github.com/nazarslota/unotes/note/api/proto"
+	"github.com/nazarslota/unotes/note/internal/service"
 	"google.golang.org/grpc"
 )
 
@@ -9,7 +10,8 @@ type Handler struct {
 	address string
 	logger  Logger
 
-	note *noteServiceServer
+	service service.Services
+	note    *noteServiceServer
 }
 
 func NewHandler(options ...HandlerOption) *Handler {
