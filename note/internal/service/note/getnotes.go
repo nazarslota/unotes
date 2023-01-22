@@ -2,6 +2,7 @@ package note
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
@@ -27,13 +28,17 @@ type getNotesRequestHandler struct {
 	NoteRepository domainnote.Repository
 }
 
+var ErrGetNotesNotFound = func() error { return domainnote.ErrNotFound }()
+
 func NewGetNotesRequestHandler(noteRepository domainnote.Repository) GetNotesRequestHandler {
 	return &getNotesRequestHandler{NoteRepository: noteRepository}
 }
 
 func (c getNotesRequestHandler) Handle(ctx context.Context, request *GetNotesRequest) (*GetNotesResponse, error) {
 	notes, err := c.NoteRepository.FindMany(ctx, request.UserID)
-	if err != nil {
+	if errors.Is(err, domainnote.ErrNotFound) {
+		return nil, fmt.Errorf("failed to find notes: %w", ErrGetNotesNotFound)
+	} else if err != nil {
 		return nil, fmt.Errorf("failed to find notes: %w", err)
 	}
 

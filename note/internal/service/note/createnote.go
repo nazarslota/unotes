@@ -2,6 +2,7 @@ package note
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -26,6 +27,8 @@ type createNoteRequestHandler struct {
 	NoteRepository domainnote.Repository
 }
 
+var ErrCreateNoteAlreadyExist = func() error { return domainnote.ErrAlreadyExist }()
+
 func NewCreateNoteRequestHandler(noteRepository domainnote.Repository) CreateNoteRequestHandler {
 	return &createNoteRequestHandler{NoteRepository: noteRepository}
 }
@@ -38,7 +41,9 @@ func (c createNoteRequestHandler) Handle(ctx context.Context, request *CreateNot
 		UserID:  request.UserID,
 	}
 
-	if err := c.NoteRepository.SaveOne(ctx, note); err != nil {
+	if err := c.NoteRepository.SaveOne(ctx, note); errors.Is(err, domainnote.ErrAlreadyExist) {
+		return nil, fmt.Errorf("failed to create note: %w", ErrCreateNoteAlreadyExist)
+	} else if err != nil {
 		return nil, fmt.Errorf("failed to create note: %w", err)
 	}
 	return &CreateNoteResponse{ID: note.ID}, nil
