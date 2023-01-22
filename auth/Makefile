@@ -42,9 +42,9 @@ endif
 
 run: build ## Builds and runs the app.
     ifeq ($(OS), Windows_NT)
-		./${BIN_DIR}/auth.exe
+		./${BIN_DIR}/${PROJECT_NAME}.exe
     else
-		./${BIN_DIR}/auth
+		./${BIN_DIR}/${PROJECT_NAME}
     endif
 
 build: dependencies protobuf swagger ## Loads dependencies, generates proto files, swagger documentation and build.
