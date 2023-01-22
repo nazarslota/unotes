@@ -38,7 +38,14 @@ else
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: clean build test swagger proto about help
+.PHONY: run build test dependencies protobuf swagger clean about help
+
+run: build ## Builds and runs the app.
+    ifeq ($(OS), Windows_NT)
+		./${BIN_DIR}/auth.exe
+    else
+		./${BIN_DIR}/auth
+    endif
 
 build: dependencies protobuf swagger ## Loads dependencies, generates proto files, swagger documentation and build.
 	go build \
