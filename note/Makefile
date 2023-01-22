@@ -1,4 +1,4 @@
-PROJECT_NAME := auth
+PROJECT_NAME := note
 
 BIN_DIR := bin
 PROTO_DIR := api/proto
@@ -38,14 +38,7 @@ else
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: run build test dependencies protobuf swagger clean about help
-
-run: build ## Builds and runs the app.
-    ifeq ($(OS), Windows_NT)
-		./${BIN_DIR}/${PROJECT_NAME}.exe
-    else
-		./${BIN_DIR}/${PROJECT_NAME}
-    endif
+.PHONY: clean build test swagger proto about help
 
 build: dependencies protobuf swagger ## Loads dependencies, generates proto files, swagger documentation and build.
 	go build \
