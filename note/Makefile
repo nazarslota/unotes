@@ -47,11 +47,11 @@ run: build ## Builds and runs the app.
 		./${BIN_DIR}/${PROJECT_NAME}
     endif
 
-build: dependencies protobuf swagger ## Loads dependencies, generates proto files, swagger documentation and build.
+build: dependencies protobuf ## Loads dependencies, generates proto files, swagger documentation and build.
 	go build \
   -o ./${BIN_DIR}/ ./cmd/...
 
-test: dependencies protobuf swagger ## Runs all tests.
+test: dependencies protobuf ## Runs all tests.
 	go test ./...
 
 dependencies: # Downloads all Go dependencies.
@@ -63,11 +63,6 @@ protobuf: ## Generates protocol buffer files.
   --go_out=. --go_opt=module=${GO_PACKAGE} \
   --go-grpc_out=. --go-grpc_opt=module=${GO_PACKAGE} \
   --validate_out=lang=go:./. --validate_opt=module=${GO_PACKAGE}
-
-swagger: ## Generates swagger documentation.
-	swag init \
-  --quiet --output ./${SWAGGER_DIR} \
-  --generalInfo ./internal/handler/rest/handler.go
 
 clean: ## Deletes generated files.
 	${RM_RF_COMMAND} ./${BIN_DIR}/

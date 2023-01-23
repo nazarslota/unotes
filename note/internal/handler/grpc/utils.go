@@ -17,7 +17,7 @@ func newUnaryLoggerInterceptor(logger Logger) grpc.UnaryServerInterceptor {
 		resp, err := handler(ctx, req)
 		duration := time.Since(start)
 
-		fields := map[string]interface{}{
+		fields := map[string]any{
 			"method":   info.FullMethod,
 			"duration": duration.String(),
 		}
@@ -33,7 +33,7 @@ func newStreamLoggerInterceptor(logger Logger) grpc.StreamServerInterceptor {
 		err := handler(srv, stream)
 		duration := time.Since(start)
 
-		fields := map[string]interface{}{
+		fields := map[string]any{
 			"method":   info.FullMethod,
 			"duration": duration.String(),
 		}

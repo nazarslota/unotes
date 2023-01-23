@@ -10,14 +10,19 @@ type Handler struct {
 	address string
 	logger  Logger
 
-	service service.Services
-	note    *noteServiceServer
+	services service.Services
+	note     *noteServiceServer
 }
 
 func NewHandler(options ...HandlerOption) *Handler {
 	h := &Handler{}
 	for _, option := range options {
 		option(h)
+	}
+
+	h.note = &noteServiceServer{
+		services: h.services,
+		logger:   h.logger,
 	}
 	return h
 }
@@ -29,5 +34,5 @@ func (h *Handler) S() *Server {
 	)
 	pb.RegisterNoteServiceServer(s, h.note)
 
-	return &Server{server: s}
+	return &Server{address: h.address, server: s}
 }

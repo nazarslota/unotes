@@ -14,6 +14,7 @@ import (
 
 type noteServiceServer struct {
 	services service.Services
+	logger   Logger
 	pb.NoteServiceServer
 }
 
