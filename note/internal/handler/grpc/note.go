@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	pb "github.com/nazarslota/unotes/note/api/proto"
-	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
 	"github.com/nazarslota/unotes/note/internal/service"
 	servicenote "github.com/nazarslota/unotes/note/internal/service/note"
 	"google.golang.org/grpc/codes"
@@ -30,7 +29,9 @@ func (s noteServiceServer) CreateNote(ctx context.Context, in *pb.CreateNoteRequ
 	}
 
 	response, err := s.services.NoteService.CreateNoteRequestHandler.Handle(ctx, request)
-	if err != nil {
+	if errors.Is(err, servicenote.ErrCreateNoteAlreadyExist) {
+		return nil, status.Error(codes.AlreadyExists, "note already exist")
+	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
 	}
 	return &pb.CreateNoteResponse{Id: response.ID}, nil
@@ -50,7 +51,7 @@ func (s noteServiceServer) DeleteNote(ctx context.Context, in *pb.DeleteNoteRequ
 	}
 
 	_, err := s.services.NoteService.DeleteNoteRequestHandler.Handle(ctx, request)
-	if errors.Is(err, domainnote.ErrNotFound) {
+	if errors.Is(err, servicenote.ErrDeleteNoteNotFound) {
 		return nil, status.Error(codes.NotFound, "not found")
 	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
@@ -68,16 +69,12 @@ func (s noteServiceServer) GetNote(ctx context.Context, in *pb.GetNoteRequest) (
 	}
 
 	response, err := s.services.NoteService.GetNoteRequestHandler.Handle(ctx, request)
-	if errors.Is(err, domainnote.ErrNotFound) {
-		return nil, status.Error(codes.NotFound, "not found")
+	if errors.Is(err, servicenote.ErrGetNoteNotFound) {
+		return nil, status.Error(codes.NotFound, "note not found")
 	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
 	}
-	return &pb.GetNoteResponse{
-		Title:   response.Title,
-		Content: response.Content,
-		UserId:  response.UserID,
-	}, nil
+	return &pb.GetNoteResponse{Title: response.Title, Content: response.Content, UserId: response.UserID}, nil
 }
 
 func (s noteServiceServer) GetNotes(in *pb.GetNotesRequest, server pb.NoteService_GetNotesServer) error {
@@ -90,8 +87,8 @@ func (s noteServiceServer) GetNotes(in *pb.GetNotesRequest, server pb.NoteServic
 	}
 
 	response, err := s.services.NoteService.GetNotesRequestHandler.Handle(server.Context(), request)
-	if errors.Is(err, domainnote.ErrNotFound) {
-		return status.Error(codes.NotFound, "not found")
+	if errors.Is(err, servicenote.ErrGetNotesNotFound) {
+		return status.Error(codes.NotFound, "notes not found")
 	} else if err != nil {
 		return status.Error(codes.Internal, "internal")
 	}
