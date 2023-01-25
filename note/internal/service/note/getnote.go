@@ -26,7 +26,7 @@ type getNoteRequestHandler struct {
 	NoteRepository domainnote.Repository
 }
 
-var ErrGetNoteNotFound = func() error { return domainnote.ErrNotFound }()
+var ErrGetNoteNotFound = func() error { return domainnote.ErrNoteNotFound }()
 
 func NewGetNoteRequestHandler(noteRepository domainnote.Repository) GetNoteRequestHandler {
 	return &getNoteRequestHandler{NoteRepository: noteRepository}
@@ -34,7 +34,7 @@ func NewGetNoteRequestHandler(noteRepository domainnote.Repository) GetNoteReque
 
 func (c getNoteRequestHandler) Handle(ctx context.Context, request *GetNoteRequest) (*GetNoteResponse, error) {
 	note, err := c.NoteRepository.FindOne(ctx, request.ID)
-	if errors.Is(err, domainnote.ErrNotFound) {
+	if errors.Is(err, domainnote.ErrNoteNotFound) {
 		return nil, fmt.Errorf("failed to find note: %w", ErrGetNoteNotFound)
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to find note: %w", err)

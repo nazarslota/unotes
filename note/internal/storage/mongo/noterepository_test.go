@@ -44,12 +44,12 @@ func TestNoteRepository_SaveOne(t *testing.T) {
 	defer func() { _ = notes.Drop(context.Background()) }()
 
 	repository := NewNoteRepository(database, "notes")
-	note := &domainnote.Note{ID: "123", Title: "Test Note", Content: "This is a test note"}
+	note := domainnote.Note{ID: "123", Title: "Test Note", Content: "This is a test note"}
 
 	err = repository.SaveOne(context.Background(), note)
 	assert.NoError(t, err)
 
-	result := new(domainnote.Note)
+	var result domainnote.Note
 	err = notes.FindOne(context.Background(), bson.M{"_id": note.ID}).Decode(&result)
 	if assert.NoError(t, err) {
 		assert.Equal(t, note, result)
@@ -57,7 +57,7 @@ func TestNoteRepository_SaveOne(t *testing.T) {
 
 	err = repository.SaveOne(context.Background(), note)
 	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, domainnote.ErrAlreadyExist)
+		assert.ErrorIs(t, err, domainnote.ErrNoteAlreadyExist)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -82,11 +82,11 @@ func TestNoteRepository_FindOne(t *testing.T) {
 	defer func() { _ = notes.Drop(context.Background()) }()
 
 	repository := NewNoteRepository(database, "notes")
-	note := &domainnote.Note{ID: "123", Title: "Test Note", Content: "This is a test note"}
+	note := domainnote.Note{ID: "123", Title: "Test Note", Content: "This is a test note"}
 
 	_, err = repository.FindOne(context.Background(), note.ID)
 	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, domainnote.ErrNotFound)
+		assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
 	}
 
 	_, err = notes.InsertOne(context.Background(), note)
@@ -102,7 +102,7 @@ func TestNoteRepository_FindOne(t *testing.T) {
 
 	result, err = repository.FindOne(ctx, note.ID)
 	if assert.Error(t, err) {
-		assert.Nil(t, result)
+		assert.Equal(t, domainnote.Note{}, result)
 		assert.ErrorIs(t, err, context.Canceled)
 	}
 }
@@ -120,14 +120,14 @@ func TestNoteRepository_FindMany(t *testing.T) {
 	defer func() { _ = notes.Drop(context.Background()) }()
 
 	repository := NewNoteRepository(database, "notes")
-	note1 := &domainnote.Note{ID: "123", UserID: "user1", Title: "Test Note 1", Content: "This is a test note"}
-	note2 := &domainnote.Note{ID: "456", UserID: "user1", Title: "Test Note 2", Content: "This is a test note"}
-	note3 := &domainnote.Note{ID: "789", UserID: "user2", Title: "Test Note 3", Content: "This is a test note"}
+	note1 := domainnote.Note{ID: "123", UserID: "user1", Title: "Test Note 1", Content: "This is a test note"}
+	note2 := domainnote.Note{ID: "456", UserID: "user1", Title: "Test Note 2", Content: "This is a test note"}
+	note3 := domainnote.Note{ID: "789", UserID: "user2", Title: "Test Note 3", Content: "This is a test note"}
 
 	result, err := repository.FindMany(context.Background(), "user1")
 	if assert.Error(t, err) {
 		assert.Nil(t, result)
-		assert.ErrorIs(t, err, domainnote.ErrNotFound)
+		assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
 	}
 
 	_, err = notes.InsertMany(context.Background(), []any{note1, note2, note3})
@@ -135,12 +135,12 @@ func TestNoteRepository_FindMany(t *testing.T) {
 
 	result, err = repository.FindMany(context.Background(), "user1")
 	if assert.NoError(t, err) {
-		assert.ElementsMatch(t, []*domainnote.Note{note1, note2}, result)
+		assert.ElementsMatch(t, []domainnote.Note{note1, note2}, result)
 	}
 
 	result, err = repository.FindMany(context.Background(), "user2")
 	if assert.NoError(t, err) {
-		assert.ElementsMatch(t, []*domainnote.Note{note3}, result)
+		assert.ElementsMatch(t, []domainnote.Note{note3}, result)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -171,19 +171,19 @@ func TestNoteRepository_UpdateOne(t *testing.T) {
 	_, err = notes.InsertOne(context.Background(), note)
 	require.NoError(t, err)
 
-	updatedNote := &domainnote.Note{ID: "123", Title: "Updated Test Note", Content: "This is an updated test note"}
+	updatedNote := domainnote.Note{ID: "123", Title: "Updated Test Note", Content: "This is an updated test note"}
 	err = repository.UpdateOne(context.Background(), updatedNote)
 	assert.NoError(t, err)
 
-	result := new(domainnote.Note)
+	var result domainnote.Note
 	err = notes.FindOne(context.Background(), bson.M{"_id": note.ID}).Decode(&result)
 	if assert.NoError(t, err) {
 		assert.Equal(t, updatedNote, result)
 	}
 
-	err = repository.UpdateOne(context.Background(), &domainnote.Note{ID: "456", Title: "Non-existing Note", Content: "This note does not exist"})
+	err = repository.UpdateOne(context.Background(), domainnote.Note{ID: "456", Title: "Non-existing Note", Content: "This note does not exist"})
 	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, domainnote.ErrNotFound)
+		assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
 	}
 }
 
@@ -204,7 +204,7 @@ func TestNoteRepository_DeleteOne(t *testing.T) {
 
 	err = repository.DeleteOne(context.Background(), note.ID)
 	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, domainnote.ErrNotFound)
+		assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
 	}
 
 	_, err = notes.InsertOne(context.Background(), note)
@@ -213,7 +213,7 @@ func TestNoteRepository_DeleteOne(t *testing.T) {
 	err = repository.DeleteOne(context.Background(), note.ID)
 	assert.NoError(t, err)
 
-	result := new(domainnote.Note)
+	var result domainnote.Note
 	err = notes.FindOne(context.Background(), bson.M{"_id": note.ID}).Decode(&result)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, mongo.ErrNoDocuments)

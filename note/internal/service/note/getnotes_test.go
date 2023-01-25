@@ -14,7 +14,7 @@ import (
 func TestGetNotesRequestHandler_Handle(t *testing.T) {
 	t.Run("should get notes", func(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
-		notes := []*domainnote.Note{
+		notes := []domainnote.Note{
 			{
 				ID:      "note1",
 				Title:   "Test Note 1",

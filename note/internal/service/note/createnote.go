@@ -27,21 +27,21 @@ type createNoteRequestHandler struct {
 	NoteRepository domainnote.Repository
 }
 
-var ErrCreateNoteAlreadyExist = func() error { return domainnote.ErrAlreadyExist }()
+var ErrCreateNoteAlreadyExist = func() error { return domainnote.ErrNoteAlreadyExist }()
 
 func NewCreateNoteRequestHandler(noteRepository domainnote.Repository) CreateNoteRequestHandler {
 	return &createNoteRequestHandler{NoteRepository: noteRepository}
 }
 
 func (c createNoteRequestHandler) Handle(ctx context.Context, request *CreateNoteRequest) (*CreateNoteResponse, error) {
-	note := &domainnote.Note{
+	note := domainnote.Note{
 		ID:      uuid.New().String(),
 		Title:   request.Title,
 		Content: request.Content,
 		UserID:  request.UserID,
 	}
 
-	if err := c.NoteRepository.SaveOne(ctx, note); errors.Is(err, domainnote.ErrAlreadyExist) {
+	if err := c.NoteRepository.SaveOne(ctx, note); errors.Is(err, domainnote.ErrNoteAlreadyExist) {
 		return nil, fmt.Errorf("failed to create note: %w", ErrCreateNoteAlreadyExist)
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to create note: %w", err)

@@ -14,7 +14,7 @@ import (
 func TestGetNoteRequestHandler_Handle(t *testing.T) {
 	t.Run("should get a note", func(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
-		note := &domainnote.Note{
+		note := domainnote.Note{
 			ID:      "note1",
 			Title:   "Test Note",
 			Content: "This is a test note",
@@ -38,7 +38,7 @@ func TestGetNoteRequestHandler_Handle(t *testing.T) {
 
 	t.Run("should return an error if getting a note failed", func(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
-		noteRepository.On("FindOne", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("failed to find notes"))
+		noteRepository.On("FindOne", mock.Anything, mock.Anything).Return(domainnote.Note{}, fmt.Errorf("failed to find note"))
 
 		getNoteRequest := &GetNoteRequest{
 			ID: "note1",
@@ -48,7 +48,7 @@ func TestGetNoteRequestHandler_Handle(t *testing.T) {
 		_, err := getNoteRequestHandler.Handle(context.Background(), getNoteRequest)
 
 		if assert.Error(t, err) {
-			assert.EqualError(t, err, "failed to find notes: failed to find notes")
+			assert.EqualError(t, err, "failed to find note: failed to find note")
 		}
 		noteRepository.AssertExpectations(t)
 	})
