@@ -74,7 +74,6 @@ func (r NoteRepository) UpdateOne(ctx context.Context, note domainnote.Note) err
 	update := bson.M{"$set": bson.M{
 		"title":   note.Title,
 		"content": note.Content,
-		"user_id": note.UserID,
 	}}
 
 	if result, err := r.notes.UpdateByID(ctx, note.ID, update); err != nil {

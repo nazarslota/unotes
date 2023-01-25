@@ -29,8 +29,8 @@ func NewDeleteNoteRequestHandler(noteRepository domainnote.Repository) DeleteNot
 	return &deleteNoteRequestHandler{NoteRepository: noteRepository}
 }
 
-func (c deleteNoteRequestHandler) Handle(ctx context.Context, request *DeleteNoteRequest) (*DeleteNoteResponse, error) {
-	if err := c.NoteRepository.DeleteOne(ctx, request.ID); errors.Is(err, domainnote.ErrNoteNotFound) {
+func (h deleteNoteRequestHandler) Handle(ctx context.Context, request *DeleteNoteRequest) (*DeleteNoteResponse, error) {
+	if err := h.NoteRepository.DeleteOne(ctx, request.ID); errors.Is(err, domainnote.ErrNoteNotFound) {
 		return nil, fmt.Errorf("failed to delete note: %w", ErrDeleteNoteNotFound)
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to delete note: %w", err)

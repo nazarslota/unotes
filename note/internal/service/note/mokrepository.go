@@ -11,13 +11,13 @@ type mockNoteRepository struct {
 	mock.Mock
 }
 
-func (m *mockNoteRepository) SaveOne(ctx context.Context, note domainnote.Note) error {
-	args := m.Called(ctx, note)
+func (r *mockNoteRepository) SaveOne(ctx context.Context, note domainnote.Note) error {
+	args := r.Called(ctx, note)
 	return args.Error(0)
 }
 
-func (m *mockNoteRepository) FindOne(ctx context.Context, noteID string) (domainnote.Note, error) {
-	args := m.Called(ctx, noteID)
+func (r *mockNoteRepository) FindOne(ctx context.Context, noteID string) (domainnote.Note, error) {
+	args := r.Called(ctx, noteID)
 	value, ok := args.Get(0).(domainnote.Note)
 	if ok {
 		return value, args.Error(1)
@@ -25,8 +25,8 @@ func (m *mockNoteRepository) FindOne(ctx context.Context, noteID string) (domain
 	return domainnote.Note{}, args.Error(1)
 }
 
-func (m *mockNoteRepository) FindMany(ctx context.Context, userID string) ([]domainnote.Note, error) {
-	args := m.Called(ctx, userID)
+func (r *mockNoteRepository) FindMany(ctx context.Context, userID string) ([]domainnote.Note, error) {
+	args := r.Called(ctx, userID)
 	notes, ok := args.Get(0).([]domainnote.Note)
 	if ok {
 		return notes, args.Error(1)
@@ -34,12 +34,12 @@ func (m *mockNoteRepository) FindMany(ctx context.Context, userID string) ([]dom
 	return nil, args.Error(1)
 }
 
-func (m *mockNoteRepository) UpdateOne(ctx context.Context, note domainnote.Note) error {
-	args := m.Called(ctx, note)
+func (r *mockNoteRepository) UpdateOne(ctx context.Context, note domainnote.Note) error {
+	args := r.Called(ctx, note)
 	return args.Error(0)
 }
 
-func (m *mockNoteRepository) DeleteOne(ctx context.Context, noteID string) error {
-	args := m.Called(ctx, noteID)
+func (r *mockNoteRepository) DeleteOne(ctx context.Context, noteID string) error {
+	args := r.Called(ctx, noteID)
 	return args.Error(0)
 }

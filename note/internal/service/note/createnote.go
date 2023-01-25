@@ -33,7 +33,7 @@ func NewCreateNoteRequestHandler(noteRepository domainnote.Repository) CreateNot
 	return &createNoteRequestHandler{NoteRepository: noteRepository}
 }
 
-func (c createNoteRequestHandler) Handle(ctx context.Context, request *CreateNoteRequest) (*CreateNoteResponse, error) {
+func (h createNoteRequestHandler) Handle(ctx context.Context, request *CreateNoteRequest) (*CreateNoteResponse, error) {
 	note := domainnote.Note{
 		ID:      uuid.New().String(),
 		Title:   request.Title,
@@ -41,7 +41,7 @@ func (c createNoteRequestHandler) Handle(ctx context.Context, request *CreateNot
 		UserID:  request.UserID,
 	}
 
-	if err := c.NoteRepository.SaveOne(ctx, note); errors.Is(err, domainnote.ErrNoteAlreadyExist) {
+	if err := h.NoteRepository.SaveOne(ctx, note); errors.Is(err, domainnote.ErrNoteAlreadyExist) {
 		return nil, fmt.Errorf("failed to create note: %w", ErrCreateNoteAlreadyExist)
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to create note: %w", err)

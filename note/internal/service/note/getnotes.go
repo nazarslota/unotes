@@ -30,8 +30,8 @@ func NewGetNotesRequestHandler(noteRepository domainnote.Repository) GetNotesReq
 	return &getNotesRequestHandler{NoteRepository: noteRepository}
 }
 
-func (c getNotesRequestHandler) Handle(ctx context.Context, request *GetNotesRequest) (*GetNotesResponse, error) {
-	notes, err := c.NoteRepository.FindMany(ctx, request.UserID)
+func (h getNotesRequestHandler) Handle(ctx context.Context, request *GetNotesRequest) (*GetNotesResponse, error) {
+	notes, err := h.NoteRepository.FindMany(ctx, request.UserID)
 	if errors.Is(err, domainnote.ErrNoteNotFound) {
 		return nil, fmt.Errorf("failed to find notes: %w", ErrGetNotesNotFound)
 	} else if err != nil {
