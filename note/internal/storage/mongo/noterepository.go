@@ -73,6 +73,21 @@ func (r NoteRepository) FindMany(ctx context.Context, userID string) ([]*domainn
 	return notes, nil
 }
 
+func (r NoteRepository) UpdateOne(ctx context.Context, note *domainnote.Note) error {
+	update := bson.M{"$set": bson.M{
+		"title":   note.Title,
+		"content": note.Content,
+		"user_id": note.UserID,
+	}}
+
+	if result, err := r.notes.UpdateByID(ctx, note.ID, update); err != nil {
+		return fmt.Errorf("updating note failed: %w", err)
+	} else if result.MatchedCount == 0 {
+		return fmt.Errorf("updating note failed: %w", domainnote.ErrNotFound)
+	}
+	return nil
+}
+
 func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
 	err := r.notes.FindOne(ctx, bson.M{"_id": noteID}).Err()
 	if errors.Is(err, mongo.ErrNoDocuments) {

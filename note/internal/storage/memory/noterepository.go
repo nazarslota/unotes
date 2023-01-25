@@ -68,6 +68,21 @@ func (r NoteRepository) FindMany(ctx context.Context, userID string) ([]*domainn
 	return notes, nil
 }
 
+func (r NoteRepository) UpdateOne(ctx context.Context, note *domainnote.Note) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("updating note failed: %w", ctx.Err())
+	default:
+	}
+
+	if _, loaded := r.notes.LoadAndDelete(note.ID); !loaded {
+		return fmt.Errorf("updatind note failed: %w", domainnote.ErrNotFound)
+	}
+
+	r.notes.Store(note.ID, note)
+	return nil
+}
+
 func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
 	select {
 	case <-ctx.Done():

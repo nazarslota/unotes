@@ -35,6 +35,8 @@ func TestNoteRepository_SaveOne(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
 	require.NoError(t, err)
 
+	defer func() { _ = client.Disconnect(context.Background()) }()
+
 	database := client.Database("test")
 	defer func() { _ = database.Drop(context.Background()) }()
 
@@ -71,6 +73,8 @@ func TestNoteRepository_FindOne(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
 	require.NoError(t, err)
 
+	defer func() { _ = client.Disconnect(context.Background()) }()
+
 	database := client.Database("test")
 	defer func() { _ = database.Drop(context.Background()) }()
 
@@ -106,6 +110,8 @@ func TestNoteRepository_FindOne(t *testing.T) {
 func TestNoteRepository_FindMany(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
 	require.NoError(t, err)
+
+	defer func() { _ = client.Disconnect(context.Background()) }()
 
 	database := client.Database("test")
 	defer func() { _ = database.Drop(context.Background()) }()
@@ -144,6 +150,40 @@ func TestNoteRepository_FindMany(t *testing.T) {
 	if assert.Error(t, err) {
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, context.Canceled)
+	}
+}
+
+func TestNoteRepository_UpdateOne(t *testing.T) {
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	require.NoError(t, err)
+
+	defer func() { _ = client.Disconnect(context.Background()) }()
+
+	database := client.Database("test")
+	defer func() { _ = database.Drop(context.Background()) }()
+
+	notes := database.Collection("notes")
+	defer func() { _ = notes.Drop(context.Background()) }()
+
+	repository := NewNoteRepository(database, "notes")
+	note := &domainnote.Note{ID: "123", Title: "Test Note", Content: "This is a test note"}
+
+	_, err = notes.InsertOne(context.Background(), note)
+	require.NoError(t, err)
+
+	updatedNote := &domainnote.Note{ID: "123", Title: "Updated Test Note", Content: "This is an updated test note"}
+	err = repository.UpdateOne(context.Background(), updatedNote)
+	assert.NoError(t, err)
+
+	result := new(domainnote.Note)
+	err = notes.FindOne(context.Background(), bson.M{"_id": note.ID}).Decode(&result)
+	if assert.NoError(t, err) {
+		assert.Equal(t, updatedNote, result)
+	}
+
+	err = repository.UpdateOne(context.Background(), &domainnote.Note{ID: "456", Title: "Non-existing Note", Content: "This note does not exist"})
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, domainnote.ErrNotFound)
 	}
 }
 
