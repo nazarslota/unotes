@@ -53,14 +53,15 @@ func (r NoteRepository) FindMany(ctx context.Context, userID string) ([]*domainn
 	if err != nil {
 		return nil, fmt.Errorf("finding notes failed: %w", err)
 	}
+	defer func() { _ = cursor.Close(ctx) }()
 
-	notes := make([]*domainnote.Note, 0)
+	notes := make([]*domainnote.Note, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
-		note := new(domainnote.Note)
+		var note domainnote.Note
 		if err := cursor.Decode(&note); err != nil {
 			return nil, fmt.Errorf("finding notes failed: %w", err)
 		}
-		notes = append(notes, note)
+		notes = append(notes, &note)
 	}
 
 	if len(notes) == 0 {
