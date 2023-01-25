@@ -22,7 +22,7 @@ func TestGetNoteRequestHandler_Handle(t *testing.T) {
 		}
 		noteRepository.On("FindOne", mock.Anything, mock.Anything).Return(note, nil)
 
-		getNoteRequest := &GetNoteRequest{
+		getNoteRequest := GetNoteRequest{
 			ID: "note1",
 		}
 
@@ -40,7 +40,7 @@ func TestGetNoteRequestHandler_Handle(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
 		noteRepository.On("FindOne", mock.Anything, mock.Anything).Return(domainnote.Note{}, fmt.Errorf("failed to find note"))
 
-		getNoteRequest := &GetNoteRequest{
+		getNoteRequest := GetNoteRequest{
 			ID: "note1",
 		}
 

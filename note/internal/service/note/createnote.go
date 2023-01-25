@@ -2,25 +2,23 @@ package note
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"github.com/google/uuid"
 	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
 )
 
 type CreateNoteRequest struct {
+	ID      string
 	Title   string
 	Content string
 	UserID  string
 }
 
 type CreateNoteResponse struct {
-	ID string
 }
 
 type CreateNoteRequestHandler interface {
-	Handle(ctx context.Context, request *CreateNoteRequest) (*CreateNoteResponse, error)
+	Handle(ctx context.Context, request CreateNoteRequest) (CreateNoteResponse, error)
 }
 
 type createNoteRequestHandler struct {
@@ -33,18 +31,16 @@ func NewCreateNoteRequestHandler(noteRepository domainnote.Repository) CreateNot
 	return &createNoteRequestHandler{NoteRepository: noteRepository}
 }
 
-func (h createNoteRequestHandler) Handle(ctx context.Context, request *CreateNoteRequest) (*CreateNoteResponse, error) {
+func (h createNoteRequestHandler) Handle(ctx context.Context, request CreateNoteRequest) (CreateNoteResponse, error) {
 	note := domainnote.Note{
-		ID:      uuid.New().String(),
+		ID:      request.ID,
 		Title:   request.Title,
 		Content: request.Content,
 		UserID:  request.UserID,
 	}
 
-	if err := h.NoteRepository.SaveOne(ctx, note); errors.Is(err, domainnote.ErrNoteAlreadyExist) {
-		return nil, fmt.Errorf("failed to create note: %w", ErrCreateNoteAlreadyExist)
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to create note: %w", err)
+	if err := h.NoteRepository.SaveOne(ctx, note); err != nil {
+		return CreateNoteResponse{}, fmt.Errorf("failed to create note: %w", err)
 	}
-	return &CreateNoteResponse{ID: note.ID}, nil
+	return CreateNoteResponse{}, nil
 }

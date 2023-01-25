@@ -2,7 +2,6 @@ package note
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
@@ -18,7 +17,7 @@ type UpdateNoteResponse struct {
 }
 
 type UpdateNoteRequestHandler interface {
-	Handle(ctx context.Context, request *UpdateNoteRequest) (*UpdateNoteResponse, error)
+	Handle(ctx context.Context, request UpdateNoteRequest) (UpdateNoteResponse, error)
 }
 
 type updateNoteRequestHandler struct {
@@ -33,17 +32,15 @@ func NewUpdateNoteRequestHandler(noteRepository domainnote.Repository) UpdateNot
 	}
 }
 
-func (h updateNoteRequestHandler) Handle(ctx context.Context, request *UpdateNoteRequest) (*UpdateNoteResponse, error) {
+func (h updateNoteRequestHandler) Handle(ctx context.Context, request UpdateNoteRequest) (UpdateNoteResponse, error) {
 	note := domainnote.Note{
 		ID:      request.ID,
 		Title:   request.NewTitle,
 		Content: request.NewContent,
 	}
 
-	if err := h.NoteRepository.UpdateOne(ctx, note); errors.Is(err, domainnote.ErrNoteNotFound) {
-		return nil, fmt.Errorf("failed to update note: %w", ErrUpdateNoteNotFound)
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to update note: %w", err)
+	if err := h.NoteRepository.UpdateOne(ctx, note); err != nil {
+		return UpdateNoteResponse{}, fmt.Errorf("failed to update note: %w", err)
 	}
-	return &UpdateNoteResponse{}, nil
+	return UpdateNoteResponse{}, nil
 }

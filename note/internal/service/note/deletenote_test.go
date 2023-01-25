@@ -15,7 +15,7 @@ func TestDeleteNoteRequestHandler_Handle(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
 		noteRepository.On("DeleteOne", mock.Anything, mock.Anything).Return(nil)
 
-		deleteNoteRequest := &DeleteNoteRequest{
+		deleteNoteRequest := DeleteNoteRequest{
 			ID: "note1",
 		}
 
@@ -31,7 +31,7 @@ func TestDeleteNoteRequestHandler_Handle(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
 		noteRepository.On("DeleteOne", mock.Anything, mock.Anything).Return(fmt.Errorf("failed to delete note"))
 
-		deleteNoteRequest := &DeleteNoteRequest{
+		deleteNoteRequest := DeleteNoteRequest{
 			ID: "note1",
 		}
 

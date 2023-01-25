@@ -18,11 +18,7 @@ func (r *mockNoteRepository) SaveOne(ctx context.Context, note domainnote.Note) 
 
 func (r *mockNoteRepository) FindOne(ctx context.Context, noteID string) (domainnote.Note, error) {
 	args := r.Called(ctx, noteID)
-	value, ok := args.Get(0).(domainnote.Note)
-	if ok {
-		return value, args.Error(1)
-	}
-	return domainnote.Note{}, args.Error(1)
+	return args.Get(0).(domainnote.Note), args.Error(1)
 }
 
 func (r *mockNoteRepository) FindMany(ctx context.Context, userID string) ([]domainnote.Note, error) {

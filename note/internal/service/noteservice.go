@@ -7,9 +7,10 @@ import (
 
 type NoteService struct {
 	CreateNoteRequestHandler servicenote.CreateNoteRequestHandler
-	DeleteNoteRequestHandler servicenote.DeleteNoteRequestHandler
 	GetNoteRequestHandler    servicenote.GetNoteRequestHandler
 	GetNotesRequestHandler   servicenote.GetNotesRequestHandler
+	UpdateNoteRequestHandler servicenote.UpdateNoteRequestHandler
+	DeleteNoteRequestHandler servicenote.DeleteNoteRequestHandler
 }
 
 type NoteServiceOptions struct {
@@ -19,8 +20,9 @@ type NoteServiceOptions struct {
 func NewNoteService(options NoteServiceOptions) NoteService {
 	return NoteService{
 		CreateNoteRequestHandler: servicenote.NewCreateNoteRequestHandler(options.NoteRepository),
-		DeleteNoteRequestHandler: servicenote.NewDeleteNoteRequestHandler(options.NoteRepository),
 		GetNoteRequestHandler:    servicenote.NewGetNoteRequestHandler(options.NoteRepository),
 		GetNotesRequestHandler:   servicenote.NewGetNotesRequestHandler(options.NoteRepository),
+		UpdateNoteRequestHandler: servicenote.NewUpdateNoteRequestHandler(options.NoteRepository),
+		DeleteNoteRequestHandler: servicenote.NewDeleteNoteRequestHandler(options.NoteRepository),
 	}
 }

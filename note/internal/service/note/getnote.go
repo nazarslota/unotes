@@ -2,7 +2,6 @@ package note
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
@@ -13,13 +12,14 @@ type GetNoteRequest struct {
 }
 
 type GetNoteResponse struct {
+	ID      string
 	Title   string
 	Content string
 	UserID  string
 }
 
 type GetNoteRequestHandler interface {
-	Handle(ctx context.Context, request *GetNoteRequest) (*GetNoteResponse, error)
+	Handle(ctx context.Context, request GetNoteRequest) (GetNoteResponse, error)
 }
 
 type getNoteRequestHandler struct {
@@ -32,18 +32,10 @@ func NewGetNoteRequestHandler(noteRepository domainnote.Repository) GetNoteReque
 	return &getNoteRequestHandler{NoteRepository: noteRepository}
 }
 
-func (h getNoteRequestHandler) Handle(ctx context.Context, request *GetNoteRequest) (*GetNoteResponse, error) {
+func (h getNoteRequestHandler) Handle(ctx context.Context, request GetNoteRequest) (GetNoteResponse, error) {
 	note, err := h.NoteRepository.FindOne(ctx, request.ID)
-	if errors.Is(err, domainnote.ErrNoteNotFound) {
-		return nil, fmt.Errorf("failed to find note: %w", ErrGetNoteNotFound)
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to find note: %w", err)
+	if err != nil {
+		return GetNoteResponse{}, fmt.Errorf("failed to find note: %w", err)
 	}
-
-	response := &GetNoteResponse{
-		Title:   note.Title,
-		Content: note.Content,
-		UserID:  note.UserID,
-	}
-	return response, nil
+	return GetNoteResponse{ID: note.ID, Title: note.Title, Content: note.Content, UserID: note.UserID}, nil
 }

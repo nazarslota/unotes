@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCreateNoteRequestHandler_Handle(t *testing.T) {
@@ -15,17 +14,17 @@ func TestCreateNoteRequestHandler_Handle(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
 		noteRepository.On("SaveOne", mock.Anything, mock.Anything).Return(nil)
 
-		createNoteRequest := &CreateNoteRequest{
+		createNoteRequest := CreateNoteRequest{
+			ID:      "Test Note ID",
 			Title:   "Test Note",
 			Content: "This is a test note",
 			UserID:  "user1",
 		}
 
 		createNoteRequestHandler := NewCreateNoteRequestHandler(noteRepository)
-		response, err := createNoteRequestHandler.Handle(context.Background(), createNoteRequest)
+		_, err := createNoteRequestHandler.Handle(context.Background(), createNoteRequest)
+		assert.NoError(t, err)
 
-		require.NoError(t, err)
-		assert.NotEmpty(t, response.ID)
 		noteRepository.AssertExpectations(t)
 	})
 
@@ -33,7 +32,8 @@ func TestCreateNoteRequestHandler_Handle(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
 		noteRepository.On("SaveOne", mock.Anything, mock.Anything).Return(fmt.Errorf("failed to save note"))
 
-		createNoteRequest := &CreateNoteRequest{
+		createNoteRequest := CreateNoteRequest{
+			ID:      "Test Note ID",
 			Title:   "Test Note",
 			Content: "This is a test note",
 			UserID:  "user1",

@@ -30,7 +30,7 @@ func TestGetNotesRequestHandler_Handle(t *testing.T) {
 		}
 		noteRepository.On("FindMany", mock.Anything, mock.Anything).Return(notes, nil)
 
-		getNotesRequest := &GetNotesRequest{
+		getNotesRequest := GetNotesRequest{
 			UserID: "user1",
 		}
 
@@ -52,7 +52,7 @@ func TestGetNotesRequestHandler_Handle(t *testing.T) {
 		noteRepository := new(mockNoteRepository)
 		noteRepository.On("FindMany", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("failed to find notes"))
 
-		getNotesRequest := &GetNotesRequest{
+		getNotesRequest := GetNotesRequest{
 			UserID: "user1",
 		}
 
