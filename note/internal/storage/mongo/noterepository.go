@@ -24,14 +24,9 @@ func NewNoteRepository(database *mongo.Database, collection ...string) *NoteRepo
 }
 
 func (r NoteRepository) SaveOne(ctx context.Context, note *domainnote.Note) error {
-	res := r.notes.FindOne(ctx, bson.M{"_id": note.ID})
-	if err := res.Err(); err == nil {
+	if _, err := r.notes.InsertOne(ctx, note); mongo.IsDuplicateKeyError(err) {
 		return fmt.Errorf("saving note failed: %w", domainnote.ErrAlreadyExist)
-	} else if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
-		return fmt.Errorf("saving note failed: %w", err)
-	}
-
-	if _, err := r.notes.InsertOne(ctx, note); err != nil {
+	} else if err != nil {
 		return fmt.Errorf("saving note failed: %w", err)
 	}
 	return nil
