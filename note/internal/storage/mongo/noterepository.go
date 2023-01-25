@@ -86,15 +86,10 @@ func (r NoteRepository) UpdateOne(ctx context.Context, note *domainnote.Note) er
 }
 
 func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
-	err := r.notes.FindOne(ctx, bson.M{"_id": noteID}).Err()
-	if errors.Is(err, mongo.ErrNoDocuments) {
+	if result, err := r.notes.DeleteOne(ctx, bson.M{"_id": noteID}); err != nil {
+		return fmt.Errorf("deleting note failed: %w", err)
+	} else if result.DeletedCount == 0 {
 		return fmt.Errorf("deleting note failed: %w", domainnote.ErrNotFound)
-	} else if err != nil {
-		return fmt.Errorf("deleting note failed: %w", err)
-	}
-
-	if _, err := r.notes.DeleteOne(ctx, bson.M{"_id": noteID}); err != nil {
-		return fmt.Errorf("deleting note failed: %w", err)
 	}
 	return nil
 }
