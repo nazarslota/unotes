@@ -34,17 +34,18 @@ func (r NoteRepository) SaveOne(ctx context.Context, note *domainnote.Note) erro
 
 func (r NoteRepository) FindOne(ctx context.Context, noteID string) (*domainnote.Note, error) {
 	res := r.notes.FindOne(ctx, bson.M{"_id": noteID})
-	if err := res.Err(); errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, fmt.Errorf("finding note failed: %w", domainnote.ErrNotFound)
-	} else if err != nil {
+	if err := res.Err(); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("finding note failed: %w", domainnote.ErrNotFound)
+		}
 		return nil, fmt.Errorf("finding note failed: %w", err)
 	}
 
-	note := new(domainnote.Note)
+	var note domainnote.Note
 	if err := res.Decode(&note); err != nil {
 		return nil, fmt.Errorf("finding note failed: %w", err)
 	}
-	return note, nil
+	return &note, nil
 }
 
 func (r NoteRepository) FindMany(ctx context.Context, userID string) ([]*domainnote.Note, error) {
