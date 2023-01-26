@@ -227,3 +227,91 @@ func TestNoteRepository_DeleteOne(t *testing.T) {
 		assert.ErrorIs(t, err, context.Canceled)
 	}
 }
+
+func TestNoteRepository_FindManyAsync(t *testing.T) {
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	require.NoError(t, err)
+
+	defer func() { _ = client.Disconnect(context.Background()) }()
+
+	database := client.Database("test")
+	defer func() { _ = database.Drop(context.Background()) }()
+
+	notes := database.Collection("notes")
+	defer func() { _ = notes.Drop(context.Background()) }()
+
+	repository := NewNoteRepository(database, "notes")
+	notesToInsert := []any{
+		domainnote.Note{ID: "123", Title: "Test Note 1", Content: "This is a test note", UserID: "123"},
+		domainnote.Note{ID: "456", Title: "Test Note 2", Content: "This is another test note", UserID: "123"},
+	}
+
+	_, err = notes.InsertMany(context.Background(), notesToInsert)
+	require.NoError(t, err)
+
+	resultCh, errCh := repository.FindManyAsync(context.Background(), "123")
+	result := make([]domainnote.Note, 0)
+loop:
+	for {
+		select {
+		case note, ok := <-resultCh:
+			if !ok {
+				continue
+			}
+			result = append(result, note)
+		case err, ok := <-errCh:
+			if !ok {
+				break loop
+			}
+			assert.NoError(t, err)
+		}
+	}
+	assert.ElementsMatch(t, notesToInsert, result)
+
+	resultCh, errCh = repository.FindManyAsync(context.Background(), "456")
+	result = make([]domainnote.Note, 0)
+loop2:
+	for {
+		select {
+		case note, ok := <-resultCh:
+			if !ok {
+				continue
+			}
+			assert.Empty(t, note)
+		case err, ok := <-errCh:
+			if !ok {
+				break loop2
+			}
+
+			if assert.Error(t, err) {
+				assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
+			}
+		}
+	}
+	assert.Empty(t, result)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	resultCh, errCh = repository.FindManyAsync(ctx, "132")
+	result = make([]domainnote.Note, 0)
+loop3:
+	for {
+		select {
+		case note, ok := <-resultCh:
+			if !ok {
+				continue
+			}
+			assert.Empty(t, note)
+		case err, ok := <-errCh:
+			if !ok {
+				break loop3
+			}
+
+			if assert.Error(t, err) {
+				assert.ErrorIs(t, err, context.Canceled)
+			}
+		}
+	}
+	assert.Empty(t, result)
+}
