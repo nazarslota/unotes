@@ -11,6 +11,7 @@ type Repository interface {
 	FindMany(ctx context.Context, userID string) ([]Note, error)
 	UpdateOne(ctx context.Context, note Note) error
 	DeleteOne(ctx context.Context, noteID string) error
+	FindManyAsync(ctx context.Context, userID string) (<-chan Note, <-chan error)
 }
 
 var (
