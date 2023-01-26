@@ -103,7 +103,7 @@ func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-cha
 
 		cursor, err := r.notes.Find(ctx, bson.M{"user_id": userID})
 		if err != nil {
-			errs <- fmt.Errorf("finding nts failed: %w", err)
+			errs <- fmt.Errorf("finding notes failed: %w", err)
 			return
 		}
 		defer func() { _ = cursor.Close(ctx) }()
@@ -111,7 +111,7 @@ func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-cha
 		for cursor.Next(ctx) {
 			var note domainnote.Note
 			if err := cursor.Decode(&note); err != nil {
-				errs <- fmt.Errorf("finding nts failed: %w", err)
+				errs <- fmt.Errorf("finding notes failed: %w", err)
 				return
 			}
 			nts <- note
