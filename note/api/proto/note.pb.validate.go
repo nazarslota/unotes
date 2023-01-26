@@ -60,6 +60,18 @@ func (m *CreateNoteRequest) validate(all bool) error {
 
 	var errors []error
 
+	if err := m._validateUuid(m.GetId()); err != nil {
+		err = CreateNoteRequestValidationError{
+			field:  "Id",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if l := utf8.RuneCountInString(m.GetTitle()); l < 4 || l > 128 {
 		err := CreateNoteRequestValidationError{
 			field:  "Title",
@@ -204,8 +216,6 @@ func (m *CreateNoteResponse) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
-
 	if len(errors) > 0 {
 		return CreateNoteResponseMultiError(errors)
 	}
@@ -335,18 +345,6 @@ func (m *UpdateNoteRequest) validate(all bool) error {
 		err := UpdateNoteRequestValidationError{
 			field:  "NewContent",
 			reason: "value length must be between 0 and 1024 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if err := m._validateUuid(m.GetUserId()); err != nil {
-		err = UpdateNoteRequestValidationError{
-			field:  "UserId",
-			reason: "value must be a valid UUID",
-			cause:  err,
 		}
 		if !all {
 			return err
@@ -1141,6 +1139,8 @@ func (m *GetNotesResponse) validate(all bool) error {
 	// no validation rules for Title
 
 	// no validation rules for Content
+
+	// no validation rules for UserId
 
 	if len(errors) > 0 {
 		return GetNotesResponseMultiError(errors)
