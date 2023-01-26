@@ -92,3 +92,30 @@ func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
 	}
 	return nil
 }
+
+func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domainnote.Note, <-chan error) {
+	nts := make(chan domainnote.Note)
+	errs := make(chan error)
+
+	go func() {
+		defer close(nts)
+		defer close(errs)
+
+		cursor, err := r.notes.Find(ctx, bson.M{"user_id": userID})
+		if err != nil {
+			errs <- fmt.Errorf("finding nts failed: %w", err)
+			return
+		}
+		defer func() { _ = cursor.Close(ctx) }()
+
+		for cursor.Next(ctx) {
+			var note domainnote.Note
+			if err := cursor.Decode(&note); err != nil {
+				errs <- fmt.Errorf("finding nts failed: %w", err)
+				return
+			}
+			nts <- note
+		}
+	}()
+	return nts, errs
+}

@@ -53,14 +53,12 @@ func (r NoteRepository) FindMany(ctx context.Context, userID string) ([]domainno
 	}
 
 	notes := make([]domainnote.Note, 0)
-	f := func(_, value any) bool {
-		note := value.(domainnote.Note)
-		if note.UserID == userID {
+	r.notes.Range(func(_, value any) bool {
+		if note := value.(domainnote.Note); note.UserID == userID {
 			notes = append(notes, note)
 		}
 		return true
-	}
-	r.notes.Range(f)
+	})
 
 	if len(notes) == 0 {
 		return nil, fmt.Errorf("finding notes failed: %w", domainnote.ErrNoteNotFound)
@@ -94,4 +92,35 @@ func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
 		return fmt.Errorf("deleting note failed: %w", domainnote.ErrNoteNotFound)
 	}
 	return nil
+}
+
+func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domainnote.Note, <-chan error) {
+	nts := make(chan domainnote.Note)
+	errs := make(chan error)
+
+	go func() {
+		defer close(nts)
+		defer close(errs)
+
+		count := 0
+		r.notes.Range(func(_, value any) bool {
+			select {
+			case <-ctx.Done():
+				errs <- fmt.Errorf("finding notes failed: %w", ctx.Err())
+				return false
+			default:
+			}
+
+			if note := value.(domainnote.Note); note.UserID == userID {
+				nts <- note
+				count++
+			}
+			return true
+		})
+
+		if count == 0 {
+			errs <- fmt.Errorf("finding notes failed: %w", domainnote.ErrNoteNotFound)
+		}
+	}()
+	return nts, errs
 }
