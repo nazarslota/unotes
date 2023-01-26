@@ -6,11 +6,12 @@ import (
 )
 
 type NoteService struct {
-	CreateNoteRequestHandler servicenote.CreateNoteRequestHandler
-	GetNoteRequestHandler    servicenote.GetNoteRequestHandler
-	GetNotesRequestHandler   servicenote.GetNotesRequestHandler
-	UpdateNoteRequestHandler servicenote.UpdateNoteRequestHandler
-	DeleteNoteRequestHandler servicenote.DeleteNoteRequestHandler
+	CreateNoteRequestHandler    servicenote.CreateNoteRequestHandler
+	GetNoteRequestHandler       servicenote.GetNoteRequestHandler
+	GetNotesRequestHandler      servicenote.GetNotesRequestHandler
+	UpdateNoteRequestHandler    servicenote.UpdateNoteRequestHandler
+	DeleteNoteRequestHandler    servicenote.DeleteNoteRequestHandler
+	GetNotesAsyncRequestHandler servicenote.GetNotesAsyncRequestHandler
 }
 
 type NoteServiceOptions struct {
@@ -19,10 +20,11 @@ type NoteServiceOptions struct {
 
 func NewNoteService(options NoteServiceOptions) NoteService {
 	return NoteService{
-		CreateNoteRequestHandler: servicenote.NewCreateNoteRequestHandler(options.NoteRepository),
-		GetNoteRequestHandler:    servicenote.NewGetNoteRequestHandler(options.NoteRepository),
-		GetNotesRequestHandler:   servicenote.NewGetNotesRequestHandler(options.NoteRepository),
-		UpdateNoteRequestHandler: servicenote.NewUpdateNoteRequestHandler(options.NoteRepository),
-		DeleteNoteRequestHandler: servicenote.NewDeleteNoteRequestHandler(options.NoteRepository),
+		CreateNoteRequestHandler:    servicenote.NewCreateNoteRequestHandler(options.NoteRepository),
+		GetNoteRequestHandler:       servicenote.NewGetNoteRequestHandler(options.NoteRepository),
+		GetNotesRequestHandler:      servicenote.NewGetNotesRequestHandler(options.NoteRepository),
+		UpdateNoteRequestHandler:    servicenote.NewUpdateNoteRequestHandler(options.NoteRepository),
+		DeleteNoteRequestHandler:    servicenote.NewDeleteNoteRequestHandler(options.NoteRepository),
+		GetNotesAsyncRequestHandler: servicenote.NewGetNotesAsyncRequestHandler(options.NoteRepository),
 	}
 }

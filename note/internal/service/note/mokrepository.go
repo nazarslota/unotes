@@ -39,3 +39,24 @@ func (r *mockNoteRepository) DeleteOne(ctx context.Context, noteID string) error
 	args := r.Called(ctx, noteID)
 	return args.Error(0)
 }
+
+func (r *mockNoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domainnote.Note, <-chan error) {
+	nts := make(chan domainnote.Note)
+	errs := make(chan error)
+
+	go func() {
+		defer close(nts)
+		defer close(errs)
+
+		notes, err := r.FindMany(ctx, userID)
+		if err != nil {
+			errs <- err
+			return
+		}
+
+		for _, note := range notes {
+			nts <- note
+		}
+	}()
+	return nts, errs
+}
