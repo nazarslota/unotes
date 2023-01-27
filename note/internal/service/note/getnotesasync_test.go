@@ -38,7 +38,7 @@ func TestGetNotesAsyncRequestHandler_Handle(t *testing.T) {
 		for note := range response.Notes {
 			receivedNotes = append(receivedNotes, note)
 		}
-		assert.Equal(t, notes, receivedNotes)
+		assert.ElementsMatch(t, notes, receivedNotes)
 
 		receivedErrs := make([]error, 0)
 		for err := range errs {
