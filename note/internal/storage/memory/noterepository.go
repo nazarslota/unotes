@@ -74,10 +74,12 @@ func (r NoteRepository) UpdateOne(ctx context.Context, note domainnote.Note) err
 	default:
 	}
 
-	if _, loaded := r.notes.LoadAndDelete(note.ID); !loaded {
+	value, loaded := r.notes.LoadAndDelete(note.ID)
+	if !loaded {
 		return fmt.Errorf("updatind note failed: %w", domainnote.ErrNoteNotFound)
 	}
 
+	note.UserID = value.(domainnote.Note).UserID
 	r.notes.Store(note.ID, note)
 	return nil
 }
