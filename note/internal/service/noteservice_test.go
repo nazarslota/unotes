@@ -15,4 +15,5 @@ func TestNewNoteService(t *testing.T) {
 	assert.IsType(t, servicenote.NewGetNotesRequestHandler(nil), service.GetNotesRequestHandler)
 	assert.IsType(t, servicenote.NewUpdateNoteRequestHandler(nil), service.UpdateNoteRequestHandler)
 	assert.IsType(t, servicenote.NewDeleteNoteRequestHandler(nil), service.DeleteNoteRequestHandler)
+	assert.IsType(t, servicenote.NewGetNotesAsyncRequestHandler(nil), service.GetNotesAsyncRequestHandler)
 }
