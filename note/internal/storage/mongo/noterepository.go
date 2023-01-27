@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"sync/atomic"
 
 	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
 	"go.mongodb.org/mongo-driver/bson"
@@ -94,28 +96,56 @@ func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
 }
 
 func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domainnote.Note, <-chan error) {
-	nts := make(chan domainnote.Note)
-	errs := make(chan error)
-
+	notes, errs := make(chan domainnote.Note), make(chan error)
 	go func() {
-		defer close(nts)
-		defer close(errs)
-
 		cursor, err := r.notes.Find(ctx, bson.M{"user_id": userID})
 		if err != nil {
-			errs <- fmt.Errorf("finding notes failed: %w", err)
+			go func() {
+				defer close(errs)
+				errs <- fmt.Errorf("finding notes failed: %w", err)
+			}()
+			close(notes)
 			return
 		}
-		defer func() { _ = cursor.Close(ctx) }()
 
+		found := atomic.Uint64{}
+		wgNotes, wgErrs := sync.WaitGroup{}, sync.WaitGroup{}
 		for cursor.Next(ctx) {
-			var note domainnote.Note
+			note := domainnote.Note{}
 			if err := cursor.Decode(&note); err != nil {
-				errs <- fmt.Errorf("finding notes failed: %w", err)
-				return
+				wgErrs.Add(1)
+				go func() {
+					defer wgErrs.Done()
+					errs <- fmt.Errorf("finding notes failed: %w", err)
+				}()
+				continue
 			}
-			nts <- note
+
+			found.Add(1)
+			wgNotes.Add(1)
+			go func() {
+				defer wgNotes.Done()
+				notes <- note
+			}()
 		}
+
+		if found.Load() == 0 {
+			wgErrs.Add(1)
+			go func() {
+				defer wgErrs.Done()
+				errs <- fmt.Errorf("finding notes failed: %w", domainnote.ErrNoteNotFound)
+			}()
+		}
+
+		go func() {
+			wgNotes.Wait()
+			close(notes)
+		}()
+
+		go func() {
+			wgErrs.Wait()
+			close(errs)
+		}()
 	}()
-	return nts, errs
+	return notes, errs
 }

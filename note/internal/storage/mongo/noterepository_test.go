@@ -240,78 +240,62 @@ func TestNoteRepository_FindManyAsync(t *testing.T) {
 	notes := database.Collection("notes")
 	defer func() { _ = notes.Drop(context.Background()) }()
 
-	repository := NewNoteRepository(database, "notes")
-	notesToInsert := []any{
+	_, err = notes.InsertMany(context.Background(), []any{
 		domainnote.Note{ID: "123", Title: "Test Note 1", Content: "This is a test note", UserID: "123"},
 		domainnote.Note{ID: "456", Title: "Test Note 2", Content: "This is another test note", UserID: "123"},
-	}
-
-	_, err = notes.InsertMany(context.Background(), notesToInsert)
+	})
 	require.NoError(t, err)
 
-	resultCh, errCh := repository.FindManyAsync(context.Background(), "123")
-	result := make([]domainnote.Note, 0)
-loop:
-	for {
-		select {
-		case note, ok := <-resultCh:
-			if !ok {
-				continue
-			}
-			result = append(result, note)
-		case err, ok := <-errCh:
-			if !ok {
-				break loop
-			}
-			assert.NoError(t, err)
-		}
-	}
-	assert.ElementsMatch(t, notesToInsert, result)
+	receivedNotes := make([]domainnote.Note, 0)
+	receivedErrs := make([]error, 0)
 
-	resultCh, errCh = repository.FindManyAsync(context.Background(), "456")
-	result = make([]domainnote.Note, 0)
-loop2:
-	for {
-		select {
-		case note, ok := <-resultCh:
-			if !ok {
-				continue
-			}
-			assert.Empty(t, note)
-		case err, ok := <-errCh:
-			if !ok {
-				break loop2
-			}
-
-			if assert.Error(t, err) {
-				assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
-			}
-		}
+	repository := NewNoteRepository(database, "notes")
+	notesCh, errsCh := repository.FindManyAsync(context.Background(), "123")
+	for note := range notesCh {
+		receivedNotes = append(receivedNotes, note)
 	}
-	assert.Empty(t, result)
+	assert.ElementsMatch(t, []domainnote.Note{
+		{ID: "123", Title: "Test Note 1", Content: "This is a test note", UserID: "123"},
+		{ID: "456", Title: "Test Note 2", Content: "This is another test note", UserID: "123"},
+	}, receivedNotes)
+
+	for err := range errsCh {
+		receivedErrs = append(receivedErrs, err)
+	}
+	assert.Empty(t, receivedErrs)
+
+	receivedNotes = make([]domainnote.Note, 0)
+	receivedErrs = make([]error, 0)
+
+	notesCh, errsCh = repository.FindManyAsync(context.Background(), "456")
+	for note := range notesCh {
+		receivedNotes = append(receivedNotes, note)
+	}
+	assert.Empty(t, receivedNotes)
+
+	for err := range errsCh {
+		receivedErrs = append(receivedErrs, err)
+	}
+	if assert.Len(t, receivedErrs, 1) {
+		assert.ErrorIs(t, receivedErrs[0], domainnote.ErrNoteNotFound)
+	}
+
+	receivedNotes = make([]domainnote.Note, 0)
+	receivedErrs = make([]error, 0)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	resultCh, errCh = repository.FindManyAsync(ctx, "132")
-	result = make([]domainnote.Note, 0)
-loop3:
-	for {
-		select {
-		case note, ok := <-resultCh:
-			if !ok {
-				continue
-			}
-			assert.Empty(t, note)
-		case err, ok := <-errCh:
-			if !ok {
-				break loop3
-			}
-
-			if assert.Error(t, err) {
-				assert.ErrorIs(t, err, context.Canceled)
-			}
-		}
+	notesCh, errsCh = repository.FindManyAsync(ctx, "123")
+	for note := range notesCh {
+		receivedNotes = append(receivedNotes, note)
 	}
-	assert.Empty(t, result)
+	assert.Empty(t, receivedNotes)
+
+	for err := range errsCh {
+		receivedErrs = append(receivedErrs, err)
+	}
+	if assert.Len(t, receivedErrs, 1) {
+		assert.ErrorIs(t, receivedErrs[0], context.Canceled)
+	}
 }
