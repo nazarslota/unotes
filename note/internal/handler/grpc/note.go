@@ -80,44 +80,25 @@ func (s noteServiceServer) GetNotes(in *pb.GetNotesRequest, server pb.NoteServic
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	request := servicenote.GetNotesAsyncRequest{
-		UserID: in.UserId,
-	}
-
+	request := servicenote.GetNotesAsyncRequest{UserID: in.UserId}
 	response, errs := s.services.NoteService.GetNotesAsyncRequestHandler.Handle(server.Context(), request)
-	for {
-		select {
-		case <-server.Context().Done():
-			return status.Error(codes.Canceled, "context done")
-		default:
-		}
-
-		select {
-		case note, ok := <-response.Notes:
-			if !ok {
-				continue
-			}
-
-			if err := server.Send(&pb.GetNotesResponse{
-				Id:      note.ID,
-				Title:   note.Title,
-				Content: note.Content,
-				UserId:  note.UserID,
-			}); err != nil {
-				return status.Errorf(codes.Unknown, "failed to send response")
-			}
-		case err, ok := <-errs:
-			if !ok {
-				return nil
-			}
-
-			if errors.Is(err, servicenote.ErrGetNotesAsyncNotFound) {
-				return status.Errorf(codes.NotFound, "notes not found")
-			} else if err != nil {
-				return status.Error(codes.Internal, "internal")
-			}
+	for note := range response.Notes {
+		if err := server.Send(&pb.GetNotesResponse{
+			Id:      note.ID,
+			Title:   note.Title,
+			Content: note.Content,
+			UserId:  note.UserID,
+		}); err != nil {
+			return status.Error(codes.Unknown, "failed to send response")
 		}
 	}
+
+	if err := <-errs; errors.Is(err, servicenote.ErrGetNotesAsyncNotFound) {
+		return status.Errorf(codes.NotFound, "notes not found")
+	} else if err != nil {
+		return status.Error(codes.Internal, "internal")
+	}
+	return nil
 }
 
 func (s noteServiceServer) UpdateNote(ctx context.Context, in *pb.UpdateNoteRequest) (*pb.UpdateNoteResponse, error) {
@@ -157,10 +138,7 @@ func (s noteServiceServer) DeleteNote(ctx context.Context, in *pb.DeleteNoteRequ
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	request := servicenote.DeleteNoteRequest{
-		ID: in.Id,
-	}
-
+	request := servicenote.DeleteNoteRequest{ID: in.Id}
 	_, err := s.services.NoteService.DeleteNoteRequestHandler.Handle(ctx, request)
 	if errors.Is(err, servicenote.ErrDeleteNoteNotFound) {
 		return nil, status.Error(codes.NotFound, "note not found")
