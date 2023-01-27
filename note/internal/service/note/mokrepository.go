@@ -2,6 +2,7 @@ package note
 
 import (
 	"context"
+	"sync"
 
 	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
 	"github.com/stretchr/testify/mock"
@@ -41,22 +42,34 @@ func (r *mockNoteRepository) DeleteOne(ctx context.Context, noteID string) error
 }
 
 func (r *mockNoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domainnote.Note, <-chan error) {
-	nts := make(chan domainnote.Note)
-	errs := make(chan error)
-
+	notes, errs := make(chan domainnote.Note), make(chan error)
 	go func() {
-		defer close(nts)
-		defer close(errs)
-
-		notes, err := r.FindMany(ctx, userID)
+		var wgNotes, wgErrs sync.WaitGroup
+		notesFindMany, err := r.FindMany(ctx, userID)
 		if err != nil {
-			errs <- err
-			return
+			wgErrs.Add(1)
+			go func() {
+				errs <- err
+				wgErrs.Done()
+			}()
+		} else {
+			for _, note := range notesFindMany {
+				wgNotes.Add(1)
+				go func(note domainnote.Note) {
+					notes <- note
+					wgNotes.Done()
+				}(note)
+			}
 		}
 
-		for _, note := range notes {
-			nts <- note
-		}
+		go func() {
+			wgNotes.Wait()
+			close(notes)
+		}()
+		go func() {
+			wgErrs.Wait()
+			close(errs)
+		}()
 	}()
-	return nts, errs
+	return notes, errs
 }

@@ -29,6 +29,6 @@ func NewGetNotesAsyncRequestHandler(noteRepository domainnote.Repository) GetNot
 }
 
 func (h getNotesAsyncRequestHandler) Handle(ctx context.Context, request GetNotesAsyncRequest) (GetNotesAsyncResponse, <-chan error) {
-	nts, errs := h.NoteRepository.FindManyAsync(ctx, request.UserID)
-	return GetNotesAsyncResponse{Notes: nts}, errs
+	notes, errs := h.NoteRepository.FindManyAsync(ctx, request.UserID)
+	return GetNotesAsyncResponse{Notes: notes}, errs
 }
