@@ -159,3 +159,61 @@ func TestNoteRepository_DeleteOne(t *testing.T) {
 		assert.ErrorIs(t, err, context.Canceled)
 	}
 }
+
+func TestNoteRepository_FindManyAsync(t *testing.T) {
+	receivedNotes := make([]domainnote.Note, 0)
+	receivedErrs := make([]error, 0)
+
+	repository := NewNoteRepository()
+	repository.notes.Store("123", domainnote.Note{ID: "123", Title: "Test Note 1", Content: "This is a test note", UserID: "123"})
+	repository.notes.Store("456", domainnote.Note{ID: "456", Title: "Test Note 2", Content: "This is another test note", UserID: "123"})
+
+	notesCh, errsCh := repository.FindManyAsync(context.Background(), "123")
+	for note := range notesCh {
+		receivedNotes = append(receivedNotes, note)
+	}
+	assert.ElementsMatch(t, []domainnote.Note{
+		{ID: "123", Title: "Test Note 1", Content: "This is a test note", UserID: "123"},
+		{ID: "456", Title: "Test Note 2", Content: "This is another test note", UserID: "123"},
+	}, receivedNotes)
+
+	for err := range errsCh {
+		receivedErrs = append(receivedErrs, err)
+	}
+	assert.Empty(t, receivedErrs)
+
+	receivedNotes = make([]domainnote.Note, 0)
+	receivedErrs = make([]error, 0)
+
+	notesCh, errsCh = repository.FindManyAsync(context.Background(), "456")
+	for note := range notesCh {
+		receivedNotes = append(receivedNotes, note)
+	}
+	assert.Empty(t, receivedNotes)
+
+	for err := range errsCh {
+		receivedErrs = append(receivedErrs, err)
+	}
+	if assert.Len(t, receivedErrs, 1) {
+		assert.ErrorIs(t, receivedErrs[0], domainnote.ErrNoteNotFound)
+	}
+
+	receivedNotes = make([]domainnote.Note, 0)
+	receivedErrs = make([]error, 0)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	notesCh, errsCh = repository.FindManyAsync(ctx, "123")
+	for note := range notesCh {
+		receivedNotes = append(receivedNotes, note)
+	}
+	assert.Empty(t, receivedNotes)
+
+	for err := range errsCh {
+		receivedErrs = append(receivedErrs, err)
+	}
+	if assert.Len(t, receivedErrs, 1) {
+		assert.ErrorIs(t, receivedErrs[0], context.Canceled)
+	}
+}

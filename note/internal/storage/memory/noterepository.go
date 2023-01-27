@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
 )
@@ -95,32 +96,52 @@ func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
 }
 
 func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domainnote.Note, <-chan error) {
-	nts := make(chan domainnote.Note)
-	errs := make(chan error)
+	notes, errs := make(chan domainnote.Note), make(chan error)
+	select {
+	case <-ctx.Done():
+		go func() {
+			errs <- fmt.Errorf("finding notes failed: %w", ctx.Err())
+			close(errs)
+		}()
+		close(notes)
+		return notes, errs
+	default:
+	}
 
 	go func() {
-		defer close(nts)
-		defer close(errs)
-
-		count := 0
+		var found atomic.Bool
+		var wgNotes, wgErrs sync.WaitGroup
 		r.notes.Range(func(_, value any) bool {
-			select {
-			case <-ctx.Done():
-				errs <- fmt.Errorf("finding notes failed: %w", ctx.Err())
-				return false
-			default:
-			}
+			if note := value.(domainnote.Note); userID == note.UserID {
+				wgNotes.Add(1)
+				if !found.Load() {
+					found.Store(true)
+				}
 
-			if note := value.(domainnote.Note); note.UserID == userID {
-				nts <- note
-				count++
+				go func() {
+					notes <- note
+					wgNotes.Done()
+				}()
 			}
 			return true
 		})
 
-		if count == 0 {
-			errs <- fmt.Errorf("finding notes failed: %w", domainnote.ErrNoteNotFound)
+		if !found.Load() {
+			wgErrs.Add(1)
+			go func() {
+				errs <- fmt.Errorf("finding notes failed: %w", domainnote.ErrNoteNotFound)
+				wgErrs.Done()
+			}()
 		}
+
+		go func() {
+			wgNotes.Wait()
+			close(notes)
+		}()
+		go func() {
+			wgErrs.Wait()
+			close(errs)
+		}()
 	}()
-	return nts, errs
+	return notes, errs
 }
