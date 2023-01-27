@@ -5,7 +5,6 @@ go 1.19
 require (
 	github.com/envoyproxy/protoc-gen-validate v0.9.1
 	github.com/go-playground/validator/v10 v10.11.1
-	github.com/google/uuid v1.3.0
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
 	go.mongodb.org/mongo-driver v1.11.1
