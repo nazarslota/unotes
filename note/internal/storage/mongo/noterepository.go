@@ -97,55 +97,58 @@ func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
 
 func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domainnote.Note, <-chan error) {
 	notes, errs := make(chan domainnote.Note), make(chan error)
-	go func() {
-		cursor, err := r.notes.Find(ctx, bson.M{"user_id": userID})
-		if err != nil {
-			go func() {
-				defer close(errs)
-				errs <- fmt.Errorf("finding notes failed: %w", err)
-			}()
-			close(notes)
-			return
-		}
-
-		found := atomic.Uint64{}
-		wgNotes, wgErrs := sync.WaitGroup{}, sync.WaitGroup{}
-		for cursor.Next(ctx) {
-			note := domainnote.Note{}
-			if err := cursor.Decode(&note); err != nil {
-				wgErrs.Add(1)
-				go func() {
-					defer wgErrs.Done()
-					errs <- fmt.Errorf("finding notes failed: %w", err)
-				}()
-				continue
-			}
-
-			found.Add(1)
-			wgNotes.Add(1)
-			go func() {
-				defer wgNotes.Done()
-				notes <- note
-			}()
-		}
-
-		if found.Load() == 0 {
-			wgErrs.Add(1)
-			go func() {
-				defer wgErrs.Done()
-				errs <- fmt.Errorf("finding notes failed: %w", domainnote.ErrNoteNotFound)
-			}()
-		}
-
+	cursor, err := r.notes.Find(ctx, bson.M{"user_id": userID})
+	if err != nil {
 		go func() {
-			wgNotes.Wait()
-			close(notes)
-		}()
-
-		go func() {
-			wgErrs.Wait()
+			errs <- fmt.Errorf("finding notes failed: %w", err)
 			close(errs)
 		}()
-	}()
+		close(notes)
+		return notes, errs
+	}
+	go r.notesFromCursor(ctx, cursor, notes, errs)
 	return notes, errs
+}
+
+func (r NoteRepository) notesFromCursor(ctx context.Context, cursor *mongo.Cursor, notes chan<- domainnote.Note, errs chan<- error) {
+	var found atomic.Bool
+	var wgNotes, wgErrs sync.WaitGroup
+	for cursor.Next(ctx) {
+		var note domainnote.Note
+		err := cursor.Decode(&note)
+		if err != nil {
+			wgErrs.Add(1)
+			go func() {
+				errs <- fmt.Errorf("finding notes failed: %w", err)
+				wgErrs.Done()
+			}()
+		} else {
+			wgNotes.Add(1)
+			if !found.Load() {
+				found.Store(true)
+			}
+
+			go func() {
+				notes <- note
+				wgNotes.Done()
+			}()
+		}
+	}
+
+	if !found.Load() {
+		wgErrs.Add(1)
+		go func() {
+			errs <- fmt.Errorf("finding notes failed: %w", domainnote.ErrNoteNotFound)
+			wgErrs.Done()
+		}()
+	}
+
+	go func() {
+		wgNotes.Wait()
+		close(notes)
+	}()
+	go func() {
+		wgErrs.Wait()
+		close(errs)
+	}()
 }
