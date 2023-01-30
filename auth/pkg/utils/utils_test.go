@@ -29,6 +29,7 @@ func TestGracefulShutdown(t *testing.T) {
 
 func TestBuildMongoURI(t *testing.T) {
 	tests := []struct {
+		name     string
 		host     string
 		port     string
 		username string
@@ -37,6 +38,7 @@ func TestBuildMongoURI(t *testing.T) {
 		err      error
 	}{
 		{
+			name:     "default MongoDB URI",
 			host:     "localhost",
 			port:     "27017",
 			username: "",
@@ -45,6 +47,7 @@ func TestBuildMongoURI(t *testing.T) {
 			err:      nil,
 		},
 		{
+			name:     "MongoDB URI with username and password",
 			host:     "cluster0.mongodb.net",
 			port:     "",
 			username: "user",
@@ -53,6 +56,7 @@ func TestBuildMongoURI(t *testing.T) {
 			err:      nil,
 		},
 		{
+			name:     "MongoDB URI with only username",
 			host:     "localhost",
 			port:     "",
 			username: "user",
@@ -61,6 +65,7 @@ func TestBuildMongoURI(t *testing.T) {
 			err:      nil,
 		},
 		{
+			name:     "invalid MongoDB URI",
 			host:     "",
 			port:     "",
 			username: "",
@@ -70,9 +75,11 @@ func TestBuildMongoURI(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		uri, err := BuildMongoURI(test.host, test.port, test.username, test.password)
-		assert.Equal(t, test.err, err)
-		assert.Equal(t, test.expected, uri)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			uri, err := BuildMongoURI(tt.host, tt.port, tt.username, tt.password)
+			assert.Equal(t, tt.expected, uri)
+			assert.ErrorIs(t, err, tt.err)
+		})
 	}
 }

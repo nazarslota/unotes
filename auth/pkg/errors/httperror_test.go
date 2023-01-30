@@ -3,8 +3,9 @@ package errors
 import (
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHTTPError(t *testing.T) {
@@ -48,25 +49,11 @@ func TestHTTPError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotCode := tt.err.Code; gotCode != tt.wantCode {
-				t.Errorf("HTTPError.Code = %v, want %v", gotCode, tt.wantCode)
-			}
-
-			if gotMessage := tt.err.Message; gotMessage != tt.wantMessage {
-				t.Errorf("HTTPError.Message = %v, want %v", gotMessage, tt.wantMessage)
-			}
-
-			if gotErr := tt.err.Internal; !reflect.DeepEqual(gotErr, tt.wantErr) {
-				t.Errorf("HTTPError.Internal = %v, want %v", gotErr, tt.wantErr)
-			}
-
-			if gotString := tt.err.Error(); gotString != tt.wantString {
-				t.Errorf("HTTPError.Error() = %v, want %v", gotString, tt.wantString)
-			}
-
-			if gotUnwrap := tt.err.Unwrap(); !reflect.DeepEqual(gotUnwrap, tt.wantUnwrap) {
-				t.Errorf("HTTPError.Unwrap() = %v, want %v", gotUnwrap, tt.wantUnwrap)
-			}
+			assert.Equal(t, tt.wantCode, tt.err.Code, "HTTPError.Code")
+			assert.Equal(t, tt.wantMessage, tt.err.Message, "HTTPError.Message")
+			assert.Equal(t, tt.wantErr, tt.err.Internal, "HTTPError.Internal")
+			assert.Equal(t, tt.wantString, tt.err.Error(), "HTTPError.Error()")
+			assert.Equal(t, tt.wantUnwrap, tt.err.Unwrap(), "HTTPError.Unwrap()")
 		})
 	}
 }
