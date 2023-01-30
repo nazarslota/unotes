@@ -1,3 +1,7 @@
+// Package errors implements a custom error type HTTPError.
+// HTTPError contains information about an HTTP error that can be used in API responses.
+// The error contains the HTTP status code, a message, and an internal error if there is one.
+// It implements the error interface and has methods for setting and unwrapping the internal error.
 package errors
 
 import (
@@ -5,19 +9,19 @@ import (
 	"net/http"
 )
 
-// HTTPError represents an httpserver error.
+// HTTPError is a custom error type that holds information about an HTTP error.
+// It contains the HTTP status code, a message, and an internal error if there is one.
 type HTTPError struct {
-	Code     int   `json:"code"`
-	Message  any   `json:"message"`
-	Internal error `json:"-"`
+	Code     int   `json:"code"`    // HTTP status code.
+	Message  any   `json:"message"` // Error message.
+	Internal error `json:"-"`       // Internal error.
 }
 
-var (
-	// ErrHTTPInternalServerError represents an internal http server error.
-	ErrHTTPInternalServerError = NewHTTPError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-)
+// ErrHTTPInternalServerError is a predefined HTTPError with status code 500 and message "Internal Server Error".
+var ErrHTTPInternalServerError = NewHTTPError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 
-// NewHTTPError creates a new UserError instance.
+// NewHTTPError returns a new HTTPError with the given status code and message.
+// If message is not provided, it will use the default message for the status code.
 func NewHTTPError(code int, message ...any) *HTTPError {
 	e := &HTTPError{Code: code, Message: http.StatusText(code)}
 	if len(message) > 0 {
@@ -26,7 +30,8 @@ func NewHTTPError(code int, message ...any) *HTTPError {
 	return e
 }
 
-// Error makes it compatible with `error` interface.
+// Error returns a string representation of the HTTPError.
+// It includes the HTTP status code, message, and internal error if there is one.
 func (e *HTTPError) Error() string {
 	if e.Internal == nil {
 		return fmt.Sprintf("code=%d, message=%v", e.Code, e.Message)
@@ -34,12 +39,12 @@ func (e *HTTPError) Error() string {
 	return fmt.Sprintf("code=%d, message=%v, internal=%v", e.Code, e.Message, e.Internal)
 }
 
-// Unwrap satisfies the Go 1.13 error wrapper interface.
+// Unwrap returns the internal error of the HTTPError.
 func (e *HTTPError) Unwrap() error {
 	return e.Internal
 }
 
-// SetInternal sets error to HTTPError.Internal.
+// SetInternal sets the internal error of the HTTPError.
 func (e *HTTPError) SetInternal(err error) *HTTPError {
 	e.Internal = err
 	return e
