@@ -27,7 +27,7 @@ func WithMemoryNoteRepository() RepositoryProviderOption {
 	}
 }
 
-func WithMongoDBNoteRepository(database *mongo.Database) RepositoryProviderOption {
+func WithMongoNoteRepository(database *mongo.Database) RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {
 		rp.NoteRepository = storagemongo.NewNoteRepository(database)
 	}

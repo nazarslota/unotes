@@ -26,7 +26,7 @@ func TestNewRepositoryProvider(t *testing.T) {
 	assert.True(t, ok)
 
 	// Test with MongoDB note repository
-	rp = NewRepositoryProvider(WithMongoDBNoteRepository(database))
+	rp = NewRepositoryProvider(WithMongoNoteRepository(database))
 	assert.NotNil(t, rp.NoteRepository)
 	_, ok = rp.NoteRepository.(*storagemongo.NoteRepository)
 	assert.True(t, ok)

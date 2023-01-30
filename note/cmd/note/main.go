@@ -13,25 +13,38 @@ import (
 	handlergrpc "github.com/nazarslota/unotes/note/internal/handler/grpc"
 	"github.com/nazarslota/unotes/note/internal/service"
 	"github.com/nazarslota/unotes/note/internal/storage"
+	"github.com/nazarslota/unotes/note/internal/storage/mongo"
 )
 
 var log logger.Logger
 
 func init() {
 	var file io.Writer
-
 	file, err := os.OpenFile(config.C().Note.Log, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		file = io.Discard
 	}
-
 	out := io.MultiWriter(file, logger.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen})
 	log = logger.NewLogger(out).With().Timestamp().Logger()
 }
 
 func main() {
+	log.Info("Attempting to establish a connection to a MongoDB...")
+	database, err := mongo.NewMongoDB(context.Background(), mongo.Config{
+		Host:     config.C().MongoDB.Host,
+		Port:     config.C().MongoDB.Port,
+		Username: config.C().MongoDB.Username,
+		Password: config.C().MongoDB.Password,
+		Database: config.C().MongoDB.Database,
+	})
+	if err != nil {
+		log.ErrorFields("Attempting to establish a connection to a mongo database.", map[string]any{"error": err})
+	} else {
+		log.Info("The connection to the database was successfully established.")
+	}
+
 	repositories := storage.NewRepositoryProvider(
-		storage.WithMemoryNoteRepository(),
+		storage.WithMongoNoteRepository(database),
 	)
 
 	services := service.NewServices(
@@ -42,7 +55,7 @@ func main() {
 
 	address := net.JoinHostPort(config.C().Note.HostGRPC, config.C().Note.PortGRPC)
 	server := handlergrpc.NewHandler(
-		handlergrpc.WithService(services),
+		handlergrpc.WithServices(services),
 		handlergrpc.WithAddress(address),
 		handlergrpc.WithLogger(log),
 	).S()
@@ -63,6 +76,4 @@ func main() {
 	} else {
 		log.Info("gRPC server was successfully shut down.")
 	}
-
-	log.Info("The server has been successfully shut down.")
 }
