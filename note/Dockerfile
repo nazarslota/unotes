@@ -15,6 +15,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 
 EXPOSE 8092
+EXPOSE 8082
 
 WORKDIR /root/
 
