@@ -12,6 +12,8 @@ type Config struct {
 	Note struct {
 		HostGRPC string `mapstructure:"NOTE_HOST_GRPC"`
 		PortGRPC string `mapstructure:"NOTE_PORT_GRPC"`
+		HostREST string `mapstructure:"NOTE_HOST_REST"`
+		PortREST string `mapstructure:"NOTE_PORT_REST"`
 		Debug    bool   `mapstructure:"NOTE_DEBUG"`
 		Log      string `mapstructure:"NOTE_LOG"`
 	} `mapstructure:",squash"`
