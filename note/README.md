@@ -42,3 +42,51 @@ for data storage and [Docker](https://www.docker.com) for easy deployment.
    ```
    docker-compose up --detach --build --remove-orphans
    ```
+
+## Development
+
+### Prerequisites
+
+* [GoLand](https://www.jetbrains.com/go) or [Visual Studio Code](https://code.visualstudio.com)
+* [Go](https://go.dev/dl)
+* [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation)
+
+### Dependencies
+
+```
+make dependencies
+```
+
+### Other
+
+#### [Protocol Buffer](https://grpc.io/docs/languages/go/quickstart/)
+
+- Code generation.
+    ```
+    make protobuf
+    ```
+
+- Plugins install.
+    ```
+    make protoplugins
+    ```
+
+- Plugins.
+    - [protoc-gen-validate](https://github.com/bufbuild/protoc-gen-validate)
+    - [gRPC-Gateway](https://github.com/grpc-ecosystem/grpc-gateway)
+
+#### [Swagger](https://swagger.io)
+
+```
+make swagger
+```
+
+#### Environment variables
+
+```
+NOTE_MONGODB_HOST=
+NOTE_MONGODB_PORT=
+NOTE_MONGODB_USERNAME=
+NOTE_MONGODB_PASSWORD=
+NOTE_MONGODB_DATABASE=
+```
