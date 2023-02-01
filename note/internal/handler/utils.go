@@ -1,7 +1,8 @@
-package grpc
+package handler
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"google.golang.org/grpc"
@@ -11,7 +12,7 @@ type Logger interface {
 	InfoFields(msg string, fields map[string]any)
 }
 
-func newUnaryLoggerInterceptor(logger Logger) grpc.UnaryServerInterceptor {
+func newGRPCLoggerUnaryInterceptor(logger Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		start := time.Now()
 		resp, err := handler(ctx, req)
@@ -27,7 +28,7 @@ func newUnaryLoggerInterceptor(logger Logger) grpc.UnaryServerInterceptor {
 	}
 }
 
-func newStreamLoggerInterceptor(logger Logger) grpc.StreamServerInterceptor {
+func newGRPCLoggerStreamInterceptor(logger Logger) grpc.StreamServerInterceptor {
 	return func(srv any, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		start := time.Now()
 		err := handler(srv, stream)
@@ -41,4 +42,19 @@ func newStreamLoggerInterceptor(logger Logger) grpc.StreamServerInterceptor {
 
 		return err
 	}
+}
+
+func newRESTLogger(handler http.Handler, logger Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		handler.ServeHTTP(w, r)
+		duration := time.Since(start)
+
+		fields := map[string]any{
+			"method":   r.Method,
+			"path":     r.URL.Path,
+			"duration": duration.String(),
+		}
+		logger.InfoFields("HTTP request handled.", fields)
+	})
 }

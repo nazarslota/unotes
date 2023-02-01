@@ -1,4 +1,4 @@
-package grpc
+package handler
 
 import (
 	"context"
@@ -13,8 +13,6 @@ import (
 
 type noteServiceServer struct {
 	services service.Services
-	logger   Logger
-
 	pb.NoteServiceServer
 }
 

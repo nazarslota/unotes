@@ -10,7 +10,7 @@ import (
 	"github.com/nazarslota/unotes/auth/pkg/logger"
 	"github.com/nazarslota/unotes/auth/pkg/utils"
 	"github.com/nazarslota/unotes/note/internal/config"
-	handlergrpc "github.com/nazarslota/unotes/note/internal/handler/grpc"
+	"github.com/nazarslota/unotes/note/internal/handler"
 	"github.com/nazarslota/unotes/note/internal/service"
 	"github.com/nazarslota/unotes/note/internal/storage"
 	"github.com/nazarslota/unotes/note/internal/storage/mongo"
@@ -29,7 +29,7 @@ func init() {
 }
 
 func main() {
-	log.Info("Attempting to establish a connection to a MongoDB...")
+	log.Info("Attempting to establish a connection with a MongoDB...")
 	database, err := mongo.NewMongoDB(context.Background(), mongo.Config{
 		Host:     config.C().MongoDB.Host,
 		Port:     config.C().MongoDB.Port,
@@ -38,7 +38,7 @@ func main() {
 		Database: config.C().MongoDB.Database,
 	})
 	if err != nil {
-		log.ErrorFields("Attempting to establish a connection to a mongo database.", map[string]any{"error": err})
+		log.FatalFields("Failed to establish a connection with MongoDB.", map[string]any{"error": err})
 	} else {
 		log.Info("The connection to the database was successfully established.")
 	}
@@ -53,27 +53,64 @@ func main() {
 		},
 	)
 
-	address := net.JoinHostPort(config.C().Note.HostGRPC, config.C().Note.PortGRPC)
-	server := handlergrpc.NewHandler(
-		handlergrpc.WithServices(services),
-		handlergrpc.WithAddress(address),
-		handlergrpc.WithLogger(log),
+	grpcServerAddr := net.JoinHostPort(
+		config.C().Note.HostGRPC,
+		config.C().Note.PortGRPC,
+	)
+	restServerAddr := net.JoinHostPort(
+		config.C().Note.HostREST,
+		config.C().Note.PortREST,
+	)
+
+	server := handler.NewHandler(
+		handler.WithServices(services),
+		handler.WithGRPCServerAddr(grpcServerAddr),
+		handler.WithRESTServerAddr(restServerAddr),
+		handler.WithLogger(log),
 	).S()
 
 	log.Info("Starting a gRPC server...")
 	go func() {
-		if err := server.Serve(); err != nil {
+		if err := server.ServeGRPC(); err != nil {
 			log.FatalFields("Error occurred while running gRPC server.", map[string]any{"error": err})
 		}
 	}()
-	log.InfoFields("The gRPC server is successfully started.", map[string]any{"address": address})
+
+	time.Sleep(time.Second)
+	log.InfoFields("The gRPC server is successfully started.", map[string]any{"address": grpcServerAddr})
+
+	log.Info("Starting a REST server...")
+	go func() {
+		if err := server.ServeREST(); err != nil {
+			log.FatalFields("Error occurred while running REST server.", map[string]any{"error": err})
+		}
+	}()
+
+	time.Sleep(time.Second)
+	log.InfoFields("The REST server is successfully started.", map[string]any{"address": restServerAddr})
 
 	<-utils.GracefulShutdown()
 
 	log.Info("Shutdown of the gRPC server...")
-	if err := server.Shutdown(context.Background()); err != nil {
+	if err := server.ShutdownGRPC(context.Background()); err != nil {
 		log.ErrorFields("Error during gRPC server shutdown.", map[string]any{"error": err})
 	} else {
 		log.Info("gRPC server was successfully shut down.")
 	}
+
+	log.Info("Shutdown of the REST server...")
+	if err := server.ShutdownREST(context.Background()); err != nil {
+		log.ErrorFields("Error during REST server shutdown.", map[string]any{"error": err})
+	} else {
+		log.Info("REST server was successfully shut down.")
+	}
+
+	log.Info("Disconnecting from MongoDB...")
+	if err := database.Client().Disconnect(context.Background()); err != nil {
+		log.ErrorFields("Error during disconnecting for MongoDB.", map[string]any{"error": err})
+	} else {
+		log.Info("Successfully disconnected from MongoDB.")
+	}
+
+	log.Info("Shutdown completed successfully.")
 }

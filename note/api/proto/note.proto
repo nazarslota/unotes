@@ -3,6 +3,7 @@ syntax = "proto3";
 option go_package = "github.com/nazarslota/unotes/note/api/proto";
 
 import "validate/validate.proto";
+import "google/api/annotations.proto";
 
 message CreateNoteRequest {
   string id = 1 [(validate.rules).string.uuid = true];
@@ -52,9 +53,35 @@ message GetNotesResponse {
 }
 
 service NoteService {
-  rpc CreateNote(CreateNoteRequest) returns (CreateNoteResponse);
-  rpc UpdateNote(UpdateNoteRequest) returns (UpdateNoteResponse);
-  rpc DeleteNote(DeleteNoteRequest) returns (DeleteNoteResponse);
-  rpc GetNote(GetNoteRequest) returns (GetNoteResponse);
-  rpc GetNotes(GetNotesRequest) returns (stream GetNotesResponse);
+  rpc CreateNote(CreateNoteRequest) returns (CreateNoteResponse) {
+    option(google.api.http) = {
+      post: "/note",
+      body: "*"
+    };
+  }
+
+  rpc UpdateNote(UpdateNoteRequest) returns (UpdateNoteResponse) {
+    option(google.api.http) = {
+      put: "/note",
+      body: "*"
+    };
+  }
+
+  rpc DeleteNote(DeleteNoteRequest) returns (DeleteNoteResponse) {
+    option(google.api.http) = {
+      delete: "/note/{id}"
+    };
+  }
+
+  rpc GetNote(GetNoteRequest) returns (GetNoteResponse) {
+    option(google.api.http) = {
+      get: "/note/{id}"
+    };
+  }
+
+  rpc GetNotes(GetNotesRequest) returns (stream GetNotesResponse) {
+    option(google.api.http) = {
+      get: "/notes/{user_id}"
+    };
+  }
 }
