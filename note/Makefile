@@ -40,41 +40,49 @@ endif
 .DEFAULT_GOAL := help
 .PHONY: run build test dependencies protobuf swagger clean about help
 
-run: build ## Builds and runs the app.
+run: build ## Build and run the app.
     ifeq ($(OS), Windows_NT)
 		./${BIN_DIR}/${PROJECT_NAME}.exe
     else
 		./${BIN_DIR}/${PROJECT_NAME}
     endif
 
-build: dependencies protobuf swagger ## Loads dependencies, generates proto files, swagger documentation and build.
+build: dependencies protobuf swagger ## Load dependencies, generates code from .proto file, swagger documentation and build.
 	go build \
   -o ./${BIN_DIR}/ ./cmd/...
 
-test: dependencies protobuf swagger ## Runs all tests.
+test: dependencies protobuf swagger ## Run all tests.
 	go test ./...
 
-dependencies: # Downloads all Go dependencies.
+dependencies: ## Download all Go dependencies.
 	go mod download
 
-protobuf: ## Generates protocol buffer files.
+protobuf: protoplugins ## Generate code from .proto files.
 	protoc -I${PROTO_DIR} ${PROTO_DIR}/*.proto \
   --go_out=. --go_opt=module=${GO_PACKAGE} \
   --go-grpc_out=. --go-grpc_opt=module=${GO_PACKAGE} \
   --validate_out=lang=go:. --validate_opt=module=${GO_PACKAGE} \
   --grpc-gateway_out=. --grpc-gateway_opt=module=${GO_PACKAGE}
 
-swagger: ## Generates swagger documentation.
+swagger: protoplugins ## Generate swagger documentation.
 	protoc -I${PROTO_DIR} ${PROTO_DIR}/*.proto \
   --openapiv2_out=${SWAGGER_DIR}
 
-clean: ## Deletes generated files.
+protoplugins: ## Install protocol compiler plugins.
+	go install \
+  github.com/envoyproxy/protoc-gen-validate \
+  github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
+  github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+  google.golang.org/protobuf/cmd/protoc-gen-go \
+  google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+clean: ## Delete generated files.
 	${RM_RF_COMMAND} ./${BIN_DIR}/
 	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.go
 	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.validate.go
 	${RM_F_COMMAND} ./${SWAGGER_DIR}/*
 
-about: ## Displays information related to the build.
+about: ## Display information related to the build.
 	@echo "OS:              ${OS}"
 	@echo "Shell:           ${SHELL} ${SHELL_VERSION}"
 	@echo "Protoc version:  $(shell protoc --version)"
@@ -82,5 +90,5 @@ about: ## Displays information related to the build.
 	@echo "Go package:      ${GO_PACKAGE}"
 	@echo "OpenSSL version: $(shell openssl version)"
 
-help: ## Shows help.
+help: ## Show help.
 	@${HELP_COMMAND}
