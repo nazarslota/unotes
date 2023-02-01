@@ -64,7 +64,7 @@ protobuf: ## Generates protocol buffer files.
   --validate_out=lang=go:. --validate_opt=module=${GO_PACKAGE} \
   --grpc-gateway_out=. --grpc-gateway_opt=module=${GO_PACKAGE}
 
-swagger:
+swagger: ## Generates swagger documentation.
 	protoc -I${PROTO_DIR} ${PROTO_DIR}/*.proto \
   --openapiv2_out=${SWAGGER_DIR}
 
