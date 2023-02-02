@@ -10,59 +10,59 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Server struct {
-	grpcAddr   string
-	restAddr   string
-	grpcServer *grpc.Server
-	restServer *http.Server
+type server struct {
+	GRPCAddr   string
+	RESTAddr   string
+	GRPCServer *grpc.Server
+	RESTServer *http.Server
 }
 
-func NewServer(grpcAddr, restAddr string, grpcServer *grpc.Server, restServer *http.Server) *Server {
-	return &Server{
-		grpcAddr:   grpcAddr,
-		restAddr:   restAddr,
-		grpcServer: grpcServer,
-		restServer: restServer,
+func newServer(grpcAddr, restAddr string, grpcServer *grpc.Server, restServer *http.Server) *server {
+	return &server{
+		GRPCAddr:   grpcAddr,
+		RESTAddr:   restAddr,
+		GRPCServer: grpcServer,
+		RESTServer: restServer,
 	}
 }
 
-func (s *Server) ServeGRPC() error {
-	lis, err := net.Listen("tcp", s.grpcAddr)
+func (s server) ServeGRPC() error {
+	lis, err := net.Listen("tcp", s.GRPCAddr)
 	if err != nil {
 		return fmt.Errorf("failed to create a listener: %w", err)
 	}
 
-	if err := s.grpcServer.Serve(lis); err != nil {
+	if err := s.GRPCServer.Serve(lis); err != nil {
 		return fmt.Errorf("internal error: %w", err)
 	}
 	return nil
 }
 
-func (s *Server) ServeREST() error {
-	lis, err := net.Listen("tcp", s.restAddr)
+func (s server) ServeREST() error {
+	lis, err := net.Listen("tcp", s.RESTAddr)
 	if err != nil {
 		return fmt.Errorf("failed to create a listener: %w", err)
 	}
 
-	if err := s.restServer.Serve(lis); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := s.RESTServer.Serve(lis); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("internal error: %w", err)
 	}
 	return nil
 }
 
-func (s *Server) ShutdownGRPC(ctx context.Context) error {
+func (s server) ShutdownGRPC(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return fmt.Errorf("context done: %w", ctx.Err())
 	default:
 	}
 
-	s.grpcServer.GracefulStop()
+	s.GRPCServer.GracefulStop()
 	return nil
 }
 
-func (s *Server) ShutdownREST(ctx context.Context) error {
-	if err := s.restServer.Shutdown(ctx); err != nil {
+func (s server) ShutdownREST(ctx context.Context) error {
+	if err := s.RESTServer.Shutdown(ctx); err != nil {
 		return fmt.Errorf("failed to shutdown server: %w", err)
 	}
 	return nil

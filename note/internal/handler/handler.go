@@ -8,6 +8,8 @@ import (
 	pb "github.com/nazarslota/unotes/note/api/proto"
 	"github.com/nazarslota/unotes/note/internal/service"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 type Handler struct {
@@ -29,19 +31,33 @@ func NewHandler(options ...Option) *Handler {
 	return h
 }
 
-func (h *Handler) S() *Server {
+type Server interface {
+	ServeGRPC() error
+	ServeREST() error
+	ShutdownGRPC(ctx context.Context) error
+	ShutdownREST(ctx context.Context) error
+}
+
+func (h *Handler) Server() Server {
+	return newServer(h.grpcAddr, h.restAddr, h.grpcServer(), h.restServer())
+}
+
+func (h *Handler) grpcServer() *grpc.Server {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(newGRPCLoggerUnaryInterceptor(h.logger)),
 		grpc.StreamInterceptor(newGRPCLoggerStreamInterceptor(h.logger)),
 	)
 	pb.RegisterNoteServiceServer(grpcServer, &h.noteServiceServer)
+	reflection.Register(grpcServer)
 
+	return grpcServer
+}
+
+func (h *Handler) restServer() *http.Server {
 	mux := runtime.NewServeMux()
-	_ = pb.RegisterNoteServiceHandlerServer(context.Background(), mux, h.noteServiceServer)
+	_ = pb.RegisterNoteServiceHandlerFromEndpoint(context.Background(), mux, h.grpcAddr, []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	})
 
-	restServer := &http.Server{
-		Handler: newRESTLogger(mux, h.logger),
-	}
-
-	return NewServer(h.grpcAddr, h.restAddr, grpcServer, restServer)
+	return &http.Server{Handler: newRESTLogger(mux, h.logger)}
 }

@@ -17,12 +17,6 @@ type noteServiceServer struct {
 }
 
 func (s noteServiceServer) CreateNote(ctx context.Context, in *pb.CreateNoteRequest) (*pb.CreateNoteResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, status.Error(codes.Canceled, "context done")
-	default:
-	}
-
 	if err := in.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -36,7 +30,7 @@ func (s noteServiceServer) CreateNote(ctx context.Context, in *pb.CreateNoteRequ
 
 	_, err := s.services.NoteService.CreateNoteRequestHandler.Handle(ctx, request)
 	if errors.Is(err, servicenote.ErrCreateNoteAlreadyExist) {
-		return nil, status.Error(codes.AlreadyExists, "note already exist")
+		return nil, status.Error(codes.AlreadyExists, "already exist")
 	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
 	}
@@ -44,36 +38,21 @@ func (s noteServiceServer) CreateNote(ctx context.Context, in *pb.CreateNoteRequ
 }
 
 func (s noteServiceServer) GetNote(ctx context.Context, in *pb.GetNoteRequest) (*pb.GetNoteResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, status.Error(codes.Canceled, "context done")
-	default:
-	}
-
 	if err := in.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	request := servicenote.GetNoteRequest{
-		ID: in.Id,
-	}
-
+	request := servicenote.GetNoteRequest{ID: in.Id}
 	response, err := s.services.NoteService.GetNoteRequestHandler.Handle(ctx, request)
 	if errors.Is(err, servicenote.ErrGetNoteNotFound) {
-		return nil, status.Error(codes.NotFound, "note not found")
+		return nil, status.Error(codes.NotFound, "not found")
 	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
 	}
-	return &pb.GetNoteResponse{Title: response.Title, Content: response.Content, UserId: response.UserID}, nil
+	return &pb.GetNoteResponse{Id: response.ID, Title: response.Title, Content: response.Content, UserId: response.UserID}, nil
 }
 
 func (s noteServiceServer) GetNotes(in *pb.GetNotesRequest, server pb.NoteService_GetNotesServer) error {
-	select {
-	case <-server.Context().Done():
-		return status.Error(codes.Canceled, "context done")
-	default:
-	}
-
 	if err := in.Validate(); err != nil {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -92,7 +71,7 @@ func (s noteServiceServer) GetNotes(in *pb.GetNotesRequest, server pb.NoteServic
 	}
 
 	if err := <-errs; errors.Is(err, servicenote.ErrGetNotesAsyncNotFound) {
-		return status.Errorf(codes.NotFound, "notes not found")
+		return status.Error(codes.NotFound, "not found")
 	} else if err != nil {
 		return status.Error(codes.Internal, "internal")
 	}
@@ -100,12 +79,6 @@ func (s noteServiceServer) GetNotes(in *pb.GetNotesRequest, server pb.NoteServic
 }
 
 func (s noteServiceServer) UpdateNote(ctx context.Context, in *pb.UpdateNoteRequest) (*pb.UpdateNoteResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, status.Error(codes.Canceled, "context done")
-	default:
-	}
-
 	if err := in.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -118,7 +91,7 @@ func (s noteServiceServer) UpdateNote(ctx context.Context, in *pb.UpdateNoteRequ
 
 	_, err := s.services.NoteService.UpdateNoteRequestHandler.Handle(ctx, request)
 	if errors.Is(err, servicenote.ErrUpdateNoteNotFound) {
-		return nil, status.Error(codes.NotFound, "note not found")
+		return nil, status.Error(codes.NotFound, "not found")
 	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
 	}
@@ -126,12 +99,6 @@ func (s noteServiceServer) UpdateNote(ctx context.Context, in *pb.UpdateNoteRequ
 }
 
 func (s noteServiceServer) DeleteNote(ctx context.Context, in *pb.DeleteNoteRequest) (*pb.DeleteNoteResponse, error) {
-	select {
-	case <-ctx.Done():
-		return nil, status.Error(codes.Canceled, "context done")
-	default:
-	}
-
 	if err := in.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -139,7 +106,7 @@ func (s noteServiceServer) DeleteNote(ctx context.Context, in *pb.DeleteNoteRequ
 	request := servicenote.DeleteNoteRequest{ID: in.Id}
 	_, err := s.services.NoteService.DeleteNoteRequestHandler.Handle(ctx, request)
 	if errors.Is(err, servicenote.ErrDeleteNoteNotFound) {
-		return nil, status.Error(codes.NotFound, "note not found")
+		return nil, status.Error(codes.NotFound, "not found")
 	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
 	}

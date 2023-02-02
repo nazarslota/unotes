@@ -2,61 +2,31 @@ syntax = "proto3";
 
 option go_package = "github.com/nazarslota/unotes/note/api/proto";
 
-import "validate/validate.proto";
 import "google/api/annotations.proto";
 
-message CreateNoteRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string title = 2 [(validate.rules).string = {min_len: 4, max_len: 128}];
-  string content = 3 [(validate.rules).string = {min_len: 0, max_len: 1024}];
-  string user_id = 4 [(validate.rules).string.uuid = true];
-}
-
-message CreateNoteResponse {
-}
-
-message UpdateNoteRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string new_title = 2 [(validate.rules).string = {min_len: 4, max_len: 128}];
-  string new_content = 3 [(validate.rules).string = {min_len: 0, max_len: 1024}];
-}
-
-message UpdateNoteResponse {
-}
-
-message DeleteNoteRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-}
-
-message DeleteNoteResponse {
-}
-
-message GetNoteRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-}
-
-message GetNoteResponse {
-  string title = 1;
-  string content = 2;
-  string user_id = 3;
-}
-
-message GetNotesRequest {
-  string user_id = 1 [(validate.rules).string.uuid = true];
-}
-
-message GetNotesResponse {
-  string id = 1;
-  string title = 2;
-  string content = 3;
-  string user_id = 4;
-}
+import "createnote.proto";
+import "getnote.proto";
+import "getnotes.proto";
+import "updatenote.proto";
+import "deletenote.proto";
 
 service NoteService {
   rpc CreateNote(CreateNoteRequest) returns (CreateNoteResponse) {
     option(google.api.http) = {
       post: "/note",
       body: "*"
+    };
+  }
+
+  rpc GetNote(GetNoteRequest) returns (GetNoteResponse) {
+    option(google.api.http) = {
+      get: "/note/{id}"
+    };
+  }
+
+  rpc GetNotes(GetNotesRequest) returns (stream GetNotesResponse) {
+    option(google.api.http) = {
+      get: "/notes/{user_id}"
     };
   }
 
@@ -70,18 +40,6 @@ service NoteService {
   rpc DeleteNote(DeleteNoteRequest) returns (DeleteNoteResponse) {
     option(google.api.http) = {
       delete: "/note/{id}"
-    };
-  }
-
-  rpc GetNote(GetNoteRequest) returns (GetNoteResponse) {
-    option(google.api.http) = {
-      get: "/note/{id}"
-    };
-  }
-
-  rpc GetNotes(GetNotesRequest) returns (stream GetNotesResponse) {
-    option(google.api.http) = {
-      get: "/notes/{user_id}"
     };
   }
 }

@@ -80,6 +80,7 @@ clean: ## Delete generated files.
 	${RM_RF_COMMAND} ./${BIN_DIR}/
 	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.go
 	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.validate.go
+	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.gw.go
 	${RM_F_COMMAND} ./${SWAGGER_DIR}/*
 
 about: ## Display information related to the build.
