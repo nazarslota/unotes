@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "github.com/nazarslota/unotes/note/api/proto";
+
+import "validate/validate.proto";
+
+message GetNoteRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetNoteResponse {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  string user_id = 4;
+}

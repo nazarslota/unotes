@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "github.com/nazarslota/unotes/note/api/proto";
+
+import "validate/validate.proto";
+
+message DeleteNoteRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteNoteResponse {}
