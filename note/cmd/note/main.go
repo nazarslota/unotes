@@ -48,9 +48,7 @@ func main() {
 	)
 
 	services := service.NewServices(
-		service.NoteServiceOptions{
-			NoteRepository: repositories.NoteRepository,
-		},
+		service.NoteServiceOptions{NoteRepository: repositories.NoteRepository},
 	)
 
 	grpcServerAddr := net.JoinHostPort(
@@ -67,7 +65,7 @@ func main() {
 		handler.WithGRPCServerAddr(grpcServerAddr),
 		handler.WithRESTServerAddr(restServerAddr),
 		handler.WithLogger(log),
-	).S()
+	).Server()
 
 	log.Info("Starting a gRPC server...")
 	go func() {
