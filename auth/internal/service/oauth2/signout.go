@@ -5,73 +5,64 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
+	"github.com/golang-jwt/jwt"
+	domainrefresh "github.com/nazarslota/unotes/auth/internal/domain/refresh"
 )
 
-// SignOutRequest represents a sign out request.
 type SignOutRequest struct {
-	AccessToken string `json:"access_token"`
+	AccessToken string
 }
 
-// SignOutResponse represents a sign out response.
-type SignOutResponse struct {
-}
+type SignOutResponse struct{}
 
-// LogOutRequestHandler is an interface that defines a sign out request handler.
 type LogOutRequestHandler interface {
-	Handle(ctx context.Context, request *SignOutRequest) (*SignOutResponse, error)
+	Handle(ctx context.Context, request SignOutRequest) (SignOutResponse, error)
 }
 
-// signOutRequestHandler is a sign out request handler that deletes the user's refresh tokens.
 type signOutRequestHandler struct {
 	AccessTokenSecret      string
-	RefreshTokenRepository refreshtoken.Repository
+	RefreshTokenRepository domainrefresh.Repository
 }
 
-// ErrSignOutInvalidOrExpiredToken is returned when the access token is invalid or expired.
-var ErrSignOutInvalidOrExpiredToken = errors.New("invalid or expired token")
+var ErrSignOutInvalidOrExpiredToken = errSignOutInvalidOrExpiredToken()
 
-// NewSignOutRequestHandler creates a new sign out request handler.
-func NewSignOutRequestHandler(
-	accessTokenSecret string, refreshTokenRepository refreshtoken.Repository,
-) LogOutRequestHandler {
+func errSignOutInvalidOrExpiredToken() error { return errors.New("invalid or expired token") }
+
+func NewSignOutRequestHandler(accessTokenSecret string, refreshTokenRepository domainrefresh.Repository) LogOutRequestHandler {
 	return &signOutRequestHandler{
 		AccessTokenSecret:      accessTokenSecret,
 		RefreshTokenRepository: refreshTokenRepository,
 	}
 }
 
-// Handle handles a sign-out request and returns a response.
-//
-// It can return the following errors:
-//   - ErrSignOutInvalidOrExpiredToken: if the access token is invalid or expired
-//   - other errors: if an error occurred while parsing the access token or deleting the refresh tokens
-func (h *signOutRequestHandler) Handle(ctx context.Context, request *SignOutRequest) (*SignOutResponse, error) {
-	// Parse the access token to get the user ID.
-	claims, err := parseHS256(request.AccessToken, h.AccessTokenSecret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse the access token: %w", ErrSignOutInvalidOrExpiredToken)
-	}
-
-	userID := ""
-	if _, ok := claims["user_id"]; !ok {
-		return nil, fmt.Errorf("failed to get the user ID from the token: %w", ErrSignOutInvalidOrExpiredToken)
-	} else if userID, ok = claims["user_id"].(string); !ok {
-		return nil, fmt.Errorf("failed to convert user ID to string: %w", ErrSignOutInvalidOrExpiredToken)
-	}
-
-	// Get the user's refresh tokens.
-	tokens, err := h.RefreshTokenRepository.FindMany(ctx, userID)
-	if errors.Is(err, refreshtoken.ErrTokensNotFound) {
-		return &SignOutResponse{}, nil
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to search for the user's refresh tokens: %w", err)
-	}
-
-	for _, token := range tokens {
-		if err := h.RefreshTokenRepository.DeleteOne(ctx, userID, &token); err != nil {
-			return nil, fmt.Errorf("failed to delete the refresh token: %w", err)
+func (h signOutRequestHandler) Handle(ctx context.Context, request SignOutRequest) (SignOutResponse, error) {
+	claims := make(jwt.MapClaims)
+	if _, err := jwt.ParseWithClaims(request.AccessToken, claims, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
 		}
+		return []byte(h.AccessTokenSecret), nil
+	}); err != nil {
+		err = fmt.Errorf("failed to parse token: %w", err)
+		return SignOutResponse{}, errors.Join(err, ErrSignOutInvalidOrExpiredToken)
 	}
-	return &SignOutResponse{}, nil
+
+	var userID string
+	if _, ok := claims["uid"]; !ok {
+		return SignOutResponse{}, ErrSignOutInvalidOrExpiredToken
+	} else if userID, ok = claims["uid"].(string); !ok {
+		return SignOutResponse{}, ErrSignOutInvalidOrExpiredToken
+	}
+
+	tokens, err := h.RefreshTokenRepository.GetRefreshTokens(ctx, userID)
+	if errors.Is(err, domainrefresh.ErrTokenNotFound) {
+		return SignOutResponse{}, nil
+	} else if err != nil {
+		return SignOutResponse{}, fmt.Errorf("failed to get refresh tokens: %w", err)
+	}
+
+	if err := h.RefreshTokenRepository.DeleteRefreshTokens(ctx, userID, tokens); err != nil {
+		return SignOutResponse{}, fmt.Errorf("failed to delete refresh tokens: %w", err)
+	}
+	return SignOutResponse{}, nil
 }

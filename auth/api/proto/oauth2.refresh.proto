@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option go_package = "github.com/nazarslota/unotes/auth/api/proto";
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message RefreshResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}

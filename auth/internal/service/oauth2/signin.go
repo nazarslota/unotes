@@ -6,50 +6,49 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nazarslota/unotes/auth/internal/domain/refreshtoken"
-	"github.com/nazarslota/unotes/auth/internal/domain/user"
+	"github.com/golang-jwt/jwt"
+	domainrefresh "github.com/nazarslota/unotes/auth/internal/domain/refresh"
+	domainuser "github.com/nazarslota/unotes/auth/internal/domain/user"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// SignInRequest represents a sign in request.
 type SignInRequest struct {
 	Username string
 	Password string
 }
 
-// SignInResponse represents a sign in response.
 type SignInResponse struct {
 	AccessToken  string
 	RefreshToken string
 }
 
-// SignInRequestHandler is an interface that defines a sign in request handler.
 type SignInRequestHandler interface {
-	Handle(ctx context.Context, request *SignInRequest) (*SignInResponse, error)
+	Handle(ctx context.Context, request SignInRequest) (SignInResponse, error)
 }
 
-// signInRequestHandler is a sign in request handler that verifies the sign in request, generates
-// access and refresh tokens, and saves the refresh token.
 type signInRequestHandler struct {
 	AccessTokenSecret      string
 	RefreshTokenSecret     string
 	AccessTokenExpiresIn   time.Duration
 	RefreshTokenExpiresIn  time.Duration
-	UserRepository         user.Repository
-	RefreshTokenRepository refreshtoken.Repository
+	UserRepository         domainuser.Repository
+	RefreshTokenRepository domainrefresh.Repository
 }
 
-// ErrSignInUserNotFound is returned when the user is not signed up.
-var ErrSignInUserNotFound = errors.New("user not found")
+var (
+	ErrSignInInvalidUsername = errSignInInvalidUsername()
+	ErrSignInInvalidPassword = errSignInInvalidPassword()
+	ErrSignInUserNotFound    = errSignInUserNotFound()
+)
 
-// ErrSignInInvalidPassword is returned when the password is invalid.
-var ErrSignInInvalidPassword = errors.New("invalid user password")
+func errSignInInvalidUsername() error { return errors.New("invalid username") }
+func errSignInInvalidPassword() error { return errors.New("invalid password") }
+func errSignInUserNotFound() error    { return domainuser.ErrUserNotFound }
 
-// NewSignInRequestHandler creates a new sign in request handler.
 func NewSignInRequestHandler(
 	accessTokenSecret, refreshTokenSecret string,
 	accessTokenExpiresIn, refreshTokenExpiresIn time.Duration,
-	userRepository user.Repository, refreshTokenRepository refreshtoken.Repository,
+	userRepository domainuser.Repository, refreshTokenRepository domainrefresh.Repository,
 ) SignInRequestHandler {
 	return &signInRequestHandler{
 		AccessTokenSecret:      accessTokenSecret,
@@ -61,44 +60,55 @@ func NewSignInRequestHandler(
 	}
 }
 
-// Handle handles a sign in request and returns a response.
-//
-// It can return the following errors:
-//   - ErrSignInUserNotFound: if the user is not signed up
-//   - ErrSignInInvalidPassword: if the password is invalid
-//   - other errors: if an error occurred while comparing passwords or creating the access or refresh tokens
-func (h *signInRequestHandler) Handle(ctx context.Context, request *SignInRequest) (*SignInResponse, error) {
-	// Check if the user is signed up.
-	u, err := h.UserRepository.FindOne(ctx, request.Username)
-	if errors.Is(err, user.ErrUserNotFound) {
-		return nil, fmt.Errorf("the user is not signed up: %w", ErrSignInUserNotFound)
+func (h signInRequestHandler) Handle(ctx context.Context, request SignInRequest) (SignInResponse, error) {
+	if len(request.Username) == 0 {
+		return SignInResponse{}, ErrSignInInvalidUsername
+	} else if len(request.Password) == 0 {
+		return SignInResponse{}, ErrSignInInvalidPassword
+	}
+
+	user, err := h.UserRepository.FindUserByUsername(ctx, request.Username)
+	if err != nil {
+		return SignInResponse{}, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
+	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+		err = fmt.Errorf("failed to compare passwords: %w", err)
+		return SignInResponse{}, errors.Join(err, ErrSignInInvalidPassword)
 	} else if err != nil {
-		return nil, fmt.Errorf("failed to verify the user sign up: %w", err)
+		return SignInResponse{}, fmt.Errorf("failed to compare passwords: %w", err)
 	}
 
-	// Check if the password is correct.
-	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(request.Password)); err != nil {
-		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return nil, fmt.Errorf("invalid user password: %w", ErrSignInInvalidPassword)
-		}
-		return nil, fmt.Errorf("failed to compare passwords: %w", err)
+	accessTokenClaims := jwt.MapClaims{
+		"iss": user.Username,
+		"sub": "auth",
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(h.AccessTokenExpiresIn).Unix(),
+		"uid": user.ID,
 	}
-
-	response := new(SignInResponse)
-	response.AccessToken, err = newHS256(h.AccessTokenSecret, h.AccessTokenExpiresIn, u.ID)
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims).
+		SignedString([]byte(h.AccessTokenSecret))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create an access token: %w", err)
+		return SignInResponse{}, fmt.Errorf("failed to sign access token: %w", err)
 	}
 
-	response.RefreshToken, err = newHS256(h.RefreshTokenSecret, h.RefreshTokenExpiresIn, u.ID)
+	refreshTokenClaims := jwt.MapClaims{
+		"iss": user.Username,
+		"sub": "auth",
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(h.RefreshTokenExpiresIn).Unix(),
+		"uid": user.ID,
+	}
+	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims).
+		SignedString([]byte(h.RefreshTokenSecret))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create a refresh token: %w", err)
+		return SignInResponse{}, fmt.Errorf("failed to sign refresh token: %w", err)
 	}
 
-	// Save the refresh token.
-	if err := h.RefreshTokenRepository.SaveOne(ctx, u.ID, &refreshtoken.Token{Token: response.RefreshToken}); err != nil {
-		return nil, fmt.Errorf("failed to save the refresh token: %w", err)
+	err = h.RefreshTokenRepository.SaveRefreshToken(ctx, user.ID, domainrefresh.Token(refreshToken))
+	if err != nil {
+		return SignInResponse{}, fmt.Errorf("failed to save refresh token: %w", err)
 	}
-
-	return response, nil
+	return SignInResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "github.com/nazarslota/unotes/auth/api/proto";
+
+import "validate/validate.proto";
+
+message SignInRequest {
+  string username = 1 [(validate.rules).string = {min_len: 4, max_len: 32}];
+  string password = 2 [(validate.rules).string = {min_len: 8, max_len: 64}];
+}
+
+message SignInResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}

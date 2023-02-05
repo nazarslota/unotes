@@ -1,10 +1,11 @@
-basePath: /api
 definitions:
   errors.HTTPError:
     properties:
       code:
+        description: HTTP status code.
         type: integer
-      message: {}
+      message:
+        description: Error message.
     type: object
   rest.oAuth2RefreshResult:
     properties:
@@ -60,14 +61,10 @@ definitions:
     - password
     - username
     type: object
-host: localhost:8081
 info:
   contact: {}
-  description: Authentication service
-  title: Auth
-  version: "1.0"
 paths:
-  /oauth2/refresh:
+  /serviceoauth2/refresh:
     get:
       consumes:
       - application/json
@@ -75,7 +72,7 @@ paths:
       parameters:
       - example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         in: query
-        name: t
+        name: refreshToken
         required: true
         type: string
       produces:
@@ -100,7 +97,7 @@ paths:
       summary: oAuth2 Refresh
       tags:
       - oAuth2
-  /oauth2/sign-in:
+  /serviceoauth2/sign-in:
     post:
       consumes:
       - application/json
@@ -138,7 +135,7 @@ paths:
       summary: oAuth2 Sign In
       tags:
       - oAuth2
-  /oauth2/sign-out:
+  /serviceoauth2/sign-out:
     post:
       consumes:
       - application/json
@@ -170,7 +167,7 @@ paths:
       summary: oAuth2 Sign Out
       tags:
       - oAuth2
-  /oauth2/sign-up:
+  /serviceoauth2/sign-up:
     post:
       consumes:
       - application/json

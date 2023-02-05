@@ -40,42 +40,50 @@ endif
 .DEFAULT_GOAL := help
 .PHONY: run build test dependencies protobuf swagger clean about help
 
-run: build ## Builds and runs the app.
+run: build ## Build and run the app.
     ifeq ($(OS), Windows_NT)
 		./${BIN_DIR}/${PROJECT_NAME}.exe
     else
 		./${BIN_DIR}/${PROJECT_NAME}
     endif
 
-build: dependencies protobuf swagger ## Loads dependencies, generates proto files, swagger documentation and build.
+build: dependencies protobuf swagger ## Load dependencies, generates code from .proto file, swagger documentation and build.
 	go build \
   -o ./${BIN_DIR}/ ./cmd/...
 
-test: dependencies protobuf swagger ## Runs all tests.
+test: dependencies protobuf swagger ## Run all tests.
 	go test ./...
 
-dependencies: # Downloads all Go dependencies.
+dependencies: ## Download all Go dependencies.
 	go mod download
 
-protobuf: ## Generates protocol buffer files.
-	protoc \
-  -I${PROTO_DIR} ${PROTO_DIR}/*.proto \
+protobuf: protoplugins ## Generate code from .proto files.
+	protoc -I${PROTO_DIR} ${PROTO_DIR}/*.proto \
   --go_out=. --go_opt=module=${GO_PACKAGE} \
   --go-grpc_out=. --go-grpc_opt=module=${GO_PACKAGE} \
-  --validate_out=lang=go:./. --validate_opt=module=${GO_PACKAGE}
+  --validate_out=lang=go:. --validate_opt=module=${GO_PACKAGE}
 
-swagger: ## Generates swagger documentation.
+protoplugins: ## Install protocol compiler plugins.
+	go install github.com/envoyproxy/protoc-gen-validate@latest
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+swagger: tools ## Generate swagger documentation.
 	swag init \
   --quiet --output ./${SWAGGER_DIR} \
   --generalInfo ./internal/handler/rest/handler.go
 
-clean: ## Deletes generated files.
+tools: ## Install all tools, swaggo and others.
+	go install github.com/swaggo/swag/cmd/swag@latest
+	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+clean: ## Delete generated files.
 	${RM_RF_COMMAND} ./${BIN_DIR}/
 	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.go
 	${RM_F_COMMAND} ./${PROTO_DIR}/*.pb.validate.go
 	${RM_F_COMMAND} ./${SWAGGER_DIR}/*
 
-about: ## Displays information related to the build.
+about: ## Display information related to the build.
 	@echo "OS:              ${OS}"
 	@echo "Shell:           ${SHELL} ${SHELL_VERSION}"
 	@echo "Protoc version:  $(shell protoc --version)"
@@ -83,5 +91,5 @@ about: ## Displays information related to the build.
 	@echo "Go package:      ${GO_PACKAGE}"
 	@echo "OpenSSL version: $(shell openssl version)"
 
-help: ## Shows help.
+help: ## Show help.
 	@${HELP_COMMAND}
