@@ -1,185 +1,148 @@
-# Auth - authentication web service.
+# Auth
 
-**Auth** - authentication service.
+This is an authentication and authorization microservice written in [Go](https://github.com/golang/go) and built using
+REST and [gRPC](https://grpc.io). It uses PostgreSQL and Redis for storage and implements the OAuth2.0
+authentication method for secure authentication.
 
 ## Run
 
 ### Docker
 
-1) You need to install [Docker](https://docs.docker.com/get-docker).
-
-2) In the root directory "auth" you need to create a new file named ".env".
-
-3) In the ".env" file you need to add the following environment variables:
-
-   Auth
-
-    ````
-    AUTH_SERVICE_ACCESS_TOKEN_SECRET
-    AUTH_SERVICE_REFRESH_TOKEN_SECRET
-    ````
-   PostgreSQL
-
-   ````
-    AUTH_SERVICE_POSTGRESQL_HOST
-    AUTH_SERVICE_POSTGRESQL_PORT
-    AUTH_SERVICE_POSTGRESQL_USERNAME
-    AUTH_SERVICE_POSTGRESQL_PASSWORD
-    AUTH_SERVICE_POSTGRESQL_DBNAME
-    AUTH_SERVICE_POSTGRESQL_SSLMODE
-    ````
-   RedisDB
-
-    ````
-    AUTH_SERVICE_REDIS_ADDR
-    AUTH_SERVICE_REDIS_PASSWORD
-    AUTH_SERVICE_REDIS_DB
-    ````
-
-4) Now run the following commands.
-    ```
-    docker build --tag auth .
-    docker run --publish 8081:8081 --publish 8091:8091 --name auth --detach --restart always --env-file ./.env auth
-    ```
+1. You must have [Docker](https://docs.docker.com/engine/install) installed.
+2. Now in the main folder of the project you need to create an `.env` file in which you need to configure to add the
+   following environment variables.
+   ```
+   AUTH_SERVICE_ACCESS_TOKEN_SECRET=
+   AUTH_SERVICE_REFRESH_TOKEN_SECRET=
+   
+   AUTH_SERVICE_POSTGRESQL_HOST=
+   AUTH_SERVICE_POSTGRESQL_PORT=
+   AUTH_SERVICE_POSTGRESQL_USERNAME=
+   AUTH_SERVICE_POSTGRESQL_PASSWORD=
+   AUTH_SERVICE_POSTGRESQL_DBNAME=
+   AUTH_SERVICE_POSTGRESQL_SSLMODE=
+   
+   AUTH_SERVICE_REDIS_ADDR=
+   AUTH_SERVICE_REDIS_PASSWORD=
+   AUTH_SERVICE_REDIS_DB=
+   ```
+3. Now run the following commands to build and run the Docker container.
+   ```
+   docker build --tag auth .
+   docker run --publish 8082:8082 --publish 8092:8092 --name auth --detach --restart always --env-file ./.env auth
+   ```
 
 ### Docker Compose
 
-1) You need to install [Docker](https://docs.docker.com/get-docker)
-   and [Docker Compose](https://docs.docker.com/compose/install).
-
-2) In the root directory "auth" you need to create a new file named ".env".
-
-3) In the ".env" file you need to add the following environment variables.
-
-   Auth
-
-    ````
-    AUTH_SERVICE_ACCESS_TOKEN_SECRET
-    AUTH_SERVICE_REFRESH_TOKEN_SECRET
-    ````
-   PostgreSQL
-
-   ````
-    AUTH_SERVICE_POSTGRESQL_HOST
-    AUTH_SERVICE_POSTGRESQL_PORT
-    AUTH_SERVICE_POSTGRESQL_USERNAME
-    AUTH_SERVICE_POSTGRESQL_PASSWORD
-    AUTH_SERVICE_POSTGRESQL_DBNAME
-    AUTH_SERVICE_POSTGRESQL_SSLMODE
-    ````
-   RedisDB
-
-    ````
-    AUTH_SERVICE_REDIS_ADDR
-    AUTH_SERVICE_REDIS_PASSWORD
-    AUTH_SERVICE_REDIS_DB
-    ````
-
-4) Now run the following command.
-   ````
-   docker-compose up -d --build --remove-orphans
-   ````
+1. You must have [Docker](https://docs.docker.com/engine/install)
+   and [Docker Compose](https://docs.docker.com/compose/install) installed.
+2. Now in the main folder of the project you need to create an `.env` file in which you need to configure to add the
+   following environment variables.
+   ```
+   AUTH_SERVICE_ACCESS_TOKEN_SECRET=
+   AUTH_SERVICE_REFRESH_TOKEN_SECRET=
+   
+   AUTH_SERVICE_POSTGRESQL_HOST=
+   AUTH_SERVICE_POSTGRESQL_PORT=
+   AUTH_SERVICE_POSTGRESQL_USERNAME=
+   AUTH_SERVICE_POSTGRESQL_PASSWORD=
+   AUTH_SERVICE_POSTGRESQL_DBNAME=
+   AUTH_SERVICE_POSTGRESQL_SSLMODE=
+   
+   AUTH_SERVICE_REDIS_ADDR=
+   AUTH_SERVICE_REDIS_PASSWORD=
+   AUTH_SERVICE_REDIS_DB=
+   ```
+3. Now you need to run the following command.
+   ```
+   docker-compose up --detach --build --remove-orphans
+   ```
 
 ## Development
 
 ### Prerequisites
 
-- [GoLang](https://go.dev/dl) (1.19.4 recommended).
-- [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation) (v3.15.8 recommended).
-
-- Tools
-
-    - [Swag](https://github.com/swaggo/swag) (1.8.9 recommended).
-    - [Migrate](https://github.com/golang-migrate/migrate) (4.15.2 recommended).
-
-- Recommended IDEs
-
-    - [GoLand](https://www.jetbrains.com/go) (2022.2.2 and above).
-    - [Visual Studio Code](https://code.visualstudio.com) (1.70 and above).
+* [GoLand](https://www.jetbrains.com/go) or [Visual Studio Code](https://code.visualstudio.com)
+* [Go](https://go.dev/dl)
+* [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation)
 
 ### Dependencies
 
-Run the following command
-
-````
+```
 make dependencies
-````
-
-### Environment
-
-Auth
-
-````
-AUTH_SERVICE_ACCESS_TOKEN_SECRET
-AUTH_SERVICE_REFRESH_TOKEN_SECRET
-````
-
-PostgreSQL
-
-````
-AUTH_SERVICE_POSTGRESQL_HOST
-AUTH_SERVICE_POSTGRESQL_PORT
-AUTH_SERVICE_POSTGRESQL_USERNAME
-AUTH_SERVICE_POSTGRESQL_PASSWORD
-AUTH_SERVICE_POSTGRESQL_DBNAME
-AUTH_SERVICE_POSTGRESQL_SSLMODE
-````
-
-RedisDB
-
-````
-AUTH_SERVICE_REDIS_ADDR
-AUTH_SERVICE_REDIS_PASSWORD
-AUTH_SERVICE_REDIS_DB
-````
-
-### Run
-
-Run the following commands.
-
-````
-make build
-./bin/auth
-````
+```
 
 ### Other
 
-#### For easy management of database migrations, it is recommended to use the [Migrate](https://github.com/golang-migrate/migrate) tool.
+#### [Protocol Buffer](https://grpc.io/docs/languages/go/quickstart)
 
-- Up
+- Code generation.
+    ```
+    make protobuf
+    ```
 
-    ````
-    migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' up
-    migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' up
-    ````
+- Plugins install.
+    ```
+    make protoplugins
+    ```
 
-- Down
+- Plugins.
+    - [protoc-gen-validate](https://github.com/bufbuild/protoc-gen-validate)
 
-    ````
-    migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' down
-    migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' down`
-    ````
+#### [Swagger](https://swagger.io)
 
-#### Project also uses swagger documentation. [Swag](https://github.com/swaggo/swag).
+- URL: http://localhost:8081/api/swagger/index.html
 
-URL [http://localhost:8081/api/swagger/index.html](http://localhost:8081/api/swagger/index.html). If the swagger
-documentation has been changed, you can use the following command to generate a new one.
+- Code generation.
+    ```
+    make swagger
+    ```
 
-````
-make swagger
-````
+- Tools install.
+    ```
+    make tools
+    ```
 
-#### Generation of proto files. [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation) and [protoc-gen-validate (PGV)](https://github.com/bufbuild/protoc-gen-validate) required.
+- Tools.
+    - [swag](https://github.com/swaggo/swag)
 
-`.proto` and `.pb.go` files are stored in the `/api/proto` folder. If the proto files have been changed, you can use the
-following command. It will generate files in `/api/proto` folder.
+#### Migrations
 
-````
-make protobuf
-````
+- Using [migrate](https://github.com/golang-migrate/migrate) tool.
+    - Up.
+        ````
+        migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' up
+        migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' up
+        ````
 
-#### Environment
+    - Down.
+        ````
+        migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' down
+        migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable' down`
+        ````
 
-If you want to change the config that is used (by default `production.env`) you can use the environment variable
-named `AUTH_ENVIRONMENT`. To use `stage.env` use `AUTH_ENVIRONMENT=STAGE`, to use `development.env`
-use `AUTH_ENVIRONMENT=DEVELOPMENT`, for use in production, this variable may not be set.
+- Tools install.
+    ```
+    make tools
+    ```
+
+- Tools.
+    - [migrate](https://github.com/golang-migrate/migrate)
+
+#### Environment variables
+
+```
+AUTH_SERVICE_ACCESS_TOKEN_SECRET=
+AUTH_SERVICE_REFRESH_TOKEN_SECRET=
+   
+AUTH_SERVICE_POSTGRESQL_HOST=
+AUTH_SERVICE_POSTGRESQL_PORT=
+AUTH_SERVICE_POSTGRESQL_USERNAME=
+AUTH_SERVICE_POSTGRESQL_PASSWORD=
+AUTH_SERVICE_POSTGRESQL_DBNAME=
+AUTH_SERVICE_POSTGRESQL_SSLMODE=
+   
+AUTH_SERVICE_REDIS_ADDR=
+AUTH_SERVICE_REDIS_PASSWORD=
+AUTH_SERVICE_REDIS_DB=
+```
