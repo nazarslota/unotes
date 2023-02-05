@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option go_package = "github.com/nazarslota/unotes/auth/api/proto";
+
+message SignOutRequest {
+  string access_token = 1;
+}
+
+message SignOutResponse {}

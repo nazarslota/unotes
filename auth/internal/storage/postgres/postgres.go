@@ -1,4 +1,4 @@
-package postgresql
+package postgres
 
 import (
 	"context"
@@ -20,14 +20,14 @@ type Config struct {
 func NewPostgreSQL(ctx context.Context, config Config) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		config.Host, config.Port, config.Username, config.Password, config.DBName, config.SSLMode)
+
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to establish connection with postgres: %w", err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
 	if err := db.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("failed to ping the database: %w", err)
+		return nil, fmt.Errorf("ping failed: %w", err)
 	}
-
 	return db, nil
 }

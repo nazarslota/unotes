@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"time"
@@ -13,44 +14,55 @@ import (
 )
 
 type Handler struct {
-	address  string
-	services *service.Services
-
+	addr   string
 	logger Logger
 	debug  bool
+
+	services service.Services
 }
 
 func NewHandler(options ...HandlerOption) *Handler {
-	h := &Handler{}
+	h := new(Handler)
 	for _, option := range options {
 		option(h)
 	}
 	return h
 }
 
-//	@title			Auth
-//	@version		1.0
-//	@description	Authentication service
+type Server interface {
+	Serve() error
+	Shutdown(ctx context.Context) error
+}
 
-//	@host		localhost:8081
-//	@BasePath	/api
+func (h *Handler) Server() Server {
+	e := echo.New()
 
-func (h *Handler) S() *Server {
-	mux := echo.New()
+	e.Debug = h.debug
 
-	mux.Debug = h.debug
+	e.Validator = newValidate(validator.New())
+	e.HTTPErrorHandler = newHTTPErrorHandler(e, h.logger)
 
-	mux.Logger.SetOutput(io.Discard)
-	mux.StdLogger.SetOutput(io.Discard)
+	e.Logger.SetOutput(io.Discard)
+	e.StdLogger.SetOutput(io.Discard)
 
-	mux.Validator = newValidate(validator.New())
-	mux.HTTPErrorHandler = newHTTPErrorHandler(mux, h.logger)
+	e.Use(newLoggerMiddleware(h.logger))
+	e.Use(newRequestLoggerMiddleware(h.logger))
+	e.Use(newCORSMiddleware())
 
-	mux.Use(newLoggerMiddleware(h.logger))
-	mux.Use(newRequestLoggerMiddleware(h.logger))
-	mux.Use(corsMiddleware())
+	h.registerEndpoints(e)
 
-	api := mux.Group("/api")
+	server := &http.Server{
+		Addr:           h.addr,
+		Handler:        e,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20, // 1 MB
+	}
+	return newServer(h.addr, server)
+}
+
+func (h *Handler) registerEndpoints(e *echo.Echo) {
+	api := e.Group("/api")
 	{
 		api.GET("/swagger/*", swagger.WrapHandler)
 		oAuth2 := api.Group("/oauth2")
@@ -61,14 +73,4 @@ func (h *Handler) S() *Server {
 			oAuth2.GET("/refresh", h.oAuth2Refresh)
 		}
 	}
-
-	s := &http.Server{
-		Addr:           h.address,
-		Handler:        mux,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: http.DefaultMaxHeaderBytes, // 1 MB
-	}
-
-	return &Server{server: s}
 }

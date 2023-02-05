@@ -54,6 +54,5 @@ func BuildMongoURI(host, port, username, password string) (string, error) {
 		proto += "+srv"
 	}
 	uri := url.URL{Scheme: proto, User: userinfo, Host: host}
-
 	return uri.String(), nil
 }

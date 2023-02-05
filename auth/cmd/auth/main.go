@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net"
-	"net/http"
 	"os"
 	"time"
 
@@ -14,7 +12,7 @@ import (
 	"github.com/nazarslota/unotes/auth/internal/handler/rest"
 	"github.com/nazarslota/unotes/auth/internal/service"
 	"github.com/nazarslota/unotes/auth/internal/storage"
-	"github.com/nazarslota/unotes/auth/internal/storage/postgresql"
+	"github.com/nazarslota/unotes/auth/internal/storage/postgres"
 	"github.com/nazarslota/unotes/auth/internal/storage/redis"
 	"github.com/nazarslota/unotes/auth/pkg/logger"
 	"github.com/nazarslota/unotes/auth/pkg/utils"
@@ -28,19 +26,13 @@ func init() {
 	if err != nil {
 		logs = io.Discard
 	}
-
-	out := io.MultiWriter(
-		logs,
-		logger.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen},
-	)
+	out := io.MultiWriter(logs, logger.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen})
 	log = logger.NewLogger(out).With().Timestamp().Logger()
 }
 
 func main() {
-	log.Info("The server starts...")
-
 	log.Info("Connecting to the PostgreSQL database...")
-	postgresDB, err := postgresql.NewPostgreSQL(context.Background(), postgresql.Config{
+	postgresDB, err := postgres.NewPostgreSQL(context.Background(), postgres.Config{
 		Host:     config.C().PostgreSQL.Host,
 		Port:     config.C().PostgreSQL.Port,
 		Username: config.C().PostgreSQL.Username,
@@ -71,7 +63,7 @@ func main() {
 		storage.WithRedisRefreshTokenRepository(redisDB),
 	)
 
-	services := service.NewServices(&service.OAuth2ServiceOptions{
+	services := service.NewServices(service.OAuth2ServiceOptions{
 		AccessTokenSecret:      config.C().Auth.AccessTokenSecret,
 		RefreshTokenSecret:     config.C().Auth.RefreshTokenSecret,
 		AccessTokenExpiresIn:   config.C().Auth.AccessTokenExpiresIn,
@@ -86,36 +78,36 @@ func main() {
 		rest.WithAddress(restAddress),
 		rest.WithLogger(log),
 		rest.WithDebug(config.C().Auth.Debug),
-	).S()
+	).Server()
+
+	log.InfoFields("Starting a REST server...", map[string]any{"address": restAddress})
+	go func() {
+		if err := restServer.Serve(); err != nil {
+			log.FatalFields("Error occurred while running REST server.", map[string]any{"error": err})
+		}
+	}()
+
+	time.Sleep(time.Second)
+	log.Info("The REST server is successfully started.")
 
 	grpcAddress := net.JoinHostPort(config.C().Auth.HostGRPC, config.C().Auth.PortGRPC)
 	grpcServer := grpc.NewHandler(
 		grpc.WithService(services),
 		grpc.WithAddress(grpcAddress),
 		grpc.WithLogger(log),
-	).S()
-
-	log.InfoFields("Starting a REST server...", map[string]any{"address": restAddress})
-	go func() {
-		err := restServer.Serve()
-		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.FatalFields("Error occurred while running REST server.", map[string]any{"error": err})
-		}
-	}()
-	log.Info("The REST server is successfully started.")
+	).Server()
 
 	log.InfoFields("Starting a gRPC server...", map[string]any{"address": grpcAddress})
 	go func() {
-		err := grpcServer.Serve()
-		if err != nil {
+		if err := grpcServer.Serve(); err != nil {
 			log.FatalFields("Error occurred while running gRPC server.", map[string]any{"error": err})
 		}
 	}()
+
+	time.Sleep(time.Second)
 	log.Info("The gRPC server is successfully started.")
 
 	<-utils.GracefulShutdown()
-	log.Info("Shutdown of the server...")
-
 	log.Info("Shutdown of the REST server...")
 	if err := restServer.Shutdown(context.Background()); err != nil {
 		log.ErrorFields("Error during REST server shutdown.", map[string]any{"error": err})
@@ -143,6 +135,4 @@ func main() {
 	} else {
 		log.Info("The connection to Redis is successfully closed.")
 	}
-
-	log.Info("The server has been successfully shut down.")
 }

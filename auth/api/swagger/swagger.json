@@ -1,15 +1,10 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Authentication service",
-        "title": "Auth",
-        "contact": {},
-        "version": "1.0"
+        "contact": {}
     },
-    "host": "localhost:8081",
-    "basePath": "/api",
     "paths": {
-        "/oauth2/refresh": {
+        "/serviceoauth2/refresh": {
             "get": {
                 "description": "Refresh",
                 "consumes": [
@@ -26,7 +21,7 @@
                     {
                         "type": "string",
                         "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-                        "name": "t",
+                        "name": "refreshToken",
                         "in": "query",
                         "required": true
                     }
@@ -59,7 +54,7 @@
                 }
             }
         },
-        "/oauth2/sign-in": {
+        "/serviceoauth2/sign-in": {
             "post": {
                 "description": "Sign in",
                 "consumes": [
@@ -117,7 +112,7 @@
                 }
             }
         },
-        "/oauth2/sign-out": {
+        "/serviceoauth2/sign-out": {
             "post": {
                 "description": "Sign out",
                 "consumes": [
@@ -166,7 +161,7 @@
                 }
             }
         },
-        "/oauth2/sign-up": {
+        "/serviceoauth2/sign-up": {
             "post": {
                 "description": "Create account",
                 "consumes": [
@@ -227,9 +222,12 @@
             "type": "object",
             "properties": {
                 "code": {
+                    "description": "HTTP status code.",
                     "type": "integer"
                 },
-                "message": {}
+                "message": {
+                    "description": "Error message."
+                }
             }
         },
         "rest.oAuth2RefreshResult": {
