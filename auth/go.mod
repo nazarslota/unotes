@@ -1,6 +1,6 @@
 module github.com/nazarslota/unotes/auth
 
-go 1.19
+go 1.20
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v0.9.1
