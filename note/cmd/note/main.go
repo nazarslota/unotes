@@ -48,6 +48,7 @@ func main() {
 	)
 
 	services := service.NewServices(
+		service.JWTServiceOptions{AccessTokenSecret: config.C().Note.AccessTokenSecret},
 		service.NoteServiceOptions{NoteRepository: repositories.NoteRepository},
 	)
 

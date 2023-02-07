@@ -26,8 +26,7 @@ func NewHandler(options ...Option) *Handler {
 	for _, option := range options {
 		option(h)
 	}
-
-	h.noteServiceServer = noteServiceServer{services: h.services}
+	h.noteServiceServer = newNoteServiceServer(h.services)
 	return h
 }
 
@@ -43,9 +42,17 @@ func (h *Handler) Server() Server {
 }
 
 func (h *Handler) grpcServer() *grpc.Server {
+	loggerInterceptor := newGRPCLoggerInterceptor(h.logger)
+	authInterceptor := newAuthInterceptor(h.services.JWTService.JWTVerifier)
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(newGRPCLoggerUnaryInterceptor(h.logger)),
-		grpc.StreamInterceptor(newGRPCLoggerStreamInterceptor(h.logger)),
+		grpc.ChainUnaryInterceptor(
+			loggerInterceptor.Unary(),
+			authInterceptor.Unary(),
+		),
+		grpc.ChainStreamInterceptor(
+			loggerInterceptor.Stream(),
+			authInterceptor.Stream(),
+		),
 	)
 	pb.RegisterNoteServiceServer(grpcServer, &h.noteServiceServer)
 	reflection.Register(grpcServer)
@@ -59,5 +66,6 @@ func (h *Handler) restServer() *http.Server {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	})
 
-	return &http.Server{Handler: newRESTLogger(mux, h.logger)}
+	loggerMiddleware := newRESTLoggerMiddleware(h.logger)
+	return &http.Server{Handler: loggerMiddleware.Middleware(mux, h.logger)}
 }

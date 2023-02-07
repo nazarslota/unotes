@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/envoyproxy/protoc-gen-validate v0.9.1
 	github.com/go-playground/validator/v10 v10.11.1
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1

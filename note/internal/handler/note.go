@@ -3,11 +3,13 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	pb "github.com/nazarslota/unotes/note/api/proto"
 	"github.com/nazarslota/unotes/note/internal/service"
 	servicenote "github.com/nazarslota/unotes/note/internal/service/note"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -16,10 +18,17 @@ type noteServiceServer struct {
 	pb.NoteServiceServer
 }
 
+func newNoteServiceServer(services service.Services) noteServiceServer {
+	return noteServiceServer{services: services}
+}
+
 func (s noteServiceServer) CreateNote(ctx context.Context, in *pb.CreateNoteRequest) (*pb.CreateNoteResponse, error) {
 	if err := in.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	fmt.Println(ok, md["uid"])
 
 	request := servicenote.CreateNoteRequest{
 		ID:      in.Id,
