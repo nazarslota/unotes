@@ -83,9 +83,7 @@ func (s oAuth2ServiceServer) Refresh(ctx context.Context, in *pb.RefreshRequest)
 
 	request := serviceoauth2.RefreshRequest{RefreshToken: in.RefreshToken}
 	response, err := s.services.OAuth2Service.RefreshRequestHandler.Handle(ctx, request)
-	if errors.Is(err, serviceoauth2.ErrRefreshUserNotFound) {
-		return nil, status.Error(codes.NotFound, "not found")
-	} else if errors.Is(err, serviceoauth2.ErrRefreshInvalidOrExpiredToken) {
+	if errors.Is(err, serviceoauth2.ErrRefreshInvalidOrExpiredToken) {
 		return nil, status.Error(codes.InvalidArgument, "invalid or expired token")
 	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
