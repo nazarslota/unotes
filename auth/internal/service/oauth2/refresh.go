@@ -39,11 +39,9 @@ type refreshRequestHandler struct {
 
 var (
 	ErrRefreshInvalidOrExpiredToken = errRefreshInvalidOrExpiredToken()
-	ErrRefreshUserNotFound          = errRefreshUserNotFound()
 )
 
 func errRefreshInvalidOrExpiredToken() error { return errors.New("invalid or expired token") }
-func errRefreshUserNotFound() error          { return domainuser.ErrUserNotFound }
 
 func NewRefreshRequestHandler(
 	accessTokenManager AccessTokenManager[jwt.AccessTokenClaims], accessTokenExpiresIn time.Duration,
