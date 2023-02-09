@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	gojwt "github.com/golang-jwt/jwt/v4"
 	domainrefresh "github.com/nazarslota/unotes/auth/internal/domain/refresh"
 	domainuser "github.com/nazarslota/unotes/auth/internal/domain/user"
+	"github.com/nazarslota/unotes/auth/pkg/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,10 +28,12 @@ type SignInRequestHandler interface {
 }
 
 type signInRequestHandler struct {
-	AccessTokenSecret      string
-	RefreshTokenSecret     string
-	AccessTokenExpiresIn   time.Duration
-	RefreshTokenExpiresIn  time.Duration
+	AccessTokenManager   AccessTokenManager[jwt.AccessTokenClaims]
+	AccessTokenExpiresIn time.Duration
+
+	RefreshTokenManager   RefreshTokenManager[jwt.RefreshTokenClaims]
+	RefreshTokenExpiresIn time.Duration
+
 	UserRepository         domainuser.Repository
 	RefreshTokenRepository domainrefresh.Repository
 }
@@ -46,14 +49,14 @@ func errSignInInvalidPassword() error { return errors.New("invalid password") }
 func errSignInUserNotFound() error    { return domainuser.ErrUserNotFound }
 
 func NewSignInRequestHandler(
-	accessTokenSecret, refreshTokenSecret string,
-	accessTokenExpiresIn, refreshTokenExpiresIn time.Duration,
+	accessTokenManager AccessTokenManager[jwt.AccessTokenClaims], accessTokenExpiresIn time.Duration,
+	refreshTokenManager RefreshTokenManager[jwt.RefreshTokenClaims], refreshTokenExpiresIn time.Duration,
 	userRepository domainuser.Repository, refreshTokenRepository domainrefresh.Repository,
 ) SignInRequestHandler {
 	return &signInRequestHandler{
-		AccessTokenSecret:      accessTokenSecret,
-		RefreshTokenSecret:     refreshTokenSecret,
+		AccessTokenManager:     accessTokenManager,
 		AccessTokenExpiresIn:   accessTokenExpiresIn,
+		RefreshTokenManager:    refreshTokenManager,
 		RefreshTokenExpiresIn:  refreshTokenExpiresIn,
 		UserRepository:         userRepository,
 		RefreshTokenRepository: refreshTokenRepository,
@@ -61,15 +64,10 @@ func NewSignInRequestHandler(
 }
 
 func (h signInRequestHandler) Handle(ctx context.Context, request SignInRequest) (SignInResponse, error) {
-	if len(request.Username) == 0 {
-		return SignInResponse{}, ErrSignInInvalidUsername
-	} else if len(request.Password) == 0 {
-		return SignInResponse{}, ErrSignInInvalidPassword
-	}
-
 	user, err := h.UserRepository.FindUserByUsername(ctx, request.Username)
 	if err != nil {
-		return SignInResponse{}, fmt.Errorf("failed to find user: %w", err)
+		err = fmt.Errorf("failed to find user: %w", err)
+		return SignInResponse{}, errors.Join(err, ErrSignInInvalidUsername)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
@@ -80,30 +78,23 @@ func (h signInRequestHandler) Handle(ctx context.Context, request SignInRequest)
 		return SignInResponse{}, fmt.Errorf("failed to compare passwords: %w", err)
 	}
 
-	accessTokenClaims := jwt.MapClaims{
-		"iss": user.Username,
-		"sub": "auth",
-		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(h.AccessTokenExpiresIn).Unix(),
-		"uid": user.ID,
-	}
-	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims).
-		SignedString([]byte(h.AccessTokenSecret))
+	accessToken, err := h.AccessTokenManager.New(jwt.AccessTokenClaims{
+		RegisteredClaims: gojwt.RegisteredClaims{
+			ExpiresAt: gojwt.NewNumericDate(time.Now().Add(h.AccessTokenExpiresIn)),
+		},
+		UserID: user.ID,
+	})
 	if err != nil {
-		return SignInResponse{}, fmt.Errorf("failed to sign access token: %w", err)
+		return SignInResponse{}, fmt.Errorf("failed to create access token: %w", err)
 	}
-
-	refreshTokenClaims := jwt.MapClaims{
-		"iss": user.Username,
-		"sub": "auth",
-		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(h.RefreshTokenExpiresIn).Unix(),
-		"uid": user.ID,
-	}
-	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims).
-		SignedString([]byte(h.RefreshTokenSecret))
+	refreshToken, err := h.RefreshTokenManager.New(jwt.RefreshTokenClaims{
+		RegisteredClaims: gojwt.RegisteredClaims{
+			ExpiresAt: gojwt.NewNumericDate(time.Now().Add(h.RefreshTokenExpiresIn)),
+		},
+		UserID: user.ID,
+	})
 	if err != nil {
-		return SignInResponse{}, fmt.Errorf("failed to sign refresh token: %w", err)
+		return SignInResponse{}, fmt.Errorf("failed to create refresh token: %w", err)
 	}
 
 	err = h.RefreshTokenRepository.SaveRefreshToken(ctx, user.ID, domainrefresh.Token(refreshToken))
