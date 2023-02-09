@@ -8,7 +8,7 @@ import (
 
 // NewHMAC creates and signs a JWT using HMAC algorithm.
 func NewHMAC[T jwt.Claims](secret string, claims T) (token string, err error) {
-	if token, err = jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(secret); err != nil {
+	if token, err = jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret)); err != nil {
 		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
 	return token, nil
