@@ -164,9 +164,7 @@ func (h *Handler) oAuth2Refresh(c echo.Context) error {
 
 	request := serviceoauth2.RefreshRequest{RefreshToken: input.RefreshToken}
 	result, err := h.services.OAuth2Service.RefreshRequestHandler.Handle(c.Request().Context(), request)
-	if errors.Is(err, serviceoauth2.ErrRefreshUserNotFound) {
-		return echo.NewHTTPError(http.StatusNotFound, "not found").SetInternal(err)
-	} else if errors.Is(err, serviceoauth2.ErrRefreshInvalidOrExpiredToken) {
+	if errors.Is(err, serviceoauth2.ErrRefreshInvalidOrExpiredToken) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid or expired token").SetInternal(err)
 	} else if err != nil {
 		return echo.ErrInternalServerError.SetInternal(err)

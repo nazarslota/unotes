@@ -14,6 +14,7 @@ import (
 	"github.com/nazarslota/unotes/auth/internal/storage"
 	"github.com/nazarslota/unotes/auth/internal/storage/postgres"
 	"github.com/nazarslota/unotes/auth/internal/storage/redis"
+	"github.com/nazarslota/unotes/auth/pkg/jwt"
 	"github.com/nazarslota/unotes/auth/pkg/logger"
 	"github.com/nazarslota/unotes/auth/pkg/utils"
 )
@@ -64,9 +65,9 @@ func main() {
 	)
 
 	services := service.NewServices(service.OAuth2ServiceOptions{
-		AccessTokenSecret:      config.C().Auth.AccessTokenSecret,
-		RefreshTokenSecret:     config.C().Auth.RefreshTokenSecret,
+		AccessTokenManager:     jwt.NewAccessTokenManagerHMAC(config.C().Auth.AccessTokenSecret),
 		AccessTokenExpiresIn:   config.C().Auth.AccessTokenExpiresIn,
+		RefreshTokenManager:    jwt.NewRefreshTokenManagerHMAC(config.C().Auth.RefreshTokenSecret),
 		RefreshTokenExpiresIn:  config.C().Auth.RefreshTokenExpiresIn,
 		UserRepository:         repositories.UserRepository,
 		RefreshTokenRepository: repositories.RefreshTokenRepository,
