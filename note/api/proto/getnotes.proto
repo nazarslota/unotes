@@ -2,15 +2,10 @@ syntax = "proto3";
 
 option go_package = "github.com/nazarslota/unotes/note/api/proto";
 
-import "validate/validate.proto";
-
-message GetNotesRequest {
-  string user_id = 1 [(validate.rules).string.uuid = true];
-}
+message GetNotesRequest {}
 
 message GetNotesResponse {
   string id = 1;
   string title = 2;
   string content = 3;
-  string user_id = 4;
 }

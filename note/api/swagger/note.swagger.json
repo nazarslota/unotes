@@ -136,7 +136,7 @@
         ]
       }
     },
-    "/notes/{userId}": {
+    "/notes": {
       "get": {
         "operationId": "NoteService_GetNotes",
         "responses": {
@@ -162,14 +162,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
         "tags": [
           "NoteService"
         ]
@@ -180,13 +172,18 @@
     "CreateNoteRequest": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "title": {
           "type": "string"
         },
         "content": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateNoteResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
         },
         "userId": {
@@ -194,18 +191,12 @@
         }
       }
     },
-    "CreateNoteResponse": {
-      "type": "object"
-    },
     "DeleteNoteResponse": {
       "type": "object"
     },
     "GetNoteResponse": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "title": {
           "type": "string"
         },
@@ -227,9 +218,6 @@
           "type": "string"
         },
         "content": {
-          "type": "string"
-        },
-        "userId": {
           "type": "string"
         }
       }

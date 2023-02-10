@@ -26,7 +26,7 @@ service NoteService {
 
   rpc GetNotes(GetNotesRequest) returns (stream GetNotesResponse) {
     option(google.api.http) = {
-      get: "/notes/{user_id}"
+      get: "/notes"
     };
   }
 

@@ -1,11 +1,11 @@
 module github.com/nazarslota/unotes/note
 
-go 1.19
+go 1.20
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v0.9.1
 	github.com/go-playground/validator/v10 v10.11.1
-	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
@@ -16,6 +16,7 @@ require (
 )
 
 require (
+	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/lyft/protoc-gen-star v0.6.1 // indirect
@@ -40,7 +41,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
-	github.com/nazarslota/unotes/auth v0.0.0-20230130142300-3d211ff52c19
+	github.com/nazarslota/unotes/auth v0.0.0-20230209224921-9323487ca5a5
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

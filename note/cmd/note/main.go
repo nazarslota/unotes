@@ -65,7 +65,8 @@ func main() {
 		handler.WithServices(services),
 		handler.WithGRPCServerAddr(grpcServerAddr),
 		handler.WithRESTServerAddr(restServerAddr),
-		handler.WithLogger(log),
+		handler.WithGRPCLogger(log),
+		handler.WithRESTLogger(log),
 	).Server()
 
 	log.Info("Starting a gRPC server...")

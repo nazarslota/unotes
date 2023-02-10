@@ -13,9 +13,10 @@ import (
 )
 
 type Handler struct {
-	grpcAddr string
-	restAddr string
-	logger   Logger
+	grpcAddr   string
+	restAddr   string
+	grpcLogger GRPCLogger
+	restLogger RESTLogger
 
 	services          service.Services
 	noteServiceServer noteServiceServer
@@ -42,22 +43,23 @@ func (h *Handler) Server() Server {
 }
 
 func (h *Handler) grpcServer() *grpc.Server {
-	loggerInterceptor := newGRPCLoggerInterceptor(h.logger)
-	authInterceptor := newAuthInterceptor(h.services.JWTService.JWTVerifier)
-	grpcServer := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			loggerInterceptor.Unary(),
-			authInterceptor.Unary(),
-		),
-		grpc.ChainStreamInterceptor(
-			loggerInterceptor.Stream(),
-			authInterceptor.Stream(),
-		),
-	)
-	pb.RegisterNoteServiceServer(grpcServer, &h.noteServiceServer)
-	reflection.Register(grpcServer)
+	logger := newLoggerInterceptor(loggerInterceptorOptions{
+		Logger: h.grpcLogger,
+	})
 
-	return grpcServer
+	auth := newAuthInterceptor(authInterceptorOptions{
+		AccessTokenValidator: h.services.JWTService.AccessTokenValidator,
+		Methods:              []string{"/NoteService/*"},
+	})
+
+	server := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(logger.Unary(), auth.Unary()),
+		grpc.ChainStreamInterceptor(logger.Stream(), auth.Stream()),
+	)
+	pb.RegisterNoteServiceServer(server, &h.noteServiceServer)
+	reflection.Register(server)
+
+	return server
 }
 
 func (h *Handler) restServer() *http.Server {
@@ -66,6 +68,8 @@ func (h *Handler) restServer() *http.Server {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	})
 
-	loggerMiddleware := newRESTLoggerMiddleware(h.logger)
-	return &http.Server{Handler: loggerMiddleware.Middleware(mux, h.logger)}
+	loggerMiddleware := newLoggerMiddleware(loggerMiddlewareOptions{
+		Logger: h.restLogger,
+	})
+	return &http.Server{Handler: loggerMiddleware.Middleware(mux)}
 }

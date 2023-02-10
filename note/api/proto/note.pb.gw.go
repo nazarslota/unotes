@@ -121,23 +121,6 @@ func request_NoteService_GetNotes_0(ctx context.Context, marshaler runtime.Marsh
 	var protoReq GetNotesRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["user_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "user_id")
-	}
-
-	protoReq.UserId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
-	}
-
 	stream, err := client.GetNotes(ctx, &protoReq)
 	if err != nil {
 		return nil, metadata, err
@@ -441,7 +424,7 @@ func RegisterNoteServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/GetNotes", runtime.WithHTTPPathPattern("/notes/{user_id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/GetNotes", runtime.WithHTTPPathPattern("/notes"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -509,7 +492,7 @@ var (
 
 	pattern_NoteService_GetNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"note", "id"}, ""))
 
-	pattern_NoteService_GetNotes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"notes", "user_id"}, ""))
+	pattern_NoteService_GetNotes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"notes"}, ""))
 
 	pattern_NoteService_UpdateNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"note"}, ""))
 

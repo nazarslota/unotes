@@ -9,7 +9,6 @@ message GetNoteRequest {
 }
 
 message GetNoteResponse {
-  string id = 1;
   string title = 2;
   string content = 3;
   string user_id = 4;

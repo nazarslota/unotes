@@ -12,7 +12,6 @@ type GetNoteRequest struct {
 }
 
 type GetNoteResponse struct {
-	ID      string
 	Title   string
 	Content string
 	UserID  string
@@ -37,5 +36,5 @@ func (h getNoteRequestHandler) Handle(ctx context.Context, request GetNoteReques
 	if err != nil {
 		return GetNoteResponse{}, fmt.Errorf("failed to find note: %w", err)
 	}
-	return GetNoteResponse{ID: note.ID, Title: note.Title, Content: note.Content, UserID: note.UserID}, nil
+	return GetNoteResponse{Title: note.Title, Content: note.Content, UserID: note.UserID}, nil
 }

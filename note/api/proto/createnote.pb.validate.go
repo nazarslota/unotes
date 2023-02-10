@@ -35,9 +35,6 @@ var (
 	_ = sort.Sort
 )
 
-// define the regex for a UUID once up-front
-var _createnote_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-
 // Validate checks the field values on CreateNoteRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -59,18 +56,6 @@ func (m *CreateNoteRequest) validate(all bool) error {
 	}
 
 	var errors []error
-
-	if err := m._validateUuid(m.GetId()); err != nil {
-		err = CreateNoteRequestValidationError{
-			field:  "Id",
-			reason: "value must be a valid UUID",
-			cause:  err,
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
 
 	if l := utf8.RuneCountInString(m.GetTitle()); l < 4 || l > 128 {
 		err := CreateNoteRequestValidationError{
@@ -94,28 +79,8 @@ func (m *CreateNoteRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if err := m._validateUuid(m.GetUserId()); err != nil {
-		err = CreateNoteRequestValidationError{
-			field:  "UserId",
-			reason: "value must be a valid UUID",
-			cause:  err,
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if len(errors) > 0 {
 		return CreateNoteRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-func (m *CreateNoteRequest) _validateUuid(uuid string) error {
-	if matched := _createnote_uuidPattern.MatchString(uuid); !matched {
-		return errors.New("invalid uuid format")
 	}
 
 	return nil
@@ -215,6 +180,10 @@ func (m *CreateNoteResponse) validate(all bool) error {
 	}
 
 	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for UserId
 
 	if len(errors) > 0 {
 		return CreateNoteResponseMultiError(errors)

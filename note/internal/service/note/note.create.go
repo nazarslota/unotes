@@ -4,17 +4,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
 )
 
 type CreateNoteRequest struct {
-	ID      string
 	Title   string
 	Content string
 	UserID  string
 }
 
 type CreateNoteResponse struct {
+	ID     string
+	UserID string
 }
 
 type CreateNoteRequestHandler interface {
@@ -33,7 +35,7 @@ func NewCreateNoteRequestHandler(noteRepository domainnote.Repository) CreateNot
 
 func (h createNoteRequestHandler) Handle(ctx context.Context, request CreateNoteRequest) (CreateNoteResponse, error) {
 	note := domainnote.Note{
-		ID:      request.ID,
+		ID:      uuid.New().String(),
 		Title:   request.Title,
 		Content: request.Content,
 		UserID:  request.UserID,
@@ -42,5 +44,5 @@ func (h createNoteRequestHandler) Handle(ctx context.Context, request CreateNote
 	if err := h.NoteRepository.SaveOne(ctx, note); err != nil {
 		return CreateNoteResponse{}, fmt.Errorf("failed to create note: %w", err)
 	}
-	return CreateNoteResponse{}, nil
+	return CreateNoteResponse{ID: note.ID, UserID: request.UserID}, nil
 }

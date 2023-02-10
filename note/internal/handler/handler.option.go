@@ -24,8 +24,14 @@ func WithRESTServerAddr(addr string) Option {
 	}
 }
 
-func WithLogger(logger Logger) Option {
+func WithGRPCLogger(logger GRPCLogger) Option {
 	return func(h *Handler) {
-		h.logger = logger
+		h.grpcLogger = logger
+	}
+}
+
+func WithRESTLogger(logger RESTLogger) Option {
+	return func(h *Handler) {
+		h.restLogger = logger
 	}
 }
