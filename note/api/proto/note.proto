@@ -13,33 +13,33 @@ import "deletenote.proto";
 service NoteService {
   rpc CreateNote(CreateNoteRequest) returns (CreateNoteResponse) {
     option(google.api.http) = {
-      post: "/note",
+      post: "/api/note",
       body: "*"
     };
   }
 
   rpc GetNote(GetNoteRequest) returns (GetNoteResponse) {
     option(google.api.http) = {
-      get: "/note/{id}"
+      get: "/api/note/{id}"
     };
   }
 
   rpc GetNotes(GetNotesRequest) returns (stream GetNotesResponse) {
     option(google.api.http) = {
-      get: "/notes"
+      get: "/api/notes"
     };
   }
 
   rpc UpdateNote(UpdateNoteRequest) returns (UpdateNoteResponse) {
     option(google.api.http) = {
-      put: "/note",
+      put: "/api/note",
       body: "*"
     };
   }
 
   rpc DeleteNote(DeleteNoteRequest) returns (DeleteNoteResponse) {
     option(google.api.http) = {
-      delete: "/note/{id}"
+      delete: "/api/note/{id}"
     };
   }
 }

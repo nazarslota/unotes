@@ -234,7 +234,7 @@ func RegisterNoteServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.NoteService/CreateNote", runtime.WithHTTPPathPattern("/note"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.NoteService/CreateNote", runtime.WithHTTPPathPattern("/api/note"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -259,7 +259,7 @@ func RegisterNoteServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.NoteService/GetNote", runtime.WithHTTPPathPattern("/note/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.NoteService/GetNote", runtime.WithHTTPPathPattern("/api/note/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -291,7 +291,7 @@ func RegisterNoteServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.NoteService/UpdateNote", runtime.WithHTTPPathPattern("/note"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.NoteService/UpdateNote", runtime.WithHTTPPathPattern("/api/note"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -316,7 +316,7 @@ func RegisterNoteServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.NoteService/DeleteNote", runtime.WithHTTPPathPattern("/note/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.NoteService/DeleteNote", runtime.WithHTTPPathPattern("/api/note/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -380,7 +380,7 @@ func RegisterNoteServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/CreateNote", runtime.WithHTTPPathPattern("/note"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/CreateNote", runtime.WithHTTPPathPattern("/api/note"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -402,7 +402,7 @@ func RegisterNoteServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/GetNote", runtime.WithHTTPPathPattern("/note/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/GetNote", runtime.WithHTTPPathPattern("/api/note/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -424,7 +424,7 @@ func RegisterNoteServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/GetNotes", runtime.WithHTTPPathPattern("/notes"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/GetNotes", runtime.WithHTTPPathPattern("/api/notes"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -446,7 +446,7 @@ func RegisterNoteServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/UpdateNote", runtime.WithHTTPPathPattern("/note"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/UpdateNote", runtime.WithHTTPPathPattern("/api/note"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -468,7 +468,7 @@ func RegisterNoteServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/DeleteNote", runtime.WithHTTPPathPattern("/note/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.NoteService/DeleteNote", runtime.WithHTTPPathPattern("/api/note/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -488,15 +488,15 @@ func RegisterNoteServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_NoteService_CreateNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"note"}, ""))
+	pattern_NoteService_CreateNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"api", "note"}, ""))
 
-	pattern_NoteService_GetNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"note", "id"}, ""))
+	pattern_NoteService_GetNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"api", "note", "id"}, ""))
 
-	pattern_NoteService_GetNotes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"notes"}, ""))
+	pattern_NoteService_GetNotes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"api", "notes"}, ""))
 
-	pattern_NoteService_UpdateNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"note"}, ""))
+	pattern_NoteService_UpdateNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"api", "note"}, ""))
 
-	pattern_NoteService_DeleteNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"note", "id"}, ""))
+	pattern_NoteService_DeleteNote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"api", "note", "id"}, ""))
 )
 
 var (

@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/note": {
+    "/api/note": {
       "post": {
         "operationId": "NoteService_CreateNote",
         "responses": {
@@ -78,7 +78,7 @@
         ]
       }
     },
-    "/note/{id}": {
+    "/api/note/{id}": {
       "get": {
         "operationId": "NoteService_GetNote",
         "responses": {
@@ -136,7 +136,7 @@
         ]
       }
     },
-    "/notes": {
+    "/api/notes": {
       "get": {
         "operationId": "NoteService_GetNotes",
         "responses": {
