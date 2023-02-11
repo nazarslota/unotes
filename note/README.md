@@ -13,6 +13,8 @@ for data storage and [Docker](https://www.docker.com) for easy deployment.
 2. Now in the main folder of the project you need to create an `.env` file in which you need to configure to add the
    following environment variables.
    ```
+   NOTE_ACCESS_TOKEN_SECRET=
+   
    NOTE_MONGODB_HOST=
    NOTE_MONGODB_PORT=
    NOTE_MONGODB_USERNAME=
@@ -32,6 +34,8 @@ for data storage and [Docker](https://www.docker.com) for easy deployment.
 2. Now in the main folder of the project you need to create an `.env` file in which you need to configure to add the
    following environment variables.
    ```
+   NOTE_ACCESS_TOKEN_SECRET=
+   
    NOTE_MONGODB_HOST=
    NOTE_MONGODB_PORT=
    NOTE_MONGODB_USERNAME=
@@ -84,6 +88,8 @@ make swagger
 #### Environment variables
 
 ```
+NOTE_ACCESS_TOKEN_SECRET=
+
 NOTE_MONGODB_HOST=
 NOTE_MONGODB_PORT=
 NOTE_MONGODB_USERNAME=
