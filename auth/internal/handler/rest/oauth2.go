@@ -24,7 +24,7 @@ type oAuth2SignUpUserModel struct {
 // @Failure		409		{object}	errors.HTTPError
 // @Failure		500		{object}	errors.HTTPError
 // @Failure		default	{object}	errors.HTTPError
-// @Router			/serviceoauth2/sign-up [post]
+// @Router			/oauth2/sign-up [post]
 func (h *Handler) oAuth2SignUp(c echo.Context) error {
 	input := new(oAuth2SignUpUserModel)
 	if err := c.Bind(input); err != nil {
@@ -71,7 +71,7 @@ type oAuth2SignInUserResult struct {
 // @Failure		404		{object}	errors.HTTPError
 // @Failure		500		{object}	errors.HTTPError
 // @Failure		default	{object}	errors.HTTPError
-// @Router			/serviceoauth2/sign-in [post]
+// @Router			/oauth2/sign-in [post]
 func (h *Handler) oAuth2SignIn(c echo.Context) error {
 	input := new(oAuth2SignInUserModel)
 	if err := c.Bind(input); err != nil {
@@ -111,7 +111,7 @@ type oAuth2SignOutModel struct {
 // @Failure		400		{object}	errors.HTTPError
 // @Failure		500		{object}	errors.HTTPError
 // @Failure		default	{object}	errors.HTTPError
-// @Router			/serviceoauth2/sign-out [post]
+// @Router			/oauth2/sign-out [post]
 func (h *Handler) oAuth2SignOut(c echo.Context) error {
 	input := new(oAuth2SignOutModel)
 	if err := c.Bind(input); err != nil {
@@ -151,7 +151,7 @@ type oAuth2RefreshResult struct {
 // @Failure		400		{object}	errors.HTTPError
 // @Failure		500		{object}	errors.HTTPError
 // @Failure		default	{object}	errors.HTTPError
-// @Router			/serviceoauth2/refresh [get]
+// @Router			/oauth2/refresh [get]
 func (h *Handler) oAuth2Refresh(c echo.Context) error {
 	input := new(oAuth2RefreshModel)
 	if err := c.Bind(input); err != nil {

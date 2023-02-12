@@ -4,7 +4,7 @@
         "contact": {}
     },
     "paths": {
-        "/serviceoauth2/refresh": {
+        "/oauth2/refresh": {
             "get": {
                 "description": "Refresh",
                 "consumes": [
@@ -54,7 +54,7 @@
                 }
             }
         },
-        "/serviceoauth2/sign-in": {
+        "/oauth2/sign-in": {
             "post": {
                 "description": "Sign in",
                 "consumes": [
@@ -112,7 +112,7 @@
                 }
             }
         },
-        "/serviceoauth2/sign-out": {
+        "/oauth2/sign-out": {
             "post": {
                 "description": "Sign out",
                 "consumes": [
@@ -161,7 +161,7 @@
                 }
             }
         },
-        "/serviceoauth2/sign-up": {
+        "/oauth2/sign-up": {
             "post": {
                 "description": "Create account",
                 "consumes": [

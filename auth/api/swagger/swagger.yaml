@@ -64,7 +64,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /serviceoauth2/refresh:
+  /oauth2/refresh:
     get:
       consumes:
       - application/json
@@ -97,7 +97,7 @@ paths:
       summary: oAuth2 Refresh
       tags:
       - oAuth2
-  /serviceoauth2/sign-in:
+  /oauth2/sign-in:
     post:
       consumes:
       - application/json
@@ -135,7 +135,7 @@ paths:
       summary: oAuth2 Sign In
       tags:
       - oAuth2
-  /serviceoauth2/sign-out:
+  /oauth2/sign-out:
     post:
       consumes:
       - application/json
@@ -167,7 +167,7 @@ paths:
       summary: oAuth2 Sign Out
       tags:
       - oAuth2
-  /serviceoauth2/sign-up:
+  /oauth2/sign-up:
     post:
       consumes:
       - application/json
