@@ -1,97 +1,137 @@
-import React, {FC, FormEvent, useState} from 'react';
-import {Navigate, useLocation} from 'react-router-dom';
+import {FC, useState} from 'react';
 import {useCookies} from 'react-cookie';
-import axios from 'axios';
+import {ErrorMessage, Field, Form, Formik, FormikErrors, FormikHelpers} from 'formik';
 
 import './SignIn.css';
+import axios from 'axios';
+import * as yup from 'yup';
 
 type SignInProps = {};
 
 const SignIn: FC<SignInProps> = () => {
-    const [, setCookie] = useCookies(['access_token', 'refresh_token']);
+    type Values = {
+        username: string;
+        password: string;
+        signInErr: string;
+    };
 
-    const [error, setError] = useState<string>("");
+    const [, setCookie] = useCookies<string, string>(['access_token', 'refresh_token']);
+    const [signedIn, setSignedIn] = useState(false);
 
-    const location = useLocation();
-    const [redirectToHome, setRedirectToHome] = useState<boolean>(false);
+    const initial: Values = {username: '', password: '', signInErr: ''};
+    const validate = (values: Values): FormikErrors<Values> => {
+        const errors: { [key: string]: string } = {};
+        try {
+            yup.string()
+                .min(4, "Min length 4")
+                .max(32, "Max length 32")
+                .required("Required")
+                .validateSync(values.username)
+        } catch (err) {
+            if (err instanceof yup.ValidationError) {
+                errors.username = err.message
+            }
+        }
 
-    const [username, setUsername] = useState<string>("");
-    const usernameOnChange = (e: FormEvent<HTMLInputElement>) => setUsername(e.currentTarget.value);
+        try {
+            yup.string()
+                .min(8, "Min length 8")
+                .max(64, "Max length 64")
+                .required("Required")
+                .validateSync(values.password)
+        } catch (err) {
+            if (err instanceof yup.ValidationError) {
+                errors.password = err.message
+            }
+        }
+        return errors;
+    }
 
-    const [password, setPassword] = useState<string>("");
-    const passwordOnChange = (e: FormEvent<HTMLInputElement>) => setPassword(e.currentTarget.value);
-
-    const signInOnClick = async (_: FormEvent<HTMLButtonElement>) => {
-        type SignInUserResponse = {
-            "access_token": string;
-            "refresh_token": string;
+    const submit = async (values: Values, actions: FormikHelpers<Values>): Promise<void> => {
+        const url = `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/oauth2/sign-in`;
+        const data = {
+            username: values.username,
+            password: values.password,
         };
 
         try {
-            const response = await axios.post<SignInUserResponse>(
-                `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/auth/oauth2/sign-in`,
-                {
-                    "username": username,
-                    "password": password,
-                },
-                {
-                    "headers": {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                    },
-                },
-            );
+            const response = await axios.post(url, data, {
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+            });
 
-            if (response.status === 200) {
-                setError("");
-                setRedirectToHome(true);
+            setCookie('access_token', response.data['access_token']);
+            setCookie('refresh_token', response.data['refresh_token']);
 
-                setCookie("access_token", response.data["access_token"], {secure: true, sameSite: 'none'});
-                setCookie("refresh_token", response.data["refresh_token"], {secure: true, sameSite: 'none'});
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                if (error.response.status === 400 || error.response.status === 404) {
-                    setError('Incorrect username or password.');
-                    return;
+            setSignedIn(true);
+        } catch (err) {
+            let message: string;
+            if (axios.isAxiosError(err) && err.response) {
+                switch (err.response.status) {
+                    case 400: {
+                        message = 'The username or password is incorrect';
+                        break;
+                    }
+                    case 404: {
+                        message = 'The username or password is incorrect';
+                        break;
+                    }
+                    case 500: {
+                        message = 'Server error, please try again later';
+                        break;
+                    }
+                    default: {
+                        message = 'Unable to sign in. Unknown error';
+                        break;
+                    }
                 }
-                setError('Unknown error.');
+            } else {
+                message = 'Unable to sign in. Unknown error';
             }
+            actions.setErrors({signInErr: message});
         }
     }
 
-    return (
-        <>
-            {redirectToHome && <Navigate to="/" state={{from: location}} replace/>}
-            <div className="sign-in-form">
-                <h1 className="sign-in-form__title">Sign In</h1>
-                {error !== "" && <label className="sign-up-form__error">{error}</label>}
-                <div className="sign-in-form__username">
-                    <label className="sign-in-form__username__label">Username</label>
-                    <input
-                        className="sign-in-form__username__input"
-                        id="sign-in-form__password__input"
-                        type="text" value={username} placeholder="Username"
-                        onChange={usernameOnChange}
-                    />
+    return <>
+        <div className="sign-in">
+            {signedIn ? (
+                <div className="sign-in__signed-in">
+                    <label className="sign-in__signed-in__label">
+                        Login successful! You can now go to the homepage.</label>
                 </div>
-                <div className="sign-in-form__password">
-                    <label className="sign-in-form__password__label">Password</label>
-                    <input
-                        className="sign-in-form__password__input"
-                        id="sign-in-form__password__input"
-                        type="password" value={password} placeholder="Password"
-                        onChange={passwordOnChange}
-                    />
-                </div>
-                <div className="sign-in-form__sign-in">
-                    <button className="sign-in-form__sign-in__button" type="submit"
-                            onClick={signInOnClick}>Sign In
-                    </button>
-                </div>
-            </div>
-        </>
-    );
+            ) : (
+                <Formik initialValues={initial} validate={validate} onSubmit={submit}>
+                    {({isSubmitting}) => (
+                        <Form className="sign-in__form">
+                            <h1 className="sign-in__form__title">Sign In</h1>
+                            <div className="sign-in__form__username">
+                                <label className="sign-in__form__username__label">Username</label>
+                                <Field className="sign-in__form__username__input" type="text" name="username"
+                                       placeholder="Username"/>
+                                <ErrorMessage className="sign-in__form__username__error-message" name="username"
+                                              component="div"/>
+                            </div>
+                            <div className="sign-in__form__password">
+                                <label className="sign-in__form__password__label">Password</label>
+                                <Field className="sign-in__form__password__input" type="password" name="password"
+                                       placeholder="Password"/>
+                                <ErrorMessage className="sign-in__form__password__error-message" name="password"
+                                              component="div"/>
+                            </div>
+                            <div className="sign-in__sign-in-error">
+                                <ErrorMessage className="sign-in-form__sign-in-error__error-message"
+                                              name="signInErr" component="div"/>
+                            </div>
+                            <div className="sign-in-form__sign-in">
+                                <button className="sign-in-form__sign-in__button" type="submit" disabled={isSubmitting}>
+                                    Sign In
+                                </button>
+                            </div>
+                        </Form>
+                    )}
+                </Formik>
+            )}
+        </div>
+    </>;
 }
 
 export default SignIn;

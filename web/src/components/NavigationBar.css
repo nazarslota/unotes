@@ -2,41 +2,50 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 50px;
-    background-color: #333;
-    color: #333333;
-    padding: 0 15px;
-}
-
-.navigation-bar__button {
-    height: 40px;
-    border: none;
-    border-radius: 5px;
-    background-color: transparent;
-    cursor: pointer;
-    margin-right: 5px;
-    padding: 0 20px;
+    padding: 16px;
+    background-color: #3f51b5;
     color: #ffffff;
+    height: 56px;
 }
 
-.navigation-bar__button:hover {
-    color: #a6a6a6;
-}
-
-.navigation-bar__button__link {
-    text-decoration: none;
-    color: #ffffff;
-}
-
-.navigation-bar__button__link:hover {
-    text-decoration: none;
-    color: #a6a6a6;
-}
-
-.navigation-bar__left {
-    display: flex;
-}
-
+.navigation-bar__left,
 .navigation-bar__right {
     display: flex;
+}
+
+.navigation-bar__left__button,
+.navigation-bar__right__button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 21px;
+    font-weight: bold;
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.navigation-bar__left__button:hover,
+.navigation-bar__right__button:hover {
+    background-color: #3f5196;
+    border-radius: 5px;
+}
+
+.navigation-bar__left__button__link,
+.navigation-bar__right__button__link {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.navigation-bar__left__button__link:hover,
+.navigation-bar__right__button__link:hover {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.navigation-bar__left__button {
+    margin-right: 16px;
+}
+
+.navigation-bar__right__button {
+    margin-left: 16px;
 }

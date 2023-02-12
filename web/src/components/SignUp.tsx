@@ -1,115 +1,146 @@
-import React, {FC, FormEvent, useState} from 'react';
+import {FC, useState} from 'react';
 import {Navigate, useLocation} from 'react-router-dom';
-import axios from 'axios';
+import {ErrorMessage, Field, Form, Formik, FormikErrors, FormikHelpers} from 'formik';
 
 import './SignUp.css';
+import axios from 'axios';
+import * as yup from 'yup';
 
 type SignUpProps = {};
 
 const SignUp: FC<SignUpProps> = () => {
-    const [error, setError] = useState("");
+    type Values = {
+        username: string;
+        password: string;
+        confirmPassword: string;
+        signUpErr: string;
+    };
 
     const location = useLocation();
     const [redirectToSignIn, setRedirectToSignIn] = useState(false);
 
-    const [username, setUsername] = useState("");
-    const usernameOnChange = (e: FormEvent<HTMLInputElement>) => setUsername(e.currentTarget.value);
+    const initial: Values = {
+        username: '',
+        password: '',
+        confirmPassword: '',
+        signUpErr: '',
+    };
 
-    const [password, setPassword] = useState("");
-    const passwordOnChange = (e: FormEvent<HTMLInputElement>) => setPassword(e.currentTarget.value);
-
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const confirmPasswordOnChange = (e: FormEvent<HTMLInputElement>) => setConfirmPassword(e.currentTarget.value);
-
-    const signUpOnClick = async (_: FormEvent<HTMLButtonElement>) => {
-        if (username.length < 4) {
-            setError('Username is too short.');
-            return;
-        } else if (username.length > 32) {
-            setError('Username is too long.');
-            return;
-        }
-
-        if (password.length < 8) {
-            setError('Password is too short.');
-            return;
-        } else if (password.length > 64) {
-            setError('Password is too long.');
-            return;
-        } else if (password !== confirmPassword) {
-            setError('The entered passwords do not match.');
-            return;
+    const validate = (values: Values): FormikErrors<Values> => {
+        const errors: { [key: string]: string } = {};
+        try {
+            yup.string()
+                .min(4, "Min length 4")
+                .max(32, "Max length 32")
+                .required("Required")
+                .validateSync(values.username)
+        } catch (err) {
+            if (err instanceof yup.ValidationError) {
+                errors.username = err.message
+            }
         }
 
         try {
-            const response = await axios.post(
-                `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/auth/oauth2/sign-up`,
-                {
-                    "username": username,
-                    "password": password,
-                },
-                {
-                    "headers": {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                    },
-                }
-            );
-
-            if (response.status === 204) {
-                setError("");
-                setRedirectToSignIn(true);
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                if (error.response && error.response.status === 409) {
-                    setError('This username is already in use.')
-                } else {
-                    setError('Unknown error.')
-                }
+            yup.string()
+                .min(8, "Min length 8")
+                .max(64, "Max length 64")
+                .required("Required")
+                .validateSync(values.password)
+        } catch (err) {
+            if (err instanceof yup.ValidationError) {
+                errors.password = err.message
             }
         }
-    }
 
-    return (
-        <>
-            {redirectToSignIn && <Navigate to="/sign-in" state={{from: location}} replace/>}
-            <div className="sign-up-form">
-                <h1 className="sign-up-form__title">Sign Up</h1>
-                {error !== "" && <label className="sign-up-form__error">{error}</label>}
-                <div className="sign-up-form__username">
-                    <label className="sign-up-form__username__label">Username</label>
-                    <input
-                        className="sign-up-form__username__input"
-                        id="sign-up-form__password__input"
-                        type="text" value={username} placeholder="Username"
-                        onChange={usernameOnChange}
-                    />
-                </div>
-                <div className="sign-up-form__password">
-                    <label className="sign-up-form__password__label">Password</label>
-                    <input
-                        className="sign-up-form__password__input" id="sign-up-form__password__input"
-                        type="password" value={password} placeholder="Password"
-                        onChange={passwordOnChange}
-                    />
-                </div>
-                <div className="sign-up-form__confirm-password">
-                    <label className="sign-up-form__confirm-password__label">Confirm Password</label>
-                    <input
-                        className="sign-up-form__confirm-password__input" id="sign-up-form__confirm-password__input"
-                        type="password" value={confirmPassword} placeholder="Confirm Password"
-                        onChange={confirmPasswordOnChange}
-                    />
-                </div>
-                <div className="sign-up-form__sign-up">
-                    <button className="sign-up-form__sign-up__button" type="submit"
-                            onClick={signUpOnClick}>Sign Up
-                    </button>
-                </div>
-            </div>
-        </>
-    );
+        if (values.password !== values.confirmPassword) {
+            errors.confirmPassword = 'Passwords must match';
+        }
+        return errors;
+    };
+
+    const submit = async (values: Values, actions: FormikHelpers<Values>): Promise<void> => {
+        const url = `${process.env.REACT_APP_AUTH_SERVICE_URL}/api/oauth2/sign-up`;
+        const data = {
+            username: values.username,
+            password: values.password,
+        };
+
+        try {
+            await axios.post(url, data, {
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+            });
+            setRedirectToSignIn(true);
+        } catch (err) {
+            let message: string;
+            if (axios.isAxiosError(err) && err.response) {
+                switch (err.response.status) {
+                    case 400: {
+                        message = 'The username or password is incorrect';
+                        break;
+                    }
+                    case 409: {
+                        message = 'A user with this username already exists';
+                        break;
+                    }
+                    case 500: {
+                        message = 'Server error, please try again later';
+                        break;
+                    }
+                    default: {
+                        message = 'Unable to sign up. Unknown error';
+                        break;
+                    }
+                }
+            } else {
+                message = 'Unable to sign up. Unknown error'
+            }
+            actions.setErrors({signUpErr: message});
+        }
+    };
+
+    return <>
+        {redirectToSignIn && <Navigate to="/sign-in" state={{from: location}}/>}
+        <div className="sign-up">
+            <Formik initialValues={initial} validate={validate} onSubmit={submit}>
+                {({isSubmitting}) => (
+                    <Form className="sign-up__form">
+                        <h1 className="sign-up__form__title">Sign Up</h1>
+                        <div className="sign-up__form__username">
+                            <label className="sign-up__form__username__label">Username</label>
+                            <Field className="sign-up__form__username__input" type="text" name="username"
+                                   placeholder="Username"/>
+                            <ErrorMessage className="sign-up__form__username__error-message" name="username"
+                                          component="div"/>
+                        </div>
+                        <div className="sign-up__form__password">
+                            <label className="sign-up__form__password__label">Password</label>
+                            <Field className="sign-up__form__password__input" type="password" name="password"
+                                   placeholder="Password"/>
+                            <ErrorMessage className="sign-up__form__password__error-message" name="password"
+                                          component="div"/>
+                        </div>
+                        <div className="sign-up__form__confirm-password">
+                            <label className="sign-up__form__confirm-password__label">Confirm
+                                password</label>
+                            <Field className="sign-up__form__confirm-password__input" type="password"
+                                   name="confirmPassword" placeholder="Confirm password"/>
+                            <ErrorMessage className="sign-up__form__confirm-password__error-message"
+                                          name="confirmPassword" component="div"/>
+                        </div>
+                        <div className="sign-up__form__sign-up-error">
+                            <ErrorMessage className="sign-up__form__sign-up-error__error-message"
+                                          name="signUpErr" component="div"/>
+                        </div>
+                        <div className="sign-up__form__sign-up">
+                            <button className="sign-up-form__sign-up__button" type="submit" disabled={isSubmitting}>
+                                Sign Up
+                            </button>
+                        </div>
+                    </Form>
+                )}
+            </Formik>
+        </div>
+    </>;
 }
 
 export default SignUp;
