@@ -68,8 +68,10 @@ func (h *Handler) restServer() *http.Server {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	})
 
-	loggerMiddleware := newLoggerMiddleware(loggerMiddlewareOptions{
-		Logger: h.restLogger,
-	})
-	return &http.Server{Handler: loggerMiddleware.Middleware(mux)}
+	loggerMiddleware := newLoggerMiddleware(loggerMiddlewareOptions{Logger: h.restLogger})
+	corsMiddleware := newCORSMiddleware(corsMiddlewareOptions{})
+
+	handler := loggerMiddleware.Middleware(mux)
+	handler = corsMiddleware.Middleware(handler)
+	return &http.Server{Handler: handler}
 }

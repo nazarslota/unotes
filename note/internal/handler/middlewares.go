@@ -35,3 +35,28 @@ func (m *loggerMiddleware) Middleware(handler http.Handler) http.Handler {
 		m.Logger.InfoFields("HTTP request handled.", fields)
 	})
 }
+
+type corsMiddleware struct{}
+
+type corsMiddlewareOptions struct{}
+
+func newCORSMiddleware(_ corsMiddlewareOptions) *corsMiddleware {
+	return &corsMiddleware{}
+}
+
+func (m *corsMiddleware) Middleware(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if m.allowedOrigin(r.Header.Get("Origin")) {
+			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, ResponseType")
+		}
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+		handler.ServeHTTP(w, r)
+	})
+}
+
+func (m *corsMiddleware) allowedOrigin(_ string) bool { return true }
