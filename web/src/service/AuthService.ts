@@ -1,5 +1,5 @@
 import {AxiosResponse} from 'axios';
-import $api from './http/auth';
+import $api from '../http/auth';
 
 type SignUpRequest = {
     "username": string;
@@ -32,19 +32,19 @@ type RefreshResponse = {};
 
 class AuthService {
     static async signUp(request: SignUpRequest): Promise<AxiosResponse<SignUpResponse>> {
-        return $api.post('/sign-up', request).then(response => response.data);
+        return $api.post('/oauth2/sign-up', request).then(response => response);
     }
 
     static async signIn(request: SignInRequest): Promise<AxiosResponse<SignInResponse>> {
-        return $api.post('/sign-in', request).then(response => response.data);
+        return $api.post('/oauth2/sign-in', request).then(response => response);
     }
 
     static async signOut(request: SignOutRequest): Promise<AxiosResponse<SignOutResponse>> {
-        return $api.post('/sign-out', request).then(response => response.data);
+        return $api.post('/oauth2/sign-out', request).then(response => response);
     }
 
     static async refresh(request: RefreshRequest): Promise<AxiosResponse<RefreshResponse>> {
-        return $api.get(`/refresh?t=${request["refresh_token"]}`).then(response => response.data);
+        return $api.get(`/oauth2/refresh?t=${request["refresh_token"]}`).then(response => response);
     }
 }
 
