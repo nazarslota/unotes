@@ -5,66 +5,103 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis/v9"
-	domainrefresh "github.com/nazarslota/unotes/auth/internal/domain/refresh"
+	"github.com/nazarslota/unotes/auth/internal/domain/refresh"
 )
 
+// RefreshTokenRepository is a struct that contains a Redis client for interacting with the Redis server.
 type RefreshTokenRepository struct {
 	client *redis.Client
 }
 
-var _ domainrefresh.Repository = (*RefreshTokenRepository)(nil)
-
-func NewRefreshTokenRepository(client *redis.Client) *RefreshTokenRepository {
-	return &RefreshTokenRepository{client: client}
+// NewRefreshTokenRepository creates a new instance of RefreshTokenRepository.
+func NewRefreshTokenRepository(client *redis.Client) (*RefreshTokenRepository, error) {
+	if client == nil {
+		return nil, fmt.Errorf("redis client is nil")
+	}
+	return &RefreshTokenRepository{client: client}, nil
 }
 
-func (r *RefreshTokenRepository) SaveRefreshToken(ctx context.Context, userID string, token domainrefresh.Token) error {
-	return r.SaveRefreshTokens(ctx, userID, []domainrefresh.Token{token})
+// SaveRefreshToken saves a single refresh token for a given user ID.
+func (r RefreshTokenRepository) SaveRefreshToken(ctx context.Context, userID string, token refresh.Token) error {
+	return r.SaveRefreshTokens(ctx, userID, []refresh.Token{token})
 }
 
-func (r *RefreshTokenRepository) DeleteRefreshToken(ctx context.Context, userID string, token domainrefresh.Token) error {
-	return r.DeleteRefreshTokens(ctx, userID, []domainrefresh.Token{token})
+// DeleteRefreshToken deletes a single refresh token for a given user ID.
+func (r RefreshTokenRepository) DeleteRefreshToken(ctx context.Context, userID string, token refresh.Token) error {
+	return r.DeleteRefreshTokens(ctx, userID, []refresh.Token{token})
 }
 
-func (r *RefreshTokenRepository) SaveRefreshTokens(ctx context.Context, userID string, tokens []domainrefresh.Token) error {
-	key := fmt.Sprintf("refresh_token:%s", userID)
+// GetRefreshToken retrieves a single refresh token for a given user ID.
+func (r RefreshTokenRepository) GetRefreshToken(ctx context.Context, userID string, token refresh.Token) (refresh.Token, error) {
+	key := refreshTokenKeyFromUserID(userID)
+	exists, err := r.client.SIsMember(ctx, key, token).Result()
+	if err != nil {
+		return "", fmt.Errorf("failed to check for refresh token: %w", err)
+	}
+
+	if exists {
+		return token, nil
+	}
+	return "", refresh.ErrTokenNotFound
+}
+
+// SaveRefreshTokens saves multiple refresh tokens for a given user ID.
+func (r RefreshTokenRepository) SaveRefreshTokens(ctx context.Context, userID string, tokens []refresh.Token) error {
+	members := make([]any, 0, len(tokens))
+	for _, token := range tokens {
+		members = append(members, token)
+	}
+
+	key := refreshTokenKeyFromUserID(userID)
 
 	pipe := r.client.TxPipeline()
-	for _, token := range tokens {
-		pipe.SAdd(ctx, key, token)
-	}
+	pipe.SAdd(ctx, key, members...)
 
 	if _, err := pipe.Exec(ctx); err != nil {
-		return fmt.Errorf("failed to execute the pipeline: %w", err)
+		return fmt.Errorf("failed to execute pipeline: %w", err)
 	}
 	return nil
 }
 
-func (r *RefreshTokenRepository) DeleteRefreshTokens(ctx context.Context, userID string, tokens []domainrefresh.Token) error {
-	key := fmt.Sprintf("refresh_token:%s", userID)
+// DeleteRefreshTokens deletes multiple refresh tokens for a given user ID.
+func (r RefreshTokenRepository) DeleteRefreshTokens(ctx context.Context, userID string, tokens []refresh.Token) error {
+	members := make([]any, 0, len(tokens))
 	for _, token := range tokens {
-		if err := r.client.SRem(ctx, key, token).Err(); err != nil {
-			return fmt.Errorf("failed to remove: %w", err)
-		}
+		members = append(members, token)
+	}
+
+	key := refreshTokenKeyFromUserID(userID)
+	result, err := r.client.SRem(ctx, key, members...).Result()
+	if err != nil {
+		return fmt.Errorf("failed to execute srem command: %w", err)
+	} else if result == 0 {
+		return refresh.ErrTokenNotFound
 	}
 	return nil
 }
 
-func (r *RefreshTokenRepository) GetRefreshTokens(ctx context.Context, userID string) ([]domainrefresh.Token, error) {
-	key := fmt.Sprintf("refresh_token:%s", userID)
+// GetRefreshTokens retrieves all refresh tokens for a given user ID.
+func (r RefreshTokenRepository) GetRefreshTokens(ctx context.Context, userID string) ([]refresh.Token, error) {
+	key := refreshTokenKeyFromUserID(userID)
 	members, err := r.client.SMembersMap(ctx, key).Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get members: %w", err)
+		return nil, fmt.Errorf("failed to execute smembers command: %w", err)
 	}
 
 	l := len(members)
 	if l == 0 {
-		return nil, domainrefresh.ErrTokenNotFound
+		return nil, refresh.ErrTokenNotFound
 	}
 
-	tokens := make([]domainrefresh.Token, 0, l)
+	tokens := make([]refresh.Token, 0, l)
 	for token := range members {
-		tokens = append(tokens, domainrefresh.Token(token))
+		tokens = append(tokens, refresh.Token(token))
 	}
 	return tokens, nil
+}
+
+const refreshTokenPrefix = "refresh-token"
+
+func refreshTokenKeyFromUserID(userID string) string {
+	return fmt.Sprintf("%s:%s", refreshTokenPrefix, userID)
 }
