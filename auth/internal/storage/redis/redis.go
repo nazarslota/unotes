@@ -1,3 +1,4 @@
+// Package redis provides a Redis repository implementation for storing and managing refresh tokens.
 package redis
 
 import (
@@ -7,26 +8,15 @@ import (
 	"github.com/go-redis/redis/v9"
 )
 
-// Config represents the configuration options for the Redis client.
+// Config contains the Redis server address, password, and database index.
 type Config struct {
-	// Addr is the Redis server address (e.g. "localhost:6379").
-	Addr string
-
-	// Password is the Redis server password (leave blank if none).
+	Addr     string
 	Password string
-
-	// DB is the Redis database number to use (default is 0).
-	DB int
+	DB       int
 }
 
-// NewRedis creates a new Redis client with the given configuration options.
-//
-// If the context is canceled before the client is created, an error is returned.
-//
-// If "PING" command fails returns an error.
-//
-// When finished with the Redis client, it is important to close it to release any resources it may be holding.
-// This can be done by calling the Close method on the client.
+// NewRedis creates a new Redis client using the provided context and configuration, and returns an error if the client
+// fails to connect to the Redis server.
 func NewRedis(ctx context.Context, config Config) (*redis.Client, error) {
 	select {
 	case <-ctx.Done():
