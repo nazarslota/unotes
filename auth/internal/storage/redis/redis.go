@@ -8,15 +8,22 @@ import (
 	"github.com/go-redis/redis/v9"
 )
 
-// Config contains the Redis server address, password, and database index.
+// Config represents the configuration options for the Redis client.
 type Config struct {
-	Addr     string
+	// Addr is the Redis server address (e.g. "localhost:6379").
+	Addr string
+
+	// Password is the Redis server password (leave blank if none).
 	Password string
-	DB       int
+
+	// DB is the Redis database number to use (default is 0).
+	DB int
 }
 
-// NewRedis creates a new Redis client using the provided context and configuration, and returns an error if the client
-// fails to connect to the Redis server.
+// NewRedis creates a new Redis client with the given configuration options.
+//
+// If the context is canceled before the client is created, an error is returned.
+// If "PING" command fails returns an error.
 func NewRedis(ctx context.Context, config Config) (*redis.Client, error) {
 	select {
 	case <-ctx.Done():
