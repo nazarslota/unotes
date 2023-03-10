@@ -10,17 +10,17 @@ import (
 
 // RefreshTokenRepository is a Redis repository for managing refresh tokens.
 type RefreshTokenRepository struct {
-	client *redis.Client
+	db *redis.Client
 }
 
-// NewRefreshTokenRepository creates a new RefreshTokenRepository with the provided Redis client.
+// NewRefreshTokenRepository creates a new RefreshTokenRepository with the provided Redis db.
 //
-// Returns an error if the client is nil.
-func NewRefreshTokenRepository(client *redis.Client) (*RefreshTokenRepository, error) {
-	if client == nil {
-		return nil, fmt.Errorf("redis client is nil")
+// Returns an error if the db is nil.
+func NewRefreshTokenRepository(db *redis.Client) (*RefreshTokenRepository, error) {
+	if db == nil {
+		return nil, fmt.Errorf("redis db is nil")
 	}
-	return &RefreshTokenRepository{client: client}, nil
+	return &RefreshTokenRepository{db: db}, nil
 }
 
 // SaveRefreshToken saves the given refresh token associated with the specified user ID.
@@ -40,7 +40,7 @@ func (r RefreshTokenRepository) DeleteRefreshToken(ctx context.Context, userID s
 // If the token is not found, an error value of `refresh.ErrTokenNotFound` is returned.
 func (r RefreshTokenRepository) GetRefreshToken(ctx context.Context, userID string, token domain.Token) (domain.Token, error) {
 	key := refreshTokenKeyFromUserID(userID)
-	exists, err := r.client.SIsMember(ctx, key, token).Result()
+	exists, err := r.db.SIsMember(ctx, key, token).Result()
 	if err != nil {
 		return "", fmt.Errorf("failed to check for refresh token: %w", err)
 	}
@@ -60,7 +60,7 @@ func (r RefreshTokenRepository) SaveRefreshTokens(ctx context.Context, userID st
 
 	key := refreshTokenKeyFromUserID(userID)
 
-	pipe := r.client.TxPipeline()
+	pipe := r.db.TxPipeline()
 	pipe.SAdd(ctx, key, members...)
 
 	if _, err := pipe.Exec(ctx); err != nil {
@@ -79,7 +79,7 @@ func (r RefreshTokenRepository) DeleteRefreshTokens(ctx context.Context, userID 
 	}
 
 	key := refreshTokenKeyFromUserID(userID)
-	result, err := r.client.SRem(ctx, key, members...).Result()
+	result, err := r.db.SRem(ctx, key, members...).Result()
 	if err != nil {
 		return fmt.Errorf("failed to execute srem command: %w", err)
 	} else if result == 0 {
@@ -93,7 +93,7 @@ func (r RefreshTokenRepository) DeleteRefreshTokens(ctx context.Context, userID 
 // If no tokens are found, this method returns an error of type `refresh.ErrTokenNotFound`.
 func (r RefreshTokenRepository) GetRefreshTokens(ctx context.Context, userID string) ([]domain.Token, error) {
 	key := refreshTokenKeyFromUserID(userID)
-	members, err := r.client.SMembersMap(ctx, key).Result()
+	members, err := r.db.SMembersMap(ctx, key).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute smembers command: %w", err)
 	}

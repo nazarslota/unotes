@@ -23,12 +23,12 @@ var repository *RefreshTokenRepository
 
 func init() {
 	cfg := Config{}
-	redis, err := NewRedis(context.Background(), cfg)
+	db, err := NewRedis(context.Background(), cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	repository, err = NewRefreshTokenRepository(redis)
+	repository, err = NewRefreshTokenRepository(db)
 	if err != nil {
 		panic(err)
 	}
@@ -47,12 +47,12 @@ func TestNewRefreshTokenRepository(t *testing.T) {
 		repository, err := NewRefreshTokenRepository(redis)
 		require.NoError(t, err)
 		require.NotNil(t, repository)
-		require.NotNil(t, repository.client)
+		require.NotNil(t, repository.db)
 	})
 
 	t.Run("should return an error when redis is nil", func(t *testing.T) {
 		repository, err := NewRefreshTokenRepository(nil)
-		require.EqualError(t, err, "redis client is nil")
+		require.EqualError(t, err, "redis db is nil")
 		require.Nil(t, repository)
 	})
 }
@@ -65,13 +65,13 @@ func TestRefreshTokenRepository_SaveRefreshToken(t *testing.T) {
 		err = repository.SaveRefreshToken(context.Background(), userAID, userATokenB)
 		assert.NoError(t, err)
 
-		result, err := repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID("user-a-id")).Result()
+		result, err := repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID("user-a-id")).Result()
 		require.NoError(t, err)
 		assert.Contains(t, result, string(userATokenA))
 		assert.Contains(t, result, string(userATokenB))
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
@@ -85,26 +85,26 @@ func TestRefreshTokenRepository_SaveRefreshToken(t *testing.T) {
 		err = repository.SaveRefreshToken(ctx, userAID, userATokenB)
 		assert.ErrorIs(t, err, context.Canceled)
 
-		result, err := repository.client.SMembers(context.Background(), userAID).Result()
+		result, err := repository.db.SMembers(context.Background(), userAID).Result()
 		require.NoError(t, err)
 		assert.NotContains(t, result, string(userATokenA))
 		assert.NotContains(t, result, string(userATokenB))
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 }
 
 func TestRefreshTokenRepository_DeleteRefreshToken(t *testing.T) {
 	t.Run("should delete a refresh token", func(t *testing.T) {
-		err := repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
+		err := repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
 		require.NoError(t, err)
 
 		err = repository.DeleteRefreshToken(context.Background(), userAID, userATokenA)
 		assert.NoError(t, err)
 
-		members, err := repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
+		members, err := repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
 		require.NoError(t, err)
 		assert.NotContains(t, members, string(userATokenA))
 		assert.Contains(t, members, string(userATokenB))
@@ -112,18 +112,18 @@ func TestRefreshTokenRepository_DeleteRefreshToken(t *testing.T) {
 		err = repository.DeleteRefreshToken(context.Background(), userAID, userATokenB)
 		assert.NoError(t, err)
 
-		members, err = repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
+		members, err = repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
 		require.NoError(t, err)
 		assert.NotContains(t, members, string(userATokenA))
 		assert.NotContains(t, members, string(userATokenB))
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
 	t.Run("should return an error if context is invalid", func(t *testing.T) {
-		err := repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
+		err := repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
 		require.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -135,13 +135,13 @@ func TestRefreshTokenRepository_DeleteRefreshToken(t *testing.T) {
 		err = repository.DeleteRefreshToken(ctx, userAID, userATokenB)
 		assert.ErrorIs(t, err, context.Canceled)
 
-		members, err := repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
+		members, err := repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
 		require.NoError(t, err)
 		assert.Contains(t, members, string(userATokenA))
 		assert.Contains(t, members, string(userATokenB))
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
@@ -153,14 +153,14 @@ func TestRefreshTokenRepository_DeleteRefreshToken(t *testing.T) {
 		assert.ErrorIs(t, err, refresh.ErrTokenNotFound)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 }
 
 func TestRefreshTokenRepository_GetRefreshToken(t *testing.T) {
 	t.Run("should get a refresh token", func(t *testing.T) {
-		err := repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
+		err := repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
 		require.NoError(t, err)
 
 		token, err := repository.GetRefreshToken(context.Background(), userAID, userATokenA)
@@ -170,12 +170,12 @@ func TestRefreshTokenRepository_GetRefreshToken(t *testing.T) {
 		assert.Equal(t, userATokenB, token)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
 	t.Run("should return an error if context is invalid", func(t *testing.T) {
-		err := repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
+		err := repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
 		require.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -190,7 +190,7 @@ func TestRefreshTokenRepository_GetRefreshToken(t *testing.T) {
 		assert.Empty(t, token)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
@@ -204,7 +204,7 @@ func TestRefreshTokenRepository_GetRefreshToken(t *testing.T) {
 		assert.Empty(t, token)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 }
@@ -217,7 +217,7 @@ func TestRefreshTokenRepository_SaveRefreshTokens(t *testing.T) {
 		err = repository.SaveRefreshTokens(context.Background(), userBID, []refresh.Token{userBTokenA, userBTokenB})
 		assert.NoError(t, err)
 
-		result, err := repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
+		result, err := repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
 		require.NoError(t, err)
 
 		assert.Contains(t, result, string(userATokenA))
@@ -225,7 +225,7 @@ func TestRefreshTokenRepository_SaveRefreshTokens(t *testing.T) {
 		assert.NotContains(t, result, string(userBTokenA))
 		assert.NotContains(t, result, string(userBTokenB))
 
-		result, err = repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userBID)).Result()
+		result, err = repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userBID)).Result()
 		require.NoError(t, err)
 
 		assert.NotContains(t, result, string(userATokenA))
@@ -234,7 +234,7 @@ func TestRefreshTokenRepository_SaveRefreshTokens(t *testing.T) {
 		assert.Contains(t, result, string(userBTokenB))
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
@@ -245,28 +245,28 @@ func TestRefreshTokenRepository_SaveRefreshTokens(t *testing.T) {
 		err := repository.SaveRefreshTokens(ctx, userAID, []refresh.Token{userATokenA, userATokenB})
 		assert.ErrorIs(t, err, context.Canceled)
 
-		result, err := repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
+		result, err := repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
 		require.NoError(t, err)
 		require.Empty(t, result)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 }
 
 func TestRefreshTokenRepository_DeleteRefreshTokens(t *testing.T) {
 	t.Run("should delete refresh tokens", func(t *testing.T) {
-		err := repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
+		err := repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
 		require.NoError(t, err)
 
-		err = repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userBID), userBTokenA, userBTokenB).Err()
+		err = repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userBID), userBTokenA, userBTokenB).Err()
 		require.NoError(t, err)
 
 		err = repository.DeleteRefreshTokens(context.Background(), userAID, []refresh.Token{userATokenA})
 		assert.NoError(t, err)
 
-		result, err := repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
+		result, err := repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
 		require.NoError(t, err)
 		assert.NotContains(t, result, string(userATokenA))
 		assert.Contains(t, result, string(userATokenB))
@@ -274,17 +274,17 @@ func TestRefreshTokenRepository_DeleteRefreshTokens(t *testing.T) {
 		err = repository.DeleteRefreshTokens(context.Background(), userBID, []refresh.Token{userBTokenA, userBTokenB})
 		assert.NoError(t, err)
 
-		result, err = repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userBID)).Result()
+		result, err = repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userBID)).Result()
 		require.NoError(t, err)
 		assert.Empty(t, result)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
 	t.Run("should return an error if context is invalid", func(t *testing.T) {
-		err := repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
+		err := repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
 		require.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -293,13 +293,13 @@ func TestRefreshTokenRepository_DeleteRefreshTokens(t *testing.T) {
 		err = repository.DeleteRefreshTokens(ctx, userAID, []refresh.Token{userATokenA, userATokenB})
 		assert.ErrorIs(t, err, context.Canceled)
 
-		result, err := repository.client.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
+		result, err := repository.db.SMembers(context.Background(), refreshTokenKeyFromUserID(userAID)).Result()
 		require.NoError(t, err)
 		assert.Contains(t, result, string(userATokenA))
 		assert.Contains(t, result, string(userATokenB))
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
@@ -308,17 +308,17 @@ func TestRefreshTokenRepository_DeleteRefreshTokens(t *testing.T) {
 		assert.ErrorIs(t, err, refresh.ErrTokenNotFound)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 }
 
 func TestRefreshTokenRepository_GetRefreshTokens(t *testing.T) {
 	t.Run("should get refresh tokens", func(t *testing.T) {
-		err := repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
+		err := repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userAID), userATokenA, userATokenB).Err()
 		require.NoError(t, err)
 
-		err = repository.client.SAdd(context.Background(), refreshTokenKeyFromUserID(userBID), userBTokenA, userBTokenB).Err()
+		err = repository.db.SAdd(context.Background(), refreshTokenKeyFromUserID(userBID), userBTokenA, userBTokenB).Err()
 		require.NoError(t, err)
 
 		tokens, err := repository.GetRefreshTokens(context.Background(), userAID)
@@ -336,7 +336,7 @@ func TestRefreshTokenRepository_GetRefreshTokens(t *testing.T) {
 		assert.Contains(t, tokens, userBTokenB)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
@@ -349,7 +349,7 @@ func TestRefreshTokenRepository_GetRefreshTokens(t *testing.T) {
 		assert.Empty(t, tokens)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 
@@ -359,7 +359,7 @@ func TestRefreshTokenRepository_GetRefreshTokens(t *testing.T) {
 		assert.Empty(t, tokens)
 
 		t.Cleanup(func() {
-			_ = repository.client.FlushDB(context.Background())
+			_ = repository.db.FlushDB(context.Background())
 		})
 	})
 }

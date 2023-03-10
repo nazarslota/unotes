@@ -8,16 +8,16 @@ import (
 	"github.com/go-redis/redis/v9"
 )
 
-// Config represents the configuration options for the Redis client.
+// Config represents the configuration options for the Redis db.
 type Config struct {
 	Addr     string // Addr is the Redis server address (e.g. "localhost:6379").
 	Password string // Password is the Redis server password (leave blank if none).
 	DB       int    // DB is the Redis database number to use (default is 0).
 }
 
-// NewRedis creates a new Redis client with the given configuration options.
+// NewRedis creates a new Redis db with the given configuration options.
 //
-// If the context is canceled before the client is created, an error is returned.
+// If the context is canceled before the db is created, an error is returned.
 // If "PING" command fails returns an error.
 func NewRedis(ctx context.Context, config Config) (*redis.Client, error) {
 	select {
@@ -33,7 +33,7 @@ func NewRedis(ctx context.Context, config Config) (*redis.Client, error) {
 	})
 
 	if err := client.Ping(ctx).Err(); err != nil {
-		return nil, fmt.Errorf("failed to ping redis client: %w", err)
+		return nil, fmt.Errorf("failed to ping redis db: %w", err)
 	}
 	return client, nil
 }
