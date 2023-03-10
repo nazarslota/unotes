@@ -10,14 +10,9 @@ import (
 
 // Config represents the configuration options for the Redis client.
 type Config struct {
-	// Addr is the Redis server address (e.g. "localhost:6379").
-	Addr string
-
-	// Password is the Redis server password (leave blank if none).
-	Password string
-
-	// DB is the Redis database number to use (default is 0).
-	DB int
+	Addr     string // Addr is the Redis server address (e.g. "localhost:6379").
+	Password string // Password is the Redis server password (leave blank if none).
+	DB       int    // DB is the Redis database number to use (default is 0).
 }
 
 // NewRedis creates a new Redis client with the given configuration options.
