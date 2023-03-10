@@ -7,20 +7,28 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	domainuser "github.com/nazarslota/unotes/auth/internal/domain/user"
+	domain "github.com/nazarslota/unotes/auth/internal/domain/user"
 )
 
+// UserRepository provides an implementation of the user repository for a PostgreSQL database.
 type UserRepository struct {
 	db *sqlx.DB
 }
 
-var _ domainuser.Repository = (*UserRepository)(nil)
-
-func NewUserRepository(db *sqlx.DB) *UserRepository {
-	return &UserRepository{db: db}
+// NewUserRepository creates a new instance of the UserRepository with the provided handle to the PostgreSQL database.
+//
+// If db is nil, returns an error.
+func NewUserRepository(db *sqlx.DB) (*UserRepository, error) {
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
+	return &UserRepository{db: db}, nil
 }
 
-func (r *UserRepository) SaveUser(ctx context.Context, user domainuser.User) error {
+// SaveUser saves a user to the PostgreSQL database.
+//
+// If the user already exists, returns `user.ErrUserAlreadyExists`.
+func (r UserRepository) SaveUser(ctx context.Context, user domain.User) error {
 	query := fmt.Sprintf(`INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING`)
 
 	res, err := r.db.ExecContext(ctx, query, user.ID, user.Username, user.PasswordHash)
@@ -32,29 +40,35 @@ func (r *UserRepository) SaveUser(ctx context.Context, user domainuser.User) err
 	if err != nil {
 		return fmt.Errorf("failed to retrieve rows affected: %w", err)
 	} else if affected == 0 {
-		return domainuser.ErrUserAlreadyExists
+		return domain.ErrUserAlreadyExists
 	}
 	return nil
 }
 
-func (r *UserRepository) FindUserByUserID(ctx context.Context, userID string) (user domainuser.User, err error) {
+// FindUserByUserID finds a user in the PostgreSQL database by their user ID.
+//
+// If the user is not found, returns `user.ErrUserNotFound`.
+func (r UserRepository) FindUserByUserID(ctx context.Context, userID string) (user domain.User, err error) {
 	query := fmt.Sprintf(`SELECT * FROM users WHERE id = $1`)
 	if err := r.db.GetContext(ctx, &user, query, userID); errors.Is(err, sql.ErrNoRows) {
 		err = fmt.Errorf("failed to execute query: %w", err)
-		return domainuser.User{}, errors.Join(err, domainuser.ErrUserNotFound)
+		return domain.User{}, errors.Join(err, domain.ErrUserNotFound)
 	} else if err != nil {
-		return domainuser.User{}, fmt.Errorf("failed to execute query: %w", err)
+		return domain.User{}, fmt.Errorf("failed to execute query: %w", err)
 	}
 	return user, nil
 }
 
-func (r *UserRepository) FindUserByUsername(ctx context.Context, username string) (user domainuser.User, err error) {
+// FindUserByUsername finds a user in the PostgreSQL database by their username.
+//
+// If the user is not found, returns `user.ErrUserNotFound`.
+func (r UserRepository) FindUserByUsername(ctx context.Context, username string) (user domain.User, err error) {
 	query := fmt.Sprintf(`SELECT * FROM users WHERE username = $1`)
 	if err := r.db.GetContext(ctx, &user, query, username); errors.Is(err, sql.ErrNoRows) {
 		err = fmt.Errorf("failed to execute query: %w", err)
-		return domainuser.User{}, errors.Join(err, domainuser.ErrUserNotFound)
+		return domain.User{}, errors.Join(err, domain.ErrUserNotFound)
 	} else if err != nil {
-		return domainuser.User{}, fmt.Errorf("failed to execute query: %w", err)
+		return domain.User{}, fmt.Errorf("failed to execute query: %w", err)
 	}
 	return user, nil
 }
