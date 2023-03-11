@@ -33,7 +33,7 @@ func GracefulShutdown() <-chan struct{} {
 // The returned URI string is of the format: "mongodb://[username:password@]host:port".
 //
 // If the port is not provided, the scheme of the URI is set to "mongodb+srv" instead of "mongodb".
-// In addition, use of the +srv connection string modifier automatically sets the tls (or the equivalent ssl) option to
+// Use of the +srv connection string modifier automatically sets the tls (or the equivalent ssl) option to
 // true for the connection.
 func BuildMongoURI(host, port, username, password string) (string, error) {
 	if len(host) == 0 {
