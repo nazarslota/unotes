@@ -1,7 +1,4 @@
 // Package errors implements a custom error type HTTPError.
-// HTTPError contains information about an HTTP error that can be used in API responses.
-// The error contains the HTTP status code, a message, and an internal error if there is one.
-// It implements the error interface and has methods for setting and unwrapping the internal error.
 package errors
 
 import (
