@@ -64,9 +64,9 @@ protobuf: protoplugins ## Generate code from .proto files.
   --validate_out=lang=go:. --validate_opt=module=${GO_PACKAGE}
 
 protoplugins: ## Install protocol compiler plugins.
-	go install github.com/envoyproxy/protoc-gen-validate@latest
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install github.com/envoyproxy/protoc-gen-validate@latest
 
 swagger: tools ## Generate swagger documentation.
 	swag init \
