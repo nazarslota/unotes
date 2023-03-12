@@ -30,13 +30,6 @@ type Config struct {
 		DBName   string `mapstructure:"AUTH_POSTGRESQL_DBNAME"`
 		SSLMode  string `mapstructure:"AUTH_POSTGRESQL_SSLMODE"`
 	} `mapstructure:",squash"`
-	MongoDB struct {
-		Host     string `mapstructure:"AUTH_MONGODB_HOST"`
-		Port     string `mapstructure:"AUTH_MONGODB_PORT"`
-		Username string `mapstructure:"AUTH_MONGODB_USERNAME"`
-		Password string `mapstructure:"AUTH_MONGODB_PASSWORD"`
-		Database string `mapstructure:"AUTH_MONGODB_DATABASE"`
-	} `mapstructure:",squash"`
 	Redis struct {
 		Addr     string `mapstructure:"AUTH_REDIS_ADDR"`
 		Password string `mapstructure:"AUTH_REDIS_PASSWORD"`
@@ -96,7 +89,6 @@ func bindEnvAuth(v *viper.Viper) {
 	_ = v.BindEnv("AUTH_ACCESS_TOKEN_SECRET")
 	_ = v.BindEnv("AUTH_REFRESH_TOKEN_SECRET")
 	bindEnvPostgreSQL(v)
-	bindEnvMongoDB(v)
 	bindEnvRedis(v)
 }
 
@@ -107,14 +99,6 @@ func bindEnvPostgreSQL(v *viper.Viper) {
 	_ = v.BindEnv("AUTH_POSTGRESQL_PASSWORD")
 	_ = v.BindEnv("AUTH_POSTGRESQL_DBNAME")
 	_ = v.BindEnv("AUTH_POSTGRESQL_SSLMODE")
-}
-
-func bindEnvMongoDB(v *viper.Viper) {
-	_ = v.BindEnv("AUTH_MONGODB_HOST")
-	_ = v.BindEnv("AUTH_MONGODB_PORT")
-	_ = v.BindEnv("AUTH_MONGODB_USERNAME")
-	_ = v.BindEnv("AUTH_MONGODB_PASSWORD")
-	_ = v.BindEnv("AUTH_MONGODB_DATABASE")
 }
 
 func bindEnvRedis(v *viper.Viper) {
