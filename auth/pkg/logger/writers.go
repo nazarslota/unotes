@@ -6,21 +6,17 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ConsoleWriter is a struct that wraps the zerolog ConsoleWriter with additional options.
+// ConsoleWriter is a console writer for Logger that writes log messages to the console in a user-friendly format.
 type ConsoleWriter struct {
-	// Out is the io.Writer to write logs to.
-	Out io.Writer
-	// NoColor controls whether the console output should be colorized.
-	NoColor bool
-	// TimeFormat is the format of the timestamp in the log message.
-	TimeFormat string
+	Out        io.Writer // Out is the destination writer for log messages.
+	NoColor    bool      // NoColor disables ANSI color escape codes in output.
+	TimeFormat string    // TimeFormat is the format for timestamps in output.
 
-	// console is the underlying zerolog ConsoleWriter
-	console *zerolog.ConsoleWriter
+	console *zerolog.ConsoleWriter // console is a ZeroLog ConsoleWriter used for writing output to the console.
 }
 
-// NewTextWriter creates a new ConsoleWriter with the given options applied.
-func NewTextWriter(options ...func(w *ConsoleWriter)) *ConsoleWriter {
+// NewConsoleWriter creates a new ConsoleWriter with the specified options.
+func NewConsoleWriter(options ...func(w *ConsoleWriter)) *ConsoleWriter {
 	w := &ConsoleWriter{}
 	for _, option := range options {
 		option(w)
@@ -34,7 +30,7 @@ func NewTextWriter(options ...func(w *ConsoleWriter)) *ConsoleWriter {
 	return w
 }
 
-// Write implements the io.Writer interface and makes calls to the base zerolog ConsoleWriter.
+// Write implements the io.Writer interface.
 func (w ConsoleWriter) Write(p []byte) (n int, err error) {
 	if w.console == nil {
 		w.console = &zerolog.ConsoleWriter{
