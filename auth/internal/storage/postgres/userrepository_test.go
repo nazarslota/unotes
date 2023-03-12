@@ -77,7 +77,7 @@ func TestUserRepository_SaveUser(t *testing.T) {
 		require.NotErrorIs(t, err, sql.ErrNoRows)
 
 		assert.NoError(t, err)
-		assert.Equal(t, result, userA)
+		assert.Equal(t, userA, result)
 
 		t.Cleanup(func() {
 			query := fmt.Sprintf(`DELETE FROM users WHERE id = $1`)
