@@ -27,10 +27,10 @@ jobs:
 
       - name: Building auth service.
         working-directory: auth
-        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.sha }} .
+        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}.${{ github.sha }} .
       - name: Building note service.
         working-directory: note
-        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_IMAGE_NAME }}:${{ github.sha }} .
+        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}.${{ github.sha }} .
 
       - name: Login to container registry.
         run: doctl registry login --expiry-seconds 600
