@@ -2,14 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [ "" ]
+    branches: [ "stage" ]
   pull_request:
-    branches: [ "" ]
+    branches: [ "stage" ]
 
 env:
-  AUTH_SERVICE_DIGITALOCEAN_REGISTRY: registry.digitalocean.com/unotes
-  AUTH_SERVICE_IMAGE_NAME: unotes-auth-service
-  AUTH_SERVICE_CONTAINER_NAME: unotes-auth-service
+  DIGITALOCEAN_REGISTRY: registry.digitalocean.com/unotes
+  AUTH_IMAGE_NAME: unotes-auth
+  NOTE_IMAGE_NAME: unotes-note
+  AUTH_CONTAINER_NAME: unotes-auth
+  NOTE_CONTAINER_NAME: unotes-note
 
 jobs:
   build:
@@ -17,50 +19,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install "doctl"
+      - name: Install doctl.
         uses: digitalocean/action-doctl@v2
         with:
-          token: ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }}
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      - name: Building the "auth-service"
-        working-directory: auth-service
-        run: docker build -t ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE_NAME }}:${{ github.sha }} .
+      - name: Building auth service.
+        working-directory: auth
+        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.sha }} .
+      - name: Building note service.
+        working-directory: note
+        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_IMAGE_NAME }}:${{ github.sha }} .
 
-      - name: Login to the "DigitalOcean Container Registry"
+      - name: Login to container registry.
         run: doctl registry login --expiry-seconds 600
 
-      - name: Pushing "auth-service" to the "DigitalOcean Container Registry"
-        run: docker push ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE_NAME }}:${{ github.sha }}
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Setting up "appleboy/ssh-action@v0.1.3" and deploying the "auth-service" to "DigitalOcean"
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.UNOTES_DROPLET_HOST }}
-          username: ${{ secrets.UNOTES_DROPLET_USERNAME }}
-          password: ${{ secrets.UNOTES_DROPLET_PASSWORD }}
-          script: |
-            rm -r ~/.env && touch ~/.env
-            
-            echo "AUTH_SERVICE_ACCESS_TOKEN_SECRET=${{ secrets.AUTH_SERVICE_ACCESS_TOKEN_SECRET }}" >> ~/.env
-            echo "AUTH_SERVICE_REFRESH_TOKEN_SECRET=${{ secrets.AUTH_SERVICE_REFRESH_TOKEN_SECRET }}" >> ~/.env
-            
-            echo "AUTH_SERVICE_POSTGRESQL_HOST=${{ secrets.AUTH_SERVICE_POSTGRESQL_HOST }}" >> ~/.env
-            echo "AUTH_SERVICE_POSTGRESQL_PORT=${{ secrets.AUTH_SERVICE_POSTGRESQL_PORT }}" >> ~/.env
-            echo "AUTH_SERVICE_POSTGRESQL_USERNAME=${{ secrets.AUTH_SERVICE_POSTGRESQL_USERNAME }}" >> ~/.env
-            echo "AUTH_SERVICE_POSTGRESQL_PASSWORD=${{ secrets.AUTH_SERVICE_POSTGRESQL_PASSWORD }}" >> ~/.env
-            echo "AUTH_SERVICE_POSTGRESQL_DBNAME=${{ secrets.AUTH_SERVICE_POSTGRESQL_DBNAME }}" >> ~/.env
-            echo "AUTH_SERVICE_POSTGRESQL_SSLMODE=${{ secrets.AUTH_SERVICE_POSTGRESQL_SSLMODE }}" >> ~/.env
-            
-            echo "AUTH_SERVICE_REDIS_ADDR=${{ secrets.AUTH_SERVICE_REDIS_ADDR }}" >> ~/.env
-            echo "AUTH_SERVICE_REDIS_PASSWORD=${{ secrets.AUTH_SERVICE_REDIS_PASSWORD }}" >> ~/.env
-            echo "AUTH_SERVICE_REDIS_DB=${{ secrets.AUTH_SERVICE_REDIS_DB }}" >> ~/.env
-            
-            docker login ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }} -u ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.AUTH_SERVICE_DIGITALOCEAN_ACCESS_TOKEN }}
-            
-            docker stop ${{ env.AUTH_SERVICE_CONTAINER_NAME }} | true && docker rm ${{ env.AUTH_SERVICE_CONTAINER_NAME }} | true
-            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_SERVICE_CONTAINER_NAME }} --publish 80:8081 \
-              ${{ env.AUTH_SERVICE_DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_SERVICE_CONTAINER_NAME }}:${{ github.sha }}
+      - name: Pushing auth service to the container registry.
+        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.sha }}
+      - name: Pushing note service to the container registry.
+        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_IMAGE_NAME }}:${{ github.sha }}
