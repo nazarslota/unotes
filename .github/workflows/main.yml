@@ -9,9 +9,10 @@ on:
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/unotes
   AUTH_IMAGE_NAME: unotes-auth
+  AUTH_REPOSITORY_NAME: unotes
+
   NOTE_IMAGE_NAME: unotes-note
-  AUTH_CONTAINER_NAME: unotes-auth
-  NOTE_CONTAINER_NAME: unotes-note
+  NOTE_REPOSITORY_NAME: unotes
 
 jobs:
   build:
@@ -35,6 +36,6 @@ jobs:
         run: doctl registry login --expiry-seconds 600
 
       - name: Pushing auth service to the container registry.
-        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.sha }}
+        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}.${{ github.sha }}
       - name: Pushing note service to the container registry.
-        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_IMAGE_NAME }}:${{ github.sha }}
+        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}.${{ github.sha }}
