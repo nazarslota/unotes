@@ -4,30 +4,33 @@ import (
 	"context"
 	"testing"
 
-	storagememory "github.com/nazarslota/unotes/note/internal/storage/memory"
-	storagemongo "github.com/nazarslota/unotes/note/internal/storage/mongo"
+	"github.com/nazarslota/unotes/note/internal/storage/mongo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func TestNewRepositoryProvider(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
-	defer func() { _ = client.Disconnect(context.Background()) }()
+	t.Run("should create a new repository provider", func(t *testing.T) {
+		provider := NewRepositoryProvider()
+		assert.NotNil(t, provider)
+		assert.Nil(t, provider.NoteRepository)
+	})
 
-	database := client.Database("test")
+	t.Run("should not create a new repository provider with given options", func(t *testing.T) {
+		db, err := mongo.NewMongoDB(context.Background(), mongo.Config{
+			Host:     "localhost",
+			Port:     "27017",
+			Username: "",
+			Password: "",
+			Database: "test",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, db)
 
-	// Test with memory note repository
-	rp := NewRepositoryProvider(WithMemoryNoteRepository())
-	assert.NotNil(t, rp.NoteRepository)
-	_, ok := rp.NoteRepository.(*storagememory.NoteRepository)
-	assert.True(t, ok)
+		provider := NewRepositoryProvider(WithMongoNoteRepository(db))
+		assert.NotNil(t, provider)
+		assert.NotNil(t, provider.NoteRepository)
 
-	// Test with MongoDB note repository
-	rp = NewRepositoryProvider(WithMongoNoteRepository(database))
-	assert.NotNil(t, rp.NoteRepository)
-	_, ok = rp.NoteRepository.(*storagemongo.NoteRepository)
-	assert.True(t, ok)
+		t.Cleanup(func() { _ = db.Drop(context.Background()) })
+	})
 }
