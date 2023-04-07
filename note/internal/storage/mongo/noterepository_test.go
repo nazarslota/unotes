@@ -4,298 +4,372 @@ import (
 	"context"
 	"testing"
 
-	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
+	domain "github.com/nazarslota/unotes/note/internal/domain/note"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var (
+	noteAA = domain.Note{
+		ID:      "note-a-id",
+		Title:   "note-a-title",
+		Content: "note-a-content",
+		UserID:  "user-a-id",
+	}
+
+	noteAB = domain.Note{
+		ID:      "note-b-id",
+		Title:   "note-b-title",
+		Content: "note-b-content",
+		UserID:  "user-a-id",
+	}
+)
+
+var repository *NoteRepository
+
+func init() {
+	db, err := NewMongoDB(context.Background(), Config{
+		Host:     "localhost",
+		Port:     "27017",
+		Username: "",
+		Password: "",
+		Database: "test",
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	repository, err = NewNoteRepository(db, "test")
+	if err != nil {
+		panic(err)
+	}
+}
+
 func TestNewNoteRepository(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
+	t.Run("should create new note repository", func(t *testing.T) {
+		db, err := NewMongoDB(context.Background(), Config{
+			Host:     "localhost",
+			Port:     "27017",
+			Username: "",
+			Password: "",
+			Database: "test",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, db)
 
-	defer func() { _ = client.Disconnect(context.Background()) }()
+		repository, err := NewNoteRepository(db, "test")
+		assert.NoError(t, err)
+		assert.NotNil(t, repository)
+	})
 
-	database := client.Database("test")
-	defer func() { _ = database.Drop(context.Background()) }()
-
-	notes := database.Collection("notes")
-	defer func() { _ = notes.Drop(context.Background()) }()
-
-	repository := NewNoteRepository(database)
-	assert.NotNil(t, repository)
-
-	repository = NewNoteRepository(database, "notes")
-	assert.NotNil(t, repository)
+	t.Run("should return error if db is nil", func(t *testing.T) {
+		repository, err := NewNoteRepository(nil, "test")
+		assert.Error(t, err)
+		assert.Nil(t, repository)
+	})
 }
 
 func TestNoteRepository_SaveOne(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
+	t.Run("should successfully save a note", func(t *testing.T) {
+		err := repository.SaveOne(context.Background(), noteAA)
+		assert.NoError(t, err)
 
-	defer func() { _ = client.Disconnect(context.Background()) }()
+		filter := bson.M{"_id": noteAA.ID}
+		result := repository.collection.FindOne(context.Background(), filter)
 
-	database := client.Database("test")
-	defer func() { _ = database.Drop(context.Background()) }()
+		var note domain.Note
+		err = result.Decode(&note)
+		assert.NoError(t, err)
+		assert.Equal(t, noteAA, note)
 
-	notes := database.Collection("notes")
-	defer func() { _ = notes.Drop(context.Background()) }()
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
 
-	repository := NewNoteRepository(database, "notes")
-	note := domainnote.Note{ID: "123", Title: "Test Note", Content: "This is a test note"}
+	t.Run("should return an error if context is invalid", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
 
-	err = repository.SaveOne(context.Background(), note)
-	assert.NoError(t, err)
-
-	var result domainnote.Note
-	err = notes.FindOne(context.Background(), bson.M{"_id": note.ID}).Decode(&result)
-	if assert.NoError(t, err) {
-		assert.Equal(t, note, result)
-	}
-
-	err = repository.SaveOne(context.Background(), note)
-	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, domainnote.ErrNoteAlreadyExist)
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	err = repository.SaveOne(ctx, note)
-	if assert.Error(t, err) {
+		err := repository.SaveOne(ctx, noteAA)
 		assert.ErrorIs(t, err, context.Canceled)
-	}
+
+		filter := bson.M{"_id": noteAA.ID}
+		err = repository.collection.FindOne(context.Background(), filter).Err()
+		require.ErrorIs(t, err, mongo.ErrNoDocuments)
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
+
+	t.Run("should return an error if note already exists", func(t *testing.T) {
+		_, err := repository.collection.InsertOne(context.Background(), noteAA)
+		require.NoError(t, err)
+
+		err = repository.SaveOne(context.Background(), noteAA)
+		assert.ErrorIs(t, err, domain.ErrNoteAlreadyExist)
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
+
+	t.Cleanup(func() {
+		_ = repository.collection.Database().Drop(context.Background())
+	})
 }
 
 func TestNoteRepository_FindOne(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
+	t.Run("should return note", func(t *testing.T) {
+		_, err := repository.collection.InsertOne(context.Background(), noteAA)
+		require.NoError(t, err)
 
-	defer func() { _ = client.Disconnect(context.Background()) }()
+		result, err := repository.FindOne(context.Background(), noteAA.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, noteAA, result)
 
-	database := client.Database("test")
-	defer func() { _ = database.Drop(context.Background()) }()
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
 
-	notes := database.Collection("notes")
-	defer func() { _ = notes.Drop(context.Background()) }()
+	t.Run("should return an error if context is invalid", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
 
-	repository := NewNoteRepository(database, "notes")
-	note := domainnote.Note{ID: "123", Title: "Test Note", Content: "This is a test note"}
-
-	_, err = repository.FindOne(context.Background(), note.ID)
-	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
-	}
-
-	_, err = notes.InsertOne(context.Background(), note)
-	require.NoError(t, err)
-
-	result, err := repository.FindOne(context.Background(), note.ID)
-	if assert.NoError(t, err) {
-		assert.Equal(t, note, result)
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	result, err = repository.FindOne(ctx, note.ID)
-	if assert.Error(t, err) {
-		assert.Equal(t, domainnote.Note{}, result)
+		result, err := repository.FindOne(ctx, noteAA.ID)
 		assert.ErrorIs(t, err, context.Canceled)
-	}
+		assert.Empty(t, result)
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
+
+	t.Run("should return an error if note does not exist", func(t *testing.T) {
+		result, err := repository.FindOne(context.Background(), "invalid-note-id")
+		assert.Error(t, err)
+		assert.Empty(t, result)
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
+
+	t.Cleanup(func() {
+		_ = repository.collection.Database().Drop(context.Background())
+	})
 }
 
 func TestNoteRepository_FindMany(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
+	t.Run("should return notes", func(t *testing.T) {
+		_, err := repository.collection.InsertMany(context.Background(), []any{noteAA, noteAB})
+		require.NoError(t, err)
 
-	defer func() { _ = client.Disconnect(context.Background()) }()
+		result, err := repository.FindMany(context.Background(), noteAA.UserID)
+		assert.NoError(t, err)
+		assert.Contains(t, result, noteAA)
+		assert.Contains(t, result, noteAB)
 
-	database := client.Database("test")
-	defer func() { _ = database.Drop(context.Background()) }()
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
 
-	notes := database.Collection("notes")
-	defer func() { _ = notes.Drop(context.Background()) }()
+	t.Run("should return an error if context is invalid", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
 
-	repository := NewNoteRepository(database, "notes")
-	note1 := domainnote.Note{ID: "123", UserID: "user1", Title: "Test Note 1", Content: "This is a test note"}
-	note2 := domainnote.Note{ID: "456", UserID: "user1", Title: "Test Note 2", Content: "This is a test note"}
-	note3 := domainnote.Note{ID: "789", UserID: "user2", Title: "Test Note 3", Content: "This is a test note"}
+		_, err := repository.collection.InsertMany(context.Background(), []any{noteAA, noteAB})
+		require.NoError(t, err)
 
-	result, err := repository.FindMany(context.Background(), "user1")
-	if assert.Error(t, err) {
-		assert.Nil(t, result)
-		assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
-	}
-
-	_, err = notes.InsertMany(context.Background(), []any{note1, note2, note3})
-	require.NoError(t, err)
-
-	result, err = repository.FindMany(context.Background(), "user1")
-	if assert.NoError(t, err) {
-		assert.ElementsMatch(t, []domainnote.Note{note1, note2}, result)
-	}
-
-	result, err = repository.FindMany(context.Background(), "user2")
-	if assert.NoError(t, err) {
-		assert.ElementsMatch(t, []domainnote.Note{note3}, result)
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	result, err = repository.FindMany(ctx, "user2")
-	if assert.Error(t, err) {
-		assert.Nil(t, result)
+		result, err := repository.FindMany(ctx, noteAA.ID)
 		assert.ErrorIs(t, err, context.Canceled)
-	}
+		assert.Nil(t, result)
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
+
+	t.Run("should return an error if notes does not exist", func(t *testing.T) {
+		result, err := repository.FindMany(context.Background(), "invalid-user-id")
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+		assert.Nil(t, result)
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
+
+	t.Cleanup(func() {
+		_ = repository.collection.Database().Drop(context.Background())
+	})
 }
 
 func TestNoteRepository_UpdateOne(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
+	t.Run("should update note", func(t *testing.T) {
+		_, err := repository.collection.InsertOne(context.Background(), noteAA)
+		require.NoError(t, err)
 
-	defer func() { _ = client.Disconnect(context.Background()) }()
+		updated := noteAA
+		updated.Content = "updated-note-content"
 
-	database := client.Database("test")
-	defer func() { _ = database.Drop(context.Background()) }()
+		err = repository.UpdateOne(context.Background(), updated)
+		assert.NoError(t, err)
 
-	notes := database.Collection("notes")
-	defer func() { _ = notes.Drop(context.Background()) }()
+		filter := bson.M{"_id": noteAA.ID}
+		result := repository.collection.FindOne(context.Background(), filter)
 
-	repository := NewNoteRepository(database, "notes")
-	note := &domainnote.Note{ID: "123", Title: "Test Note", Content: "This is a test note"}
+		var note domain.Note
+		err = result.Decode(&note)
+		assert.NoError(t, err)
+		assert.Equal(t, updated, note)
 
-	_, err = notes.InsertOne(context.Background(), note)
-	require.NoError(t, err)
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
 
-	updatedNote := domainnote.Note{ID: "123", Title: "Updated Test Note", Content: "This is an updated test note"}
-	err = repository.UpdateOne(context.Background(), updatedNote)
-	assert.NoError(t, err)
+	t.Run("should return an error if context is invalid", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
 
-	var result domainnote.Note
-	err = notes.FindOne(context.Background(), bson.M{"_id": note.ID}).Decode(&result)
-	if assert.NoError(t, err) {
-		assert.Equal(t, updatedNote, result)
-	}
+		_, err := repository.collection.InsertOne(context.Background(), noteAA)
+		require.NoError(t, err)
 
-	err = repository.UpdateOne(context.Background(), domainnote.Note{ID: "456", Title: "Non-existing Note", Content: "This note does not exist"})
-	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
-	}
+		updated := noteAA
+		updated.Content = "updated-note-content"
+
+		err = repository.UpdateOne(ctx, updated)
+		assert.ErrorIs(t, err, context.Canceled)
+
+		filter := bson.M{"_id": noteAA.ID}
+		result := repository.collection.FindOne(context.Background(), filter)
+
+		var note domain.Note
+		err = result.Decode(&note)
+		assert.NoError(t, err)
+		assert.NotEqual(t, updated, noteAA)
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
+
+	t.Run("should return en error if note does not exist", func(t *testing.T) {
+		err := repository.UpdateOne(context.Background(), noteAA)
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+
+		filter := bson.M{"_id": noteAA.ID}
+		err = repository.collection.FindOne(context.Background(), filter).Err()
+		require.ErrorIs(t, err, mongo.ErrNoDocuments)
+	})
 }
 
 func TestNoteRepository_DeleteOne(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
+	t.Run("should successfully delete note", func(t *testing.T) {
+		_, err := repository.collection.InsertOne(context.Background(), noteAA)
+		require.NoError(t, err)
 
-	defer func() { _ = client.Disconnect(context.Background()) }()
+		err = repository.DeleteOne(context.Background(), noteAA.ID)
+		assert.NoError(t, err)
 
-	database := client.Database("test")
-	defer func() { _ = database.Drop(context.Background()) }()
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
 
-	notes := database.Collection("notes")
-	defer func() { _ = notes.Drop(context.Background()) }()
+	t.Run("should return an error if context is invalid", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
 
-	repository := NewNoteRepository(database, "notes")
-	note := &domainnote.Note{Title: "Test Note", Content: "This is a test note"}
+		_, err := repository.collection.InsertOne(context.Background(), noteAA)
+		require.NoError(t, err)
 
-	err = repository.DeleteOne(context.Background(), note.ID)
-	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, domainnote.ErrNoteNotFound)
-	}
-
-	_, err = notes.InsertOne(context.Background(), note)
-	require.NoError(t, err)
-
-	err = repository.DeleteOne(context.Background(), note.ID)
-	assert.NoError(t, err)
-
-	var result domainnote.Note
-	err = notes.FindOne(context.Background(), bson.M{"_id": note.ID}).Decode(&result)
-	if assert.Error(t, err) {
-		assert.ErrorIs(t, err, mongo.ErrNoDocuments)
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	err = repository.DeleteOne(ctx, note.ID)
-	if assert.Error(t, err) {
+		err = repository.DeleteOne(ctx, noteAA.ID)
 		assert.ErrorIs(t, err, context.Canceled)
-	}
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
+
+	t.Run("should return an error if note does not exist", func(t *testing.T) {
+		err := repository.DeleteOne(context.Background(), "invalid-note-id")
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+	})
 }
 
 func TestNoteRepository_FindManyAsync(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
+	t.Run("should successfully find notes", func(t *testing.T) {
+		_, err := repository.collection.InsertMany(context.Background(), []any{noteAA, noteAB})
+		require.NoError(t, err)
 
-	defer func() { _ = client.Disconnect(context.Background()) }()
+		notes, errs := repository.FindManyAsync(context.Background(), noteAA.UserID)
 
-	database := client.Database("test")
-	defer func() { _ = database.Drop(context.Background()) }()
+		note, ok := <-notes
+		assert.True(t, ok)
+		assert.Contains(t, []any{noteAA, noteAB}, note)
 
-	notes := database.Collection("notes")
-	defer func() { _ = notes.Drop(context.Background()) }()
+		note, ok = <-notes
+		assert.True(t, ok)
+		assert.Contains(t, []any{noteAA, noteAB}, note)
 
-	_, err = notes.InsertMany(context.Background(), []any{
-		domainnote.Note{ID: "123", Title: "Test Note 1", Content: "This is a test note", UserID: "123"},
-		domainnote.Note{ID: "456", Title: "Test Note 2", Content: "This is another test note", UserID: "123"},
+		note, ok = <-notes
+		assert.False(t, ok)
+		assert.Empty(t, note)
+
+		err, ok = <-errs
+		assert.False(t, ok)
+		assert.NoError(t, err)
+
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
 	})
-	require.NoError(t, err)
 
-	receivedNotes := make([]domainnote.Note, 0)
-	receivedErrs := make([]error, 0)
+	t.Run("should return an error if context is invalid", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
 
-	repository := NewNoteRepository(database, "notes")
-	notesCh, errsCh := repository.FindManyAsync(context.Background(), "123")
-	for note := range notesCh {
-		receivedNotes = append(receivedNotes, note)
-	}
-	assert.ElementsMatch(t, []domainnote.Note{
-		{ID: "123", Title: "Test Note 1", Content: "This is a test note", UserID: "123"},
-		{ID: "456", Title: "Test Note 2", Content: "This is another test note", UserID: "123"},
-	}, receivedNotes)
+		_, err := repository.collection.InsertMany(context.Background(), []any{noteAA, noteAB})
+		require.NoError(t, err)
 
-	for err := range errsCh {
-		receivedErrs = append(receivedErrs, err)
-	}
-	assert.Empty(t, receivedErrs)
+		notes, errs := repository.FindManyAsync(ctx, "invalid-user-id")
+		note, ok := <-notes
+		assert.False(t, ok)
+		assert.Empty(t, note)
 
-	receivedNotes = make([]domainnote.Note, 0)
-	receivedErrs = make([]error, 0)
+		err, ok = <-errs
+		assert.True(t, ok)
+		assert.ErrorIs(t, err, context.Canceled)
 
-	notesCh, errsCh = repository.FindManyAsync(context.Background(), "456")
-	for note := range notesCh {
-		receivedNotes = append(receivedNotes, note)
-	}
-	assert.Empty(t, receivedNotes)
+		err, ok = <-errs
+		assert.False(t, ok)
+		assert.NoError(t, err)
 
-	for err := range errsCh {
-		receivedErrs = append(receivedErrs, err)
-	}
-	if assert.Len(t, receivedErrs, 1) {
-		assert.ErrorIs(t, receivedErrs[0], domainnote.ErrNoteNotFound)
-	}
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
 
-	receivedNotes = make([]domainnote.Note, 0)
-	receivedErrs = make([]error, 0)
+	t.Run("should return an error if note does not exist", func(t *testing.T) {
+		notes, errs := repository.FindManyAsync(context.Background(), "invalid-user-id")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
+		note, ok := <-notes
+		assert.False(t, ok)
+		assert.Empty(t, note)
 
-	notesCh, errsCh = repository.FindManyAsync(ctx, "123")
-	for note := range notesCh {
-		receivedNotes = append(receivedNotes, note)
-	}
-	assert.Empty(t, receivedNotes)
+		err, ok := <-errs
+		assert.True(t, ok)
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
 
-	for err := range errsCh {
-		receivedErrs = append(receivedErrs, err)
-	}
-	if assert.Len(t, receivedErrs, 1) {
-		assert.ErrorIs(t, receivedErrs[0], context.Canceled)
-	}
+		t.Cleanup(func() {
+			_ = repository.collection.Drop(context.Background())
+		})
+	})
 }

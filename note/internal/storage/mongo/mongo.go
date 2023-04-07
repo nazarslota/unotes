@@ -1,3 +1,4 @@
+// Package mongo provides a MongoDB database repository implementation.
 package mongo
 
 import (
@@ -10,14 +11,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
+// Config represents MongoDB configuration.
 type Config struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
-	Database string
+	Host     string // Host specifies the MongoDB server host.
+	Port     string // Port specifies the MongoDB server port.
+	Username string // Username specifies the username used to authenticate with the MongoDB server.
+	Password string // Password specifies the password used to authenticate with the MongoDB server.
+	Database string // Database specifies the name of the MongoDB database to use.
 }
 
+// NewMongoDB returns a new instance of the *mongo.Database type using the provided configuration.
 func NewMongoDB(ctx context.Context, config Config) (*mongo.Database, error) {
 	uri, err := utils.BuildMongoURI(config.Host, config.Port, config.Username, config.Password)
 	if err != nil {
