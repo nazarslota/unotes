@@ -1,11 +1,14 @@
 package refresh
 
-import "encoding"
+import (
+	"encoding"
+	"errors"
+)
 
 type Token string
 
 var _ encoding.BinaryMarshaler = (*Token)(nil)
 
-func (t Token) MarshalBinary() (data []byte, err error) {
-	return []byte(t), nil
-}
+func (t Token) MarshalBinary() ([]byte, error) { return []byte(t), nil }
+
+var ErrTokenNotFound = errors.New("token not found")

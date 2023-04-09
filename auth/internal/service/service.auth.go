@@ -3,10 +3,7 @@ package service
 import (
 	"time"
 
-	"github.com/nazarslota/unotes/auth/internal/domain/refresh"
-	"github.com/nazarslota/unotes/auth/internal/domain/user"
 	"github.com/nazarslota/unotes/auth/internal/service/oauth2"
-	"github.com/nazarslota/unotes/auth/pkg/jwt"
 )
 
 type OAuth2Service struct {
@@ -17,38 +14,57 @@ type OAuth2Service struct {
 }
 
 type OAuth2ServiceOptions struct {
-	AccessTokenManager     oauth2.AccessTokenManager[jwt.AccessTokenClaims]
-	AccessTokenExpiresIn   time.Duration
-	RefreshTokenManager    oauth2.RefreshTokenManager[jwt.RefreshTokenClaims]
-	RefreshTokenExpiresIn  time.Duration
-	UserRepository         user.Repository
-	RefreshTokenRepository refresh.Repository
+	AccessTokenCreator   oauth2.AccessTokenCreator
+	AccessTokenParser    oauth2.AccessTokenParser
+	AccessTokenExpiresIn time.Duration
+
+	RefreshTokenCreator   oauth2.RefreshTokenCreator
+	RefreshTokenParser    oauth2.RefreshTokenParser
+	RefreshTokenExpiresIn time.Duration
+
+	RefreshTokenSaver    oauth2.RefreshTokenSaver
+	RefreshTokenDeleter  oauth2.RefreshTokenDeleter
+	RefreshTokensDeleter oauth2.RefreshTokensDeleter
+	RefreshTokenGetter   oauth2.RefreshTokenGetter
+
+	UserSaver  oauth2.UserSaver
+	UserFinder oauth2.UserFinder
 }
 
 func NewOAuth2Service(options OAuth2ServiceOptions) OAuth2Service {
 	return OAuth2Service{
 		SignUpRequestHandler: oauth2.NewSignUpRequestHandler(
-			options.UserRepository,
-		),
-		SingInRequestHandler: oauth2.NewSignInRequestHandler(
-			options.AccessTokenManager,
-			options.AccessTokenExpiresIn,
-			options.RefreshTokenManager,
-			options.RefreshTokenExpiresIn,
-			options.UserRepository,
-			options.RefreshTokenRepository,
+			options.UserSaver,
 		),
 		RefreshRequestHandler: oauth2.NewRefreshRequestHandler(
-			options.AccessTokenManager,
+			options.AccessTokenCreator,
+			options.AccessTokenParser,
 			options.AccessTokenExpiresIn,
-			options.RefreshTokenManager,
+
+			options.RefreshTokenCreator,
+			options.RefreshTokenParser,
 			options.RefreshTokenExpiresIn,
-			options.UserRepository,
-			options.RefreshTokenRepository,
+
+			options.RefreshTokenSaver,
+			options.RefreshTokenDeleter,
+			options.RefreshTokenGetter,
+		),
+		SingInRequestHandler: oauth2.NewSignInRequestHandler(
+			options.AccessTokenCreator,
+			options.AccessTokenExpiresIn,
+
+			options.RefreshTokenCreator,
+			options.RefreshTokenExpiresIn,
+
+			options.RefreshTokenSaver,
+
+			options.UserFinder,
 		),
 		SignOutRequestHandler: oauth2.NewSignOutRequestHandler(
-			options.AccessTokenManager,
-			options.RefreshTokenRepository,
+			options.AccessTokenParser,
+
+			options.RefreshTokensDeleter,
+			options.RefreshTokenGetter,
 		),
 	}
 }

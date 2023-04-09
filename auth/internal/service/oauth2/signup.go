@@ -22,7 +22,7 @@ type SignUpRequestHandler interface {
 }
 
 type signUpRequestHandler struct {
-	UserRepository domainuser.Repository
+	UserSaver UserSaver
 }
 
 var (
@@ -35,8 +35,12 @@ func errSignUpInvalidUsername() error   { return errors.New("invalid username") 
 func errSignUpInvalidPassword() error   { return errors.New("invalid password") }
 func errSignUpUserAlreadyExists() error { return domainuser.ErrUserAlreadyExists }
 
-func NewSignUpRequestHandler(userRepository domainuser.Repository) SignUpRequestHandler {
-	return &signUpRequestHandler{UserRepository: userRepository}
+func NewSignUpRequestHandler(
+	userSaver UserSaver,
+) SignUpRequestHandler {
+	return &signUpRequestHandler{
+		UserSaver: userSaver,
+	}
 }
 
 func (h signUpRequestHandler) Handler(ctx context.Context, request SignUpRequest) (SignUpResponse, error) {
@@ -51,7 +55,7 @@ func (h signUpRequestHandler) Handler(ctx context.Context, request SignUpRequest
 		return SignUpResponse{}, fmt.Errorf("failed to generate password hash: %w", err)
 	}
 
-	if err := h.UserRepository.SaveUser(ctx, domainuser.User{
+	if err := h.UserSaver.SaveUser(ctx, domainuser.User{
 		ID:           uuid.New().String(),
 		Username:     request.Username,
 		PasswordHash: string(passwordHash),

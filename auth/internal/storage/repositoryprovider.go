@@ -5,17 +5,14 @@ import (
 	"github.com/go-redis/redis/v9"
 	"github.com/jmoiron/sqlx"
 
-	domainrefresh "github.com/nazarslota/unotes/auth/internal/domain/refresh"
-	domainuser "github.com/nazarslota/unotes/auth/internal/domain/user"
-
 	storagepostgres "github.com/nazarslota/unotes/auth/internal/storage/postgres"
 	storageredis "github.com/nazarslota/unotes/auth/internal/storage/redis"
 )
 
-// RepositoryProvider is a provider for the UserRepository and RefreshTokenRepository.
+// RepositoryProvider is a provider for the PostgresUserRepository and RedisRefreshTokenRepository.
 type RepositoryProvider struct {
-	UserRepository         domainuser.Repository
-	RefreshTokenRepository domainrefresh.Repository
+	PostgresUserRepository      *storagepostgres.UserRepository
+	RedisRefreshTokenRepository *storageredis.RefreshTokenRepository
 }
 
 // RepositoryProviderOption is a functional option for the RepositoryProvider.
@@ -31,18 +28,18 @@ func NewRepositoryProvider(options ...RepositoryProviderOption) *RepositoryProvi
 	return s
 }
 
-// WithPostgreSQLUserRepository is a functional option that sets the UserRepository
+// WithPostgreSQLUserRepository is a functional option that sets the PostgresUserRepository
 // of the RepositoryProvider to a new instance of `postgres.UserRepository`.
 func WithPostgreSQLUserRepository(db *sqlx.DB) RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {
-		rp.UserRepository, _ = storagepostgres.NewUserRepository(db)
+		rp.PostgresUserRepository, _ = storagepostgres.NewUserRepository(db)
 	}
 }
 
-// WithRedisRefreshTokenRepository is a functional option that sets the RefreshTokenRepository
+// WithRedisRefreshTokenRepository is a functional option that sets the RedisRefreshTokenRepository
 // of the RepositoryProvider to a new instance of `redis.RefreshTokenRepository`.
 func WithRedisRefreshTokenRepository(db *redis.Client) RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {
-		rp.RefreshTokenRepository, _ = storageredis.NewRefreshTokenRepository(db)
+		rp.RedisRefreshTokenRepository, _ = storageredis.NewRefreshTokenRepository(db)
 	}
 }

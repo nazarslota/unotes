@@ -28,14 +28,15 @@ type SignInRequestHandler interface {
 }
 
 type signInRequestHandler struct {
-	AccessTokenManager   AccessTokenManager[jwt.AccessTokenClaims]
+	AccessTokenCreator   AccessTokenCreator
 	AccessTokenExpiresIn time.Duration
 
-	RefreshTokenManager   RefreshTokenManager[jwt.RefreshTokenClaims]
+	RefreshTokenCreator   RefreshTokenCreator
 	RefreshTokenExpiresIn time.Duration
 
-	UserRepository         domainuser.Repository
-	RefreshTokenRepository domainrefresh.Repository
+	RefreshTokenSaver RefreshTokenSaver
+
+	UserFinder UserFinder
 }
 
 var (
@@ -49,22 +50,26 @@ func errSignInInvalidPassword() error { return errors.New("invalid password") }
 func errSignInUserNotFound() error    { return domainuser.ErrUserNotFound }
 
 func NewSignInRequestHandler(
-	accessTokenManager AccessTokenManager[jwt.AccessTokenClaims], accessTokenExpiresIn time.Duration,
-	refreshTokenManager RefreshTokenManager[jwt.RefreshTokenClaims], refreshTokenExpiresIn time.Duration,
-	userRepository domainuser.Repository, refreshTokenRepository domainrefresh.Repository,
+	accessTokenCreator AccessTokenCreator, accessTokenExpiresIn time.Duration,
+	refreshTokenCreator RefreshTokenCreator, refreshTokenExpiresIn time.Duration,
+	refreshTokenSaver RefreshTokenSaver,
+	userFinder UserFinder,
 ) SignInRequestHandler {
 	return &signInRequestHandler{
-		AccessTokenManager:     accessTokenManager,
-		AccessTokenExpiresIn:   accessTokenExpiresIn,
-		RefreshTokenManager:    refreshTokenManager,
-		RefreshTokenExpiresIn:  refreshTokenExpiresIn,
-		UserRepository:         userRepository,
-		RefreshTokenRepository: refreshTokenRepository,
+		AccessTokenCreator:   accessTokenCreator,
+		AccessTokenExpiresIn: accessTokenExpiresIn,
+
+		RefreshTokenCreator:   refreshTokenCreator,
+		RefreshTokenExpiresIn: refreshTokenExpiresIn,
+
+		RefreshTokenSaver: refreshTokenSaver,
+
+		UserFinder: userFinder,
 	}
 }
 
 func (h signInRequestHandler) Handle(ctx context.Context, request SignInRequest) (SignInResponse, error) {
-	user, err := h.UserRepository.FindUserByUsername(ctx, request.Username)
+	user, err := h.UserFinder.FindUserByUsername(ctx, request.Username)
 	if err != nil {
 		err = fmt.Errorf("failed to find user: %w", err)
 		return SignInResponse{}, errors.Join(err, ErrSignInInvalidUsername)
@@ -78,7 +83,7 @@ func (h signInRequestHandler) Handle(ctx context.Context, request SignInRequest)
 		return SignInResponse{}, fmt.Errorf("failed to compare passwords: %w", err)
 	}
 
-	accessToken, err := h.AccessTokenManager.New(jwt.AccessTokenClaims{
+	accessToken, err := h.AccessTokenCreator.New(jwt.AccessTokenClaims{
 		RegisteredClaims: gojwt.RegisteredClaims{
 			ExpiresAt: gojwt.NewNumericDate(time.Now().Add(h.AccessTokenExpiresIn)),
 		},
@@ -87,7 +92,7 @@ func (h signInRequestHandler) Handle(ctx context.Context, request SignInRequest)
 	if err != nil {
 		return SignInResponse{}, fmt.Errorf("failed to create access token: %w", err)
 	}
-	refreshToken, err := h.RefreshTokenManager.New(jwt.RefreshTokenClaims{
+	refreshToken, err := h.RefreshTokenCreator.New(jwt.RefreshTokenClaims{
 		RegisteredClaims: gojwt.RegisteredClaims{
 			ExpiresAt: gojwt.NewNumericDate(time.Now().Add(h.RefreshTokenExpiresIn)),
 		},
@@ -97,7 +102,7 @@ func (h signInRequestHandler) Handle(ctx context.Context, request SignInRequest)
 		return SignInResponse{}, fmt.Errorf("failed to create refresh token: %w", err)
 	}
 
-	err = h.RefreshTokenRepository.SaveRefreshToken(ctx, user.ID, domainrefresh.Token(refreshToken))
+	err = h.RefreshTokenSaver.SaveRefreshToken(ctx, user.ID, domainrefresh.Token(refreshToken))
 	if err != nil {
 		return SignInResponse{}, fmt.Errorf("failed to save refresh token: %w", err)
 	}

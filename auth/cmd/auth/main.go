@@ -64,13 +64,24 @@ func main() {
 		storage.WithRedisRefreshTokenRepository(redisDB),
 	)
 
+	accessTokenManager := jwt.NewAccessTokenManagerHMAC(config.C().Auth.AccessTokenSecret)
+	refreshTokenManager := jwt.NewRefreshTokenManagerHMAC(config.C().Auth.RefreshTokenSecret)
+
 	services := service.NewServices(service.OAuth2ServiceOptions{
-		AccessTokenManager:     jwt.NewAccessTokenManagerHMAC(config.C().Auth.AccessTokenSecret),
-		AccessTokenExpiresIn:   config.C().Auth.AccessTokenExpiresIn,
-		RefreshTokenManager:    jwt.NewRefreshTokenManagerHMAC(config.C().Auth.RefreshTokenSecret),
-		RefreshTokenExpiresIn:  config.C().Auth.RefreshTokenExpiresIn,
-		UserRepository:         repositories.UserRepository,
-		RefreshTokenRepository: repositories.RefreshTokenRepository,
+		AccessTokenCreator:   accessTokenManager,
+		AccessTokenParser:    accessTokenManager,
+		AccessTokenExpiresIn: config.C().Auth.AccessTokenExpiresIn,
+
+		RefreshTokenCreator:   refreshTokenManager,
+		RefreshTokenParser:    refreshTokenManager,
+		RefreshTokenExpiresIn: config.C().Auth.RefreshTokenExpiresIn,
+
+		RefreshTokenSaver:   repositories.RedisRefreshTokenRepository,
+		RefreshTokenDeleter: repositories.RedisRefreshTokenRepository,
+		RefreshTokenGetter:  repositories.RedisRefreshTokenRepository,
+
+		UserSaver:  repositories.PostgresUserRepository,
+		UserFinder: repositories.PostgresUserRepository,
 	})
 
 	restAddress := net.JoinHostPort(config.C().Auth.HostREST, config.C().Auth.PortREST)

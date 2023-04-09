@@ -8,7 +8,6 @@ import (
 
 	gojwt "github.com/golang-jwt/jwt/v4"
 	domainrefresh "github.com/nazarslota/unotes/auth/internal/domain/refresh"
-	domainuser "github.com/nazarslota/unotes/auth/internal/domain/user"
 	"github.com/nazarslota/unotes/auth/pkg/jwt"
 	"golang.org/x/exp/slices"
 )
@@ -27,14 +26,17 @@ type RefreshRequestHandler interface {
 }
 
 type refreshRequestHandler struct {
-	AccessTokenManager   AccessTokenManager[jwt.AccessTokenClaims]
+	AccessTokenCreator   AccessTokenCreator
+	AccessTokenParser    AccessTokenParser
 	AccessTokenExpiresIn time.Duration
 
-	RefreshTokenManager   RefreshTokenManager[jwt.RefreshTokenClaims]
+	RefreshTokenCreator   RefreshTokenCreator
+	RefreshTokenParser    RefreshTokenParser
 	RefreshTokenExpiresIn time.Duration
 
-	UserRepository         domainuser.Repository
-	RefreshTokenRepository domainrefresh.Repository
+	RefreshTokenSaver   RefreshTokenSaver
+	RefreshTokenDeleter RefreshTokenDeleter
+	RefreshTokenGetter  RefreshTokenGetter
 }
 
 var (
@@ -44,28 +46,33 @@ var (
 func errRefreshInvalidOrExpiredToken() error { return errors.New("invalid or expired token") }
 
 func NewRefreshRequestHandler(
-	accessTokenManager AccessTokenManager[jwt.AccessTokenClaims], accessTokenExpiresIn time.Duration,
-	refreshTokenManager RefreshTokenManager[jwt.RefreshTokenClaims], refreshTokenExpiresIn time.Duration,
-	userRepository domainuser.Repository, refreshTokenRepository domainrefresh.Repository,
+	accessTokenCreator AccessTokenCreator, accessTokenParser AccessTokenParser, accessTokenExpiresIn time.Duration,
+	refreshTokenCreator RefreshTokenCreator, refreshTokenParser RefreshTokenParser, refreshTokenExpiresIn time.Duration,
+	refreshTokenSaver RefreshTokenSaver, refreshTokenDeleter RefreshTokenDeleter, refreshTokenGetter RefreshTokenGetter,
 ) RefreshRequestHandler {
 	return &refreshRequestHandler{
-		AccessTokenManager:     accessTokenManager,
-		AccessTokenExpiresIn:   accessTokenExpiresIn,
-		RefreshTokenManager:    refreshTokenManager,
-		RefreshTokenExpiresIn:  refreshTokenExpiresIn,
-		UserRepository:         userRepository,
-		RefreshTokenRepository: refreshTokenRepository,
+		AccessTokenCreator:   accessTokenCreator,
+		AccessTokenParser:    accessTokenParser,
+		AccessTokenExpiresIn: accessTokenExpiresIn,
+
+		RefreshTokenCreator:   refreshTokenCreator,
+		RefreshTokenParser:    refreshTokenParser,
+		RefreshTokenExpiresIn: refreshTokenExpiresIn,
+
+		RefreshTokenSaver:   refreshTokenSaver,
+		RefreshTokenDeleter: refreshTokenDeleter,
+		RefreshTokenGetter:  refreshTokenGetter,
 	}
 }
 
 func (h refreshRequestHandler) Handle(ctx context.Context, request RefreshRequest) (RefreshResponse, error) {
-	claims, err := h.RefreshTokenManager.Parse(request.RefreshToken)
+	claims, err := h.RefreshTokenParser.Parse(request.RefreshToken)
 	if err != nil {
 		err = fmt.Errorf("failed to parse refresh accessToken: %w", err)
 		return RefreshResponse{}, errors.Join(err, ErrRefreshInvalidOrExpiredToken)
 	}
 
-	tokens, err := h.RefreshTokenRepository.GetRefreshTokens(ctx, claims.UserID)
+	tokens, err := h.RefreshTokenGetter.GetRefreshTokens(ctx, claims.UserID)
 	if errors.Is(err, domainrefresh.ErrTokenNotFound) {
 		err = fmt.Errorf("failed to get refresh tokens: %w", err)
 		return RefreshResponse{}, errors.Join(err, ErrRefreshInvalidOrExpiredToken)
@@ -75,7 +82,7 @@ func (h refreshRequestHandler) Handle(ctx context.Context, request RefreshReques
 		return RefreshResponse{}, ErrRefreshInvalidOrExpiredToken
 	}
 
-	accessToken, err := h.AccessTokenManager.New(jwt.AccessTokenClaims{
+	accessToken, err := h.AccessTokenCreator.New(jwt.AccessTokenClaims{
 		RegisteredClaims: gojwt.RegisteredClaims{
 			ExpiresAt: gojwt.NewNumericDate(time.Now().Add(h.AccessTokenExpiresIn)),
 		},
@@ -84,7 +91,7 @@ func (h refreshRequestHandler) Handle(ctx context.Context, request RefreshReques
 	if err != nil {
 		return RefreshResponse{}, fmt.Errorf("failed to create new access token: %w", err)
 	}
-	refreshToken, err := h.RefreshTokenManager.New(jwt.RefreshTokenClaims{
+	refreshToken, err := h.RefreshTokenCreator.New(jwt.RefreshTokenClaims{
 		RegisteredClaims: gojwt.RegisteredClaims{
 			ExpiresAt: gojwt.NewNumericDate(time.Now().Add(h.RefreshTokenExpiresIn)),
 		},
@@ -94,11 +101,11 @@ func (h refreshRequestHandler) Handle(ctx context.Context, request RefreshReques
 		return RefreshResponse{}, fmt.Errorf("failed to create new refresh token: %w", err)
 	}
 
-	err = h.RefreshTokenRepository.DeleteRefreshToken(ctx, claims.UserID, domainrefresh.Token(request.RefreshToken))
+	err = h.RefreshTokenDeleter.DeleteRefreshToken(ctx, claims.UserID, domainrefresh.Token(request.RefreshToken))
 	if err != nil {
 		return RefreshResponse{}, fmt.Errorf("failed to delete refresh token: %w", err)
 	}
-	err = h.RefreshTokenRepository.SaveRefreshToken(ctx, claims.UserID, domainrefresh.Token(refreshToken))
+	err = h.RefreshTokenSaver.SaveRefreshToken(ctx, claims.UserID, domainrefresh.Token(refreshToken))
 	if err != nil {
 		return RefreshResponse{}, fmt.Errorf("failed to save refresh token: %w", err)
 	}
