@@ -1,33 +1,47 @@
-import React, {FC, useState} from 'react';
+import React, {FC} from 'react';
 import {Link} from 'react-router-dom';
+import {useCookies} from 'react-cookie';
 
-import './NavigationBar.css';
+import AuthService from '../service/AuthService'
 
-type NavigationBarProps = {};
+type NavigationBarProps = {
+    signed: boolean
+}
 
-const NavigationBar: FC<NavigationBarProps> = () => {
-    const [isRegistrationOpen, setIsSignUpOpen] = useState(false);
-    const toggleSignUpModal = () => setIsSignUpOpen(!isRegistrationOpen);
+const NavigationBar: FC<NavigationBarProps> = ({signed}) => {
+    const [, , removeCookie] = useCookies<string, string>(['refresh_token'])
 
-    const [isSignInOpen, setIsSignInOpen] = useState(false);
-    const toggleSignInModal = () => setIsSignInOpen(!isSignInOpen);
+    const handleSignOut = async () => {
+        try {
+            await AuthService.signOut({access_token: localStorage.getItem('access_token') || ''})
+            localStorage.removeItem('access_token')
+            removeCookie('access_token')
 
-    const [isHomeModalOpen, setIsHomeModalOpen] = useState(false);
-    const toggleHomeModal = () => setIsHomeModalOpen(!isHomeModalOpen);
+            window.location.reload()
+        } catch (err) {
+            throw err
+        }
+    }
 
     return <>
-        <nav className="navigation-bar">
-            <div className="navigation-bar__left">
-                <Link className="navigation-bar__left__button navigation-bar__left__button__link" to='/'
-                      onClick={toggleHomeModal}>Home</Link>
-            </div>
-            <div className="navigation-bar__right">
-                <Link className="navigation-bar__right__button navigation-bar__right__button__link" to='/sign-in'
-                      onClick={toggleSignInModal}>Sign In</Link>
-                <Link className="navigation-bar__right__button navigation-bar__right__button__link" to='/sign-up'
-                      onClick={toggleSignUpModal}>Sign Up</Link>
-            </div>
-        </nav>
+        <header className="flex items-center justify-between px-3 border-b-2">
+            <Link className="font-bold text-2xl text-indigo-500 hover:text-indigo-800 hover:underline"
+                  to='/'>Unotes</Link>
+            <nav>
+                {signed ? (<ul className="text-gray-500 font-semibold inline-flex items-center">
+                    <li>
+                        <button className="inline-block py-3 px-2 text-xl hover:text-indigo-800 hover:underline"
+                                onClick={handleSignOut}>Sign Out
+                        </button>
+                    </li>
+                </ul>) : (<ul className="text-gray-500 font-semibold inline-flex items-center">
+                    <li><Link className="inline-block py-3 px-2 text-xl hover:text-indigo-800 hover:underline"
+                              to='/sign-in'>Sign In</Link></li>
+                    <li><Link className="inline-block py-3 px-2 text-xl hover:text-indigo-800 hover:underline"
+                              to='/sign-up'>Sign Up</Link></li>
+                </ul>)}
+            </nav>
+        </header>
     </>;
 };
 

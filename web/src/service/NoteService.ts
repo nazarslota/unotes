@@ -1,65 +1,84 @@
-import {AxiosResponse} from 'axios';
-import $api from '../http/note';
+import {AxiosResponse} from 'axios'
+
+import $api from '../http/note'
 
 type CreateNoteRequest = {
-    "title": string;
-    "content": string;
-};
+    "title": string
+    "content": string
+}
 
 type CreateNoteResponse = {
-    "id": string;
-    "userId": string;
-};
+    "id": number
+    "userId": string
+}
 
 type UpdateNoteRequest = {
-    "id": string;
-    "newTitle": string;
-    "newContent": string;
-};
+    "id": number
+    "newTitle": string
+    "newContent": string
+}
 
-type UpdateNoteResponse = {};
+type UpdateNoteResponse = {}
 
 type DeleteNoteRequest = {
-    "id": string;
-};
+    "id": number
+}
 
-type DeleteNoteResponse = {};
+type DeleteNoteResponse = {}
 
 type GetNoteRequest = {
-    "id": string;
-};
+    "id": string
+}
 
 type GetNoteResponse = {
-    "title": string;
-    "content": string;
-    "userId": string;
-};
+    "title": string
+    "content": string
+    "userId": string
+}
 
 type GetNotesRequest = {};
 
+type Note = {
+    "id": number
+    "title": string
+    "content": string
+    "userId": string
+}
+
 type GetNotesResponse = {
-    "notes": { "id": string; "title": string; "content": string; "userId": string; }[];
+    "notes": Note[]
 };
 
 class NoteService {
     static async create(request: CreateNoteRequest): Promise<AxiosResponse<CreateNoteResponse>> {
-        return $api.post('/note', request).then(request => request);
+        return $api.post('/note', request).then(response => response)
     }
 
     static async update(request: UpdateNoteRequest): Promise<AxiosResponse<UpdateNoteResponse>> {
-        return $api.put('/note', request).then(request => request);
+        return $api.put('/note', request).then(response => response)
     }
 
     static async delete(request: DeleteNoteRequest): Promise<AxiosResponse<DeleteNoteResponse>> {
-        return $api.delete(`/note/${request["id"]}`).then(response => response);
+        return $api.delete(`/note/${request["id"]}`).then(response => response)
     }
 
     static async note(request: GetNoteRequest): Promise<AxiosResponse<GetNoteResponse>> {
-        return $api.get(`/note/${request["id"]}`).then(response => response);
+        return $api.get(`/note/${request["id"]}`).then(response => response)
     }
 
     static async notes(_: GetNotesRequest): Promise<AxiosResponse<GetNotesResponse>> {
-        return $api.get(`/notes`).then(response => response);
+        return $api.get('/notes').then(response => {
+            if (response.data["result"]) {
+                const data: GetNotesResponse = {notes: [response.data["result"]]}
+                return {...response, data: data}
+            }
+
+            const jsons = response.data.trim().split('\n')
+            const notes = jsons.map((json: string) => JSON.parse(json)["result"])
+
+            const data: GetNotesResponse = {notes: notes}
+            return {...response, data: data}
+        })
     }
 }
 
