@@ -21,8 +21,8 @@ type LogOutRequestHandler interface {
 type signOutRequestHandler struct {
 	AccessTokenParser AccessTokenParser
 
-	RefreshTokenDeleter RefreshTokensDeleter
-	RefreshTokenGetter  RefreshTokenGetter
+	RefreshTokensDeleter RefreshTokensDeleter
+	RefreshTokenGetter   RefreshTokenGetter
 }
 
 var ErrSignOutInvalidOrExpiredToken = errSignOutInvalidOrExpiredToken()
@@ -31,13 +31,13 @@ func errSignOutInvalidOrExpiredToken() error { return errors.New("invalid or exp
 
 func NewSignOutRequestHandler(
 	accessTokenParser AccessTokenParser,
-	refreshTokenDeleter RefreshTokensDeleter, refreshTokenGetter RefreshTokenGetter,
+	refreshTokensDeleter RefreshTokensDeleter, refreshTokenGetter RefreshTokenGetter,
 ) LogOutRequestHandler {
 	return &signOutRequestHandler{
 		AccessTokenParser: accessTokenParser,
 
-		RefreshTokenDeleter: refreshTokenDeleter,
-		RefreshTokenGetter:  refreshTokenGetter,
+		RefreshTokensDeleter: refreshTokensDeleter,
+		RefreshTokenGetter:   refreshTokenGetter,
 	}
 }
 
@@ -55,7 +55,7 @@ func (h signOutRequestHandler) Handle(ctx context.Context, request SignOutReques
 		return SignOutResponse{}, fmt.Errorf("failed to get refresh tokens: %w", err)
 	}
 
-	if err := h.RefreshTokenDeleter.DeleteRefreshTokens(ctx, claims.UserID, tokens); err != nil {
+	if err := h.RefreshTokensDeleter.DeleteRefreshTokens(ctx, claims.UserID, tokens); err != nil {
 		return SignOutResponse{}, fmt.Errorf("failed to delete refresh tokens: %w", err)
 	}
 	return SignOutResponse{}, nil

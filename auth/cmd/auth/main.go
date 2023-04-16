@@ -76,9 +76,10 @@ func main() {
 		RefreshTokenParser:    refreshTokenManager,
 		RefreshTokenExpiresIn: config.C().Auth.RefreshTokenExpiresIn,
 
-		RefreshTokenSaver:   repositories.RedisRefreshTokenRepository,
-		RefreshTokenDeleter: repositories.RedisRefreshTokenRepository,
-		RefreshTokenGetter:  repositories.RedisRefreshTokenRepository,
+		RefreshTokenSaver:    repositories.RedisRefreshTokenRepository,
+		RefreshTokenDeleter:  repositories.RedisRefreshTokenRepository,
+		RefreshTokensDeleter: repositories.RedisRefreshTokenRepository,
+		RefreshTokenGetter:   repositories.RedisRefreshTokenRepository,
 
 		UserSaver:  repositories.PostgresUserRepository,
 		UserFinder: repositories.PostgresUserRepository,
