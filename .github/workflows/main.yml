@@ -64,7 +64,7 @@ jobs:
           password: ${{ secrets.UNOTES_DROPLET_PASSWORD }}
 
           script: |
-            rm -r ~/.env | true && touch ~/.env
+            rm -r ~/auth.env | true && touch ~/auth.env
             echo "AUTH_ACCESS_TOKEN_SECRET=${{ secrets.AUTH_ACCESS_TOKEN_SECRET }}" >> ~/auth.env
             echo "AUTH_REFRESH_TOKEN_SECRET=${{ secrets.AUTH_REFRESH_TOKEN_SECRET }}" >> ~/auth.env
             
@@ -85,7 +85,7 @@ jobs:
             docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_CONTAINER_NAME }} --publish 8081:8081 --publish 8091:8091 \
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}.${{ github.sha }}
             
-            rm -r ~/.env | true && touch ~/.env
+            rm -r ~/note.env | true && touch ~/note.env
             echo "NOTE_ACCESS_TOKEN_SECRET=${{ secrets.NOTE_ACCESS_TOKEN_SECRET }}" >> ~/note.env
             
             echo "NOTE_MONGODB_HOST=${{ secrets.NOTE_MONGODB_HOST }}" >> ~/note.env
