@@ -34,23 +34,23 @@ jobs:
 
       - name: Building auth service.
         working-directory: auth
-        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}.${{ github.sha }} .
+        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}:${{ github.sha }} .
       - name: Building note service.
         working-directory: note
-        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}.${{ github.sha }} .
+        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}:${{ github.sha }} .
       - name: Building web.
         working-directory: web
-        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}.${{ github.sha }} .
+        run: docker build -t ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} .
 
       - name: Login to container registry.
         run: doctl registry login --expiry-seconds 600
 
       - name: Pushing auth service to the container registry.
-        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}.${{ github.sha }}
+        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}:${{ github.sha }}
       - name: Pushing note service to the container registry.
-        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}.${{ github.sha }}
+        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}:${{ github.sha }}
       - name: Pushing web to the container registry.
-        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}.${{ github.sha }}
+        run: docker push ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -82,8 +82,8 @@ jobs:
             docker login ${{ env.DIGITALOCEAN_REGISTRY }} -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
             
             docker stop ${{ env.AUTH_CONTAINER_NAME }} | true && docker rm ${{ env.AUTH_CONTAINER_NAME }} | true
-            docker run --detach --restart always --env-file ~/.env --name ${{ env.AUTH_CONTAINER_NAME }} --publish 8081:8081 --publish 8091:8091 \
-              ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}.${{ github.sha }}
+            docker run --detach --restart always --env-file ~/auth.env --name ${{ env.AUTH_CONTAINER_NAME }} --publish 8081:8081 --publish 8091:8091 \
+              ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}:${{ github.sha }}
             
             rm -r ~/note.env | true && touch ~/note.env
             echo "NOTE_ACCESS_TOKEN_SECRET=${{ secrets.NOTE_ACCESS_TOKEN_SECRET }}" >> ~/note.env
@@ -96,12 +96,12 @@ jobs:
             
             docker stop ${{ env.NOTE_CONTAINER_NAME }} | true && docker rm ${{ env.NOTE_CONTAINER_NAME }} | true
             docker run --detach --restart always --env-file ~/note.env --name ${{ env.NOTE_CONTAINER_NAME }} --publish 8082:8082 --publish 8092:8092 \
-              ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}.${{ github.sha }}
+              ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}:${{ github.sha }}
             
-            rm -r ~/.env | true && touch ~/.env
-            echo "REACT_APP_AUTH_URL=${{ secrets.REACT_APP_AUTH_URL }}" >> ~/.env
-            echo "REACT_APP_NOTE_URL=${{ secrets.REACT_APP_NOTE_URL }}" >> ~/.env
+            rm -r ~/web.env | true && touch ~/web.env
+            echo "REACT_APP_AUTH_URL=${{ secrets.REACT_APP_AUTH_URL }}" >> ~/web.env
+            echo "REACT_APP_NOTE_URL=${{ secrets.REACT_APP_NOTE_URL }}" >> ~/web.env
             
             docker stop ${{ env.WEB_CONTAINER_NAME }} | true && docker rm ${{ env.WEB_CONTAINER_NAME }} | true
-            docker run --detach --restart always --env-file ~/.env --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:3000 \
-              ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}.${{ github.sha }}
+            docker run --detach --restart always --env-file ~/web.env --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:3000 \
+              ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
