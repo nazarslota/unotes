@@ -103,5 +103,5 @@ jobs:
             echo "REACT_APP_NOTE_URL=${{ secrets.REACT_APP_NOTE_URL }}" >> ~/web.env
             
             docker stop ${{ env.WEB_CONTAINER_NAME }} | true && docker rm ${{ env.WEB_CONTAINER_NAME }} | true
-            docker run --detach --restart always --env-file ~/web.env --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:3000 \
+            docker run --detach --restart always --env-file ~/web.env --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:80 \
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}.${{ github.sha }}
