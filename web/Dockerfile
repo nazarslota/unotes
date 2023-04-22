@@ -1,12 +1,12 @@
-FROM node:19-alpine
+FROM node:19-alpine as builder
 
 WORKDIR /app
 COPY . .
 
-RUN npm ci
+RUN npm install
 RUN npm run build
 
-ENV NODE_ENV production
-EXPOSE 3000
+FROM nginx:1-alpine
 
-CMD [ "npx", "serve", "build" ]
+COPY --from=builder /app/build /usr/share/nginx/html
+CMD ["nginx", "-g", "daemon off;"]
