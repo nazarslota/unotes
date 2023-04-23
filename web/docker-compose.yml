@@ -5,7 +5,5 @@ services:
     container_name: 'web'
     build: .
     ports:
-      - '3000:80/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
-    env_file:
-      - .env
+      - '80:80/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
     restart: always
