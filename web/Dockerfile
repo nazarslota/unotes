@@ -7,6 +7,7 @@ RUN npm install
 
 COPY . /usr/app/
 COPY .env /usr/app/
+COPY .env.local /usr/app/
 
 RUN npm run build
 
