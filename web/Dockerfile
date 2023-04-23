@@ -1,7 +1,9 @@
 FROM node:19-alpine as builder
 
 WORKDIR /app
+
 COPY . .
+COPY .env .
 
 RUN npm install
 RUN npm run build
