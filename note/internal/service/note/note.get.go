@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
+	domain "github.com/nazarslota/unotes/note/internal/domain/note"
 )
 
 type GetNoteRequest struct {
@@ -22,17 +22,17 @@ type GetNoteRequestHandler interface {
 }
 
 type getNoteRequestHandler struct {
-	NoteRepository domainnote.Repository
+	NoteFinder NoteFinder
 }
 
-var ErrGetNoteNotFound = func() error { return domainnote.ErrNoteNotFound }()
+var ErrGetNoteNotFound = func() error { return domain.ErrNoteNotFound }()
 
-func NewGetNoteRequestHandler(noteRepository domainnote.Repository) GetNoteRequestHandler {
-	return &getNoteRequestHandler{NoteRepository: noteRepository}
+func NewGetNoteRequestHandler(noteFinder NoteFinder) GetNoteRequestHandler {
+	return &getNoteRequestHandler{NoteFinder: noteFinder}
 }
 
 func (h getNoteRequestHandler) Handle(ctx context.Context, request GetNoteRequest) (GetNoteResponse, error) {
-	note, err := h.NoteRepository.FindOne(ctx, request.ID)
+	note, err := h.NoteFinder.FindOne(ctx, request.ID)
 	if err != nil {
 		return GetNoteResponse{}, fmt.Errorf("failed to find note: %w", err)
 	}

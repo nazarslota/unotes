@@ -1,7 +1,6 @@
 package service
 
 import (
-	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
 	servicenote "github.com/nazarslota/unotes/note/internal/service/note"
 )
 
@@ -15,16 +14,19 @@ type NoteService struct {
 }
 
 type NoteServiceOptions struct {
-	NoteRepository domainnote.Repository
+	NoteSaver   servicenote.NoteSaver
+	NoteFinder  servicenote.NoteFinder
+	NoteUpdater servicenote.NoteUpdater
+	NoteDeleter servicenote.NoteDeleter
 }
 
 func NewNoteService(options NoteServiceOptions) NoteService {
 	return NoteService{
-		CreateNoteRequestHandler:    servicenote.NewCreateNoteRequestHandler(options.NoteRepository),
-		GetNoteRequestHandler:       servicenote.NewGetNoteRequestHandler(options.NoteRepository),
-		GetNotesRequestHandler:      servicenote.NewGetNotesRequestHandler(options.NoteRepository),
-		UpdateNoteRequestHandler:    servicenote.NewUpdateNoteRequestHandler(options.NoteRepository),
-		DeleteNoteRequestHandler:    servicenote.NewDeleteNoteRequestHandler(options.NoteRepository),
-		GetNotesAsyncRequestHandler: servicenote.NewGetNotesAsyncRequestHandler(options.NoteRepository),
+		CreateNoteRequestHandler:    servicenote.NewCreateNoteRequestHandler(options.NoteSaver),
+		GetNoteRequestHandler:       servicenote.NewGetNoteRequestHandler(options.NoteFinder),
+		GetNotesRequestHandler:      servicenote.NewGetNotesRequestHandler(options.NoteFinder),
+		UpdateNoteRequestHandler:    servicenote.NewUpdateNoteRequestHandler(options.NoteUpdater),
+		DeleteNoteRequestHandler:    servicenote.NewDeleteNoteRequestHandler(options.NoteDeleter),
+		GetNotesAsyncRequestHandler: servicenote.NewGetNotesAsyncRequestHandler(options.NoteFinder),
 	}
 }

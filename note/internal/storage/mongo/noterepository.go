@@ -109,8 +109,7 @@ func (r NoteRepository) DeleteOne(ctx context.Context, noteID string) error {
 	return nil
 }
 
-// FindManyAsync
-func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domain.Note, <-chan error) {
+func (r NoteRepository) FindManyAsync(ctx context.Context, userID string) (<-chan domain.Note, <-chan error) { // TODO: Documentation.
 	notes, errs := make(chan domain.Note), make(chan error)
 	cursor, err := r.collection.Find(ctx, bson.M{"user_id": userID})
 	if err != nil {

@@ -3,7 +3,7 @@ package note
 import (
 	"context"
 
-	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
+	domain "github.com/nazarslota/unotes/note/internal/domain/note"
 )
 
 type GetNotesAsyncRequest struct {
@@ -11,7 +11,7 @@ type GetNotesAsyncRequest struct {
 }
 
 type GetNotesAsyncResponse struct {
-	Notes <-chan domainnote.Note
+	Notes <-chan domain.Note
 }
 
 type GetNotesAsyncRequestHandler interface {
@@ -19,16 +19,16 @@ type GetNotesAsyncRequestHandler interface {
 }
 
 type getNotesAsyncRequestHandler struct {
-	NoteRepository domainnote.Repository
+	NoteFinder NoteFinder
 }
 
-var ErrGetNotesAsyncNotFound = func() error { return domainnote.ErrNoteNotFound }()
+var ErrGetNotesAsyncNotFound = func() error { return domain.ErrNoteNotFound }()
 
-func NewGetNotesAsyncRequestHandler(noteRepository domainnote.Repository) GetNotesAsyncRequestHandler {
-	return &getNotesAsyncRequestHandler{NoteRepository: noteRepository}
+func NewGetNotesAsyncRequestHandler(noteFinder NoteFinder) GetNotesAsyncRequestHandler {
+	return &getNotesAsyncRequestHandler{NoteFinder: noteFinder}
 }
 
 func (h getNotesAsyncRequestHandler) Handle(ctx context.Context, request GetNotesAsyncRequest) (GetNotesAsyncResponse, <-chan error) {
-	notes, errs := h.NoteRepository.FindManyAsync(ctx, request.UserID)
+	notes, errs := h.NoteFinder.FindManyAsync(ctx, request.UserID)
 	return GetNotesAsyncResponse{Notes: notes}, errs
 }
