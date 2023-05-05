@@ -98,10 +98,6 @@ jobs:
             docker run --detach --restart always --env-file ~/note.env --name ${{ env.NOTE_CONTAINER_NAME }} --publish 8082:8082 --publish 8092:8092 \
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}.${{ github.sha }}
             
-            rm -r ~/web.env | true && touch ~/web.env
-            echo "REACT_APP_AUTH_URL=${{ secrets.REACT_APP_AUTH_URL }}" >> ~/web.env
-            echo "REACT_APP_NOTE_URL=${{ secrets.REACT_APP_NOTE_URL }}" >> ~/web.env
-            
             docker stop ${{ env.WEB_CONTAINER_NAME }} | true && docker rm ${{ env.WEB_CONTAINER_NAME }} | true
-            docker run --detach --restart always --env-file ~/web.env --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:80 \
+            docker run --detach --restart always --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:80 \
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}.${{ github.sha }}
