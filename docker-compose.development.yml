@@ -1,0 +1,91 @@
+version: '3'
+
+services:
+  web:
+    build: ./web/
+    container_name: 'web'
+    ports:
+      - '80:80/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
+      - '443:443/tcp'
+    restart: always
+    depends_on:
+      - auth
+      - note
+
+  auth:
+    build: ./auth/
+    container_name: 'auth'
+    ports:
+      - '8081:8081/tcp'
+      - '8091:8091/tcp'
+    restart: always
+    env_file:
+      - ./auth/.env
+    environment:
+      - AUTH_POSTGRESQL_HOST=postgres
+      - AUTH_POSTGRESQL_PORT=5432
+      - AUTH_POSTGRESQL_USERNAME=root
+      - AUTH_POSTGRESQL_PASSWORD=root
+      - AUTH_POSTGRESQL_DBNAME=postgres
+      - AUTH_POSTGRESQL_SSLMODE=disable
+
+      - AUTH_REDIS_ADDR=redis:6379
+      - AUTH_REDIS_PASSWORD=root
+      - AUTH_REDIS_DB=0
+    depends_on:
+      - postgres
+      - redis
+
+  note:
+    build: ./note/
+    container_name: 'note'
+    ports:
+      - '8092:8092/tcp'
+      - '8082:8082/tcp'
+    restart: always
+    env_file:
+      - ./note/.env
+    environment:
+      - NOTE_MONGODB_HOST=mongo
+      - NOTE_MONGODB_PORT=27017
+      - NOTE_MONGODB_USERNAME=root
+      - NOTE_MONGODB_PASSWORD=root
+      - NOTE_MONGODB_DATABASE=notes
+    depends_on:
+      - mongo
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: 'postgres'
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=postgres
+      - PGDATA=/data/postgres
+    volumes:
+      - ./db/postgres:/var/lib/postgresql/data/
+      - ./auth/schema/000001_init.up.sql:/docker-entrypoint-initdb.d/000001_init.up.sql
+
+  redis:
+    image: bitnami/redis:7.0-debian-11
+    container_name: 'redis'
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_PASSWORD=root
+    volumes:
+      - ./db/redis:/bitnami/redis/data
+
+  mongo:
+    image: mongo:6-jammy
+    container_name: 'mongo'
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_DATABASE=notes
+    volumes:
+      - ./db/mongo:/data/db

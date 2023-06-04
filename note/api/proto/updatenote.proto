@@ -6,7 +6,7 @@ import "validate/validate.proto";
 
 message UpdateNoteRequest {
   string id = 1          [(validate.rules).string.uuid = true];
-  string new_title = 2   [(validate.rules).string = {min_len: 4, max_len: 128}];
+  string new_title = 2   [(validate.rules).string = {min_len: 0, max_len: 128}];
   string new_content = 3 [(validate.rules).string = {min_len: 0, max_len: 1024}];
 }
 

@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  auth:
+    build: .
+    container_name: 'auth'
+    ports:
+      - '8081:8081/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
+      - '8091:8091/tcp'
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - AUTH_POSTGRESQL_HOST=postgres
+      - AUTH_POSTGRESQL_PORT=5432
+      - AUTH_POSTGRESQL_USERNAME=root
+      - AUTH_POSTGRESQL_PASSWORD=root
+      - AUTH_POSTGRESQL_DBNAME=postgres
+      - AUTH_POSTGRESQL_SSLMODE=disable
+
+      - AUTH_REDIS_ADDR=redis:6379
+      - AUTH_REDIS_PASSWORD=root
+      - AUTH_REDIS_DB=0
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: 'postgres'
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=postgres
+      - PGDATA=/data/postgres
+    volumes:
+      - ./db/postgres:/var/lib/postgresql/data/
+      - ./schema/000001_init.up.sql:/docker-entrypoint-initdb.d/000001_init.up.sql
+
+  redis:
+    image: bitnami/redis:7.0-debian-11
+    container_name: 'redis'
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_PASSWORD=root
+    volumes:
+      - ./db/redis:/bitnami/redis/data

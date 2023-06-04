@@ -3,6 +3,7 @@ package note
 import (
 	"context"
 	"fmt"
+	"time"
 
 	domain "github.com/nazarslota/unotes/note/internal/domain/note"
 )
@@ -12,9 +13,12 @@ type GetNoteRequest struct {
 }
 
 type GetNoteResponse struct {
-	Title   string
-	Content string
-	UserID  string
+	Title          string
+	Content        string
+	UserID         string
+	CreatedAt      time.Time
+	Priority       *string
+	CompletionTime *time.Time
 }
 
 type GetNoteRequestHandler interface {
@@ -36,5 +40,12 @@ func (h getNoteRequestHandler) Handle(ctx context.Context, request GetNoteReques
 	if err != nil {
 		return GetNoteResponse{}, fmt.Errorf("failed to find note: %w", err)
 	}
-	return GetNoteResponse{Title: note.Title, Content: note.Content, UserID: note.UserID}, nil
+	return GetNoteResponse{
+		Title:          note.Title,
+		Content:        note.Content,
+		UserID:         note.UserID,
+		CreatedAt:      note.CreatedAt,
+		Priority:       note.Priority,
+		CompletionTime: note.CompletionTime,
+	}, nil
 }

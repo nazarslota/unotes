@@ -3,6 +3,7 @@ package note
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	domain "github.com/nazarslota/unotes/note/internal/domain/note"
@@ -12,6 +13,9 @@ type CreateNoteRequest struct {
 	Title   string
 	Content string
 	UserID  string
+
+	Priority       *string
+	CompletionTime *time.Time
 }
 
 type CreateNoteResponse struct {
@@ -35,10 +39,13 @@ func NewCreateNoteRequestHandler(noteSaver NoteSaver) CreateNoteRequestHandler {
 
 func (h createNoteRequestHandler) Handle(ctx context.Context, request CreateNoteRequest) (CreateNoteResponse, error) {
 	note := domain.Note{
-		ID:      uuid.New().String(),
-		Title:   request.Title,
-		Content: request.Content,
-		UserID:  request.UserID,
+		ID:             uuid.New().String(),
+		Title:          request.Title,
+		Content:        request.Content,
+		UserID:         request.UserID,
+		CreatedAt:      time.Now().UTC(),
+		Priority:       request.Priority,
+		CompletionTime: request.CompletionTime,
 	}
 
 	if err := h.NoteSaver.SaveOne(ctx, note); err != nil {

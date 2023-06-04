@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 const AUTH_SERVICE_API_URL = `${process.env.REACT_APP_AUTH_URL}/api`;
 

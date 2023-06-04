@@ -2,11 +2,11 @@ version: '3'
 
 services:
   auth:
-    container_name: 'auth'
     build: .
+    container_name: 'auth'
     ports:
       - '8081:8081/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
       - '8091:8091/tcp'
+    restart: always
     env_file:
       - .env
-    restart: always

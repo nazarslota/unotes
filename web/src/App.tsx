@@ -1,54 +1,19 @@
-import React, {useEffect, useState} from 'react'
-import {Route, Routes} from 'react-router-dom'
+import React from "react";
+import {Route, Routes} from "react-router-dom";
 
-import axios from 'axios'
+import NavBar from "./components/NavBar";
 
-import NavigationBar from './components/NavigationBar'
-import Home from './components/Home'
-import SignUp from './components/SignUp'
-import SignIn from './components/SignIn'
+import Home from "./views/Home";
+import SignUp from "./views/SignUp";
+import SignIn from "./views/SignIn";
 
-import NoteService from './service/NoteService'
-
-type Note = {
-    id: number
-    title: string
-    content: string
+export default class App extends React.Component {
+    public render = (): JSX.Element => (<>
+        <NavBar/>
+        <Routes>
+            <Route path='/' element={<Home/>}/>
+            <Route path='/sign-up' element={<SignUp/>}/>
+            <Route path='/sign-in' element={<SignIn/>}/>
+        </Routes>
+    </>);
 }
-
-const App = () => {
-    const [signed, setSigned] = useState(false)
-    const [notes, setNotes] = useState<Note[]>([])
-    useEffect(() => {
-        NoteService.notes({}).then(r => {
-            setNotes([...r.data.notes])
-            setSigned(true)
-        }).catch(err => {
-            if (!axios.isAxiosError(err) || !err.response) {
-                throw err
-            }
-
-            switch (err.response.status) {
-                case 404:
-                    setSigned(true)
-                    break
-                default:
-                    throw err
-            }
-        })
-    }, [])
-
-
-    return (
-        <>
-            <NavigationBar signed={signed}/>
-            <Routes>
-                <Route path='/' element={<Home signed={signed} notes={notes} setNotes={setNotes}/>}/>
-                <Route path='/sign-up' element={<SignUp/>}/>
-                <Route path='/sign-in' element={<SignIn/>}/>
-            </Routes>
-        </>
-    );
-}
-
-export default App;

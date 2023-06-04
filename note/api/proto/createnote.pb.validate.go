@@ -57,10 +57,10 @@ func (m *CreateNoteRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetTitle()); l < 4 || l > 128 {
+	if l := utf8.RuneCountInString(m.GetTitle()); l < 0 || l > 128 {
 		err := CreateNoteRequestValidationError{
 			field:  "Title",
-			reason: "value length must be between 4 and 128 runes, inclusive",
+			reason: "value length must be between 0 and 128 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -77,6 +77,54 @@ func (m *CreateNoteRequest) validate(all bool) error {
 			return err
 		}
 		errors = append(errors, err)
+	}
+
+	if m.Priority != nil {
+
+		if len(m.GetPriority()) != 2 {
+			err := CreateNoteRequestValidationError{
+				field:  "Priority",
+				reason: "value length must be 2 bytes",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if m.CompletionTime != nil {
+
+		if all {
+			switch v := interface{}(m.GetCompletionTime()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateNoteRequestValidationError{
+						field:  "CompletionTime",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateNoteRequestValidationError{
+						field:  "CompletionTime",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetCompletionTime()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateNoteRequestValidationError{
+					field:  "CompletionTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
 	}
 
 	if len(errors) > 0 {

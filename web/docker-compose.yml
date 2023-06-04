@@ -2,8 +2,9 @@ version: '3'
 
 services:
   web:
-    container_name: 'web'
     build: .
+    container_name: 'web'
     ports:
       - '80:80/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
+      - '443:443/tcp'
     restart: always

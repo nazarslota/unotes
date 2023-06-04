@@ -72,10 +72,10 @@ func (m *UpdateNoteRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetNewTitle()); l < 4 || l > 128 {
+	if l := utf8.RuneCountInString(m.GetNewTitle()); l < 0 || l > 128 {
 		err := UpdateNoteRequestValidationError{
 			field:  "NewTitle",
-			reason: "value length must be between 4 and 128 runes, inclusive",
+			reason: "value length must be between 0 and 128 runes, inclusive",
 		}
 		if !all {
 			return err
