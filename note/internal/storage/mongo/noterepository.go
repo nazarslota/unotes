@@ -86,8 +86,10 @@ func (r NoteRepository) FindMany(ctx context.Context, userID string) ([]domain.N
 // If no note with the specified ID is found, returns an error.
 func (r NoteRepository) UpdateOne(ctx context.Context, note domain.Note) error {
 	update := bson.M{"$set": bson.M{
-		"title":   note.Title,
-		"content": note.Content,
+		"title":           note.Title,
+		"content":         note.Content,
+		"priority":        note.Priority,
+		"completion_time": note.CompletionTime,
 	}}
 
 	if result, err := r.collection.UpdateByID(ctx, note.ID, update); err != nil {
