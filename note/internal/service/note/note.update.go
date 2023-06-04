@@ -3,14 +3,17 @@ package note
 import (
 	"context"
 	"fmt"
+	"time"
 
 	domain "github.com/nazarslota/unotes/note/internal/domain/note"
 )
 
 type UpdateNoteRequest struct {
-	ID         string
-	NewTitle   string
-	NewContent string
+	ID                string
+	NewTitle          string
+	NewContent        string
+	NewPriority       *string
+	NewCompletionTime *time.Time
 }
 
 type UpdateNoteResponse struct {
@@ -32,9 +35,11 @@ func NewUpdateNoteRequestHandler(noteUpdater NoteUpdater) UpdateNoteRequestHandl
 
 func (h updateNoteRequestHandler) Handle(ctx context.Context, request UpdateNoteRequest) (UpdateNoteResponse, error) {
 	note := domain.Note{
-		ID:      request.ID,
-		Title:   request.NewTitle,
-		Content: request.NewContent,
+		ID:             request.ID,
+		Title:          request.NewTitle,
+		Content:        request.NewContent,
+		Priority:       request.NewPriority,
+		CompletionTime: request.NewCompletionTime,
 	}
 
 	if err := h.NoteUpdater.UpdateOne(ctx, note); err != nil {

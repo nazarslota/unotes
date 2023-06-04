@@ -262,6 +262,13 @@
         },
         "newContent": {
           "type": "string"
+        },
+        "newPriority": {
+          "type": "string"
+        },
+        "newCompletionTime": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },

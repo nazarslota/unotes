@@ -94,6 +94,54 @@ func (m *UpdateNoteRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if m.NewPriority != nil {
+
+		if len(m.GetNewPriority()) != 2 {
+			err := UpdateNoteRequestValidationError{
+				field:  "NewPriority",
+				reason: "value length must be 2 bytes",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if m.NewCompletionTime != nil {
+
+		if all {
+			switch v := interface{}(m.GetNewCompletionTime()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UpdateNoteRequestValidationError{
+						field:  "NewCompletionTime",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UpdateNoteRequestValidationError{
+						field:  "NewCompletionTime",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetNewCompletionTime()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateNoteRequestValidationError{
+					field:  "NewCompletionTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return UpdateNoteRequestMultiError(errors)
 	}

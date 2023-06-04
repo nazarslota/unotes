@@ -134,9 +134,18 @@ func (s noteServiceServer) UpdateNote(ctx context.Context, in *pb.UpdateNoteRequ
 	}
 
 	request := servicenote.UpdateNoteRequest{
-		ID:         in.Id,
-		NewTitle:   in.NewTitle,
-		NewContent: in.NewContent,
+		ID:          in.Id,
+		NewTitle:    in.NewTitle,
+		NewContent:  in.NewContent,
+		NewPriority: in.NewPriority,
+		NewCompletionTime: func() *time.Time {
+			if in.NewCompletionTime == nil {
+				return nil
+			}
+
+			t := in.NewCompletionTime.AsTime()
+			return &t
+		}(),
 	}
 	_, err := s.services.NoteService.UpdateNoteRequestHandler.Handle(ctx, request)
 	if errors.Is(err, servicenote.ErrUpdateNoteNotFound) {
