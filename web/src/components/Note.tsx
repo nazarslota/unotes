@@ -39,8 +39,19 @@ export default class Note extends React.Component<NoteT.Props, NoteT.State> {
                     <div className="ml-2 border-l border-gray-600 border-dashed"/>
                     <div
                         className="flex items-center justify-between max-[1000px]:items-center max-[300px]:flex-col-reverse max-[300px]:justify-center">
-                        <EditNoteButton className="ml-2" onClick={() => null}/>
-                        <DeleteNoteButton className="ml-2" onClick={() => this.props.onDelete(this.props.id)}/>
+                        <EditNoteButton
+                            className="ml-2"
+                            noteId={this.props.id}
+                            noteTitle={this.props.title}
+                            noteContent={this.props.content}
+                            notePriority={this.props.priority}
+                            noteCompletionTime={this.props.completionTime}
+                            onClick={this.props.onEdit}
+                        />
+                        <DeleteNoteButton
+                            className="ml-2"
+                            onClick={() => this.props.onDelete?.(this.props.id)}
+                        />
                     </div>
                 </div>
                 <div className="my-1.5 border-b border-gray-600 border-dashed"></div>
@@ -58,11 +69,11 @@ export module NoteT {
         title: string;
         content: string;
         createdAt: Date;
+        priority?: string;
         completionTime?: Date;
 
-        priority?: string;
-
-        onDelete: (id: number) => void;
+        onEdit?: (id: number, title: string, content: string, priority?: string, completionTime?: Date) => void;
+        onDelete?: (id: number) => void;
     };
 
     export type State = {};

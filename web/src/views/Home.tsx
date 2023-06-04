@@ -64,17 +64,11 @@ export default withCookies(class Home extends React.Component<HomeT.Props, HomeT
                 </p>
             </div>
         </div>) : (<div className="m-4 md:flex">
-            <NoteCreationForm
-                className="md:w-5/12"
-                formInitial={this.noteCreationFormInitial}
-                formSubmit={this.noteCreationFormSubmit}
-            />
+            <NoteCreationForm className="md:w-5/12" formInitial={this.noteCreationFormInitial}
+                              formSubmit={this.noteCreationFormSubmit}/>
             <div className="mt-4 border-b border-gray-600 border-dashed md:my-0 md:border-b-0 md:mx-4 md:border-l"/>
-            <NoteList
-                className="mt-4 md:w-7/12"
-                notes={this.state.notes}
-                noteOnDelete={this.noteOnDelete}
-            />
+            <NoteList className="mt-4 md:w-7/12" notes={this.state.notes} noteOnEdit={this.noteOnEdit}
+                      noteOnDelete={this.noteOnDelete}/>
         </div>)}
     </>);
 
@@ -105,6 +99,29 @@ export default withCookies(class Home extends React.Component<HomeT.Props, HomeT
             actions.resetForm();
         }).catch(e => {
             actions.resetForm();
+            if (!axios.isAxiosError(e) || !e.response) {
+                return;
+            }
+        })
+    }
+
+    private noteOnEdit = (id: number, title: string, content: string, priority?: string, completionTime?: Date): void => {
+        console.log(id, title, content, priority, completionTime);
+        NoteService.update({
+            id: id,
+            newTitle: title,
+            newContent: content,
+            newPriority: priority,
+            newCompletionTime: completionTime,
+        }).then(_ => {
+            const note = this.state.notes.find(note => note.id === id)!;
+            note.title = title;
+            note.content = content;
+            note.priority = priority;
+            note.completionTime = completionTime;
+
+            this.setState({notes: [...this.state.notes.filter(note => note.id !== id), note]});
+        }).catch(e => {
             if (!axios.isAxiosError(e) || !e.response) {
                 return;
             }

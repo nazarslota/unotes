@@ -15,12 +15,8 @@ export default class NoteList extends React.Component<NoteListT.Props, NoteListT
                 <h1 className="w-full font-semibold text-center text-lg text-gray-600">Your Notes</h1>
                 <ul className="mt-2">
                     {this.props.notes.map(note => (<li className="mt-2" key={note.id}><Note
-                        id={note.id}
-                        title={note.title}
-                        content={note.content}
-                        createdAt={note.createdAt}
-                        priority={note.priority}
-                        completionTime={note.completionTime}
+                        id={note.id} title={note.title} content={note.content} createdAt={note.createdAt}
+                        priority={note.priority} completionTime={note.completionTime} onEdit={this.props.noteOnEdit}
                         onDelete={this.props.noteOnDelete}
                     /></li>))}
                 </ul>
@@ -34,6 +30,7 @@ export module NoteListT {
         className?: string;
 
         notes: Note[];
+        noteOnEdit: (id: number, title: string, content: string, priority?: string, completionTime?: Date) => void;
         noteOnDelete: (id: number) => void;
     };
 

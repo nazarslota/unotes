@@ -14,6 +14,8 @@ type UpdateNoteRequest = {
     id: number;
     newTitle: string;
     newContent: string;
+    newPriority?: string;
+    newCompletionTime?: Date;
 };
 
 type DeleteNoteRequest = {

@@ -24,7 +24,7 @@ export default class NoteCreationForm extends React.Component<NoteCreationFormT.
                         <Field
                             className="w-full p-1.5 text-base text-gray-600 border border-gray-600 rounded focus:border-gray-600 focus:ring-gray-600"
                             type="text" name="title" placeholder="Title"/>
-                        <ErrorMessage className="text-base text-red-600" name="title" component="span"/>
+                        <ErrorMessage className="text-xs text-red-600" name="title" component="span"/>
                     </div>
                     <div className="mt-2">
                         <label className="w-full font-semibold text-base text-gray-600">Content</label>
