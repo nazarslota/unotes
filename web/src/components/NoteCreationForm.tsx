@@ -24,7 +24,7 @@ export default class NoteCreationForm extends React.Component<NoteCreationFormT.
                         <Field
                             className="w-full p-1.5 text-base text-gray-600 border border-gray-600 rounded focus:border-gray-600 focus:ring-gray-600"
                             type="text" name="title" placeholder="Title"/>
-                        <ErrorMessage className="text-xs text-red-600" name="title" component="span"/>
+                        <ErrorMessage className="text-sm text-red-600" name="title" component="span"/>
                     </div>
                     <div className="mt-2">
                         <label className="w-full font-semibold text-base text-gray-600">Content</label>
@@ -36,13 +36,9 @@ export default class NoteCreationForm extends React.Component<NoteCreationFormT.
                         <h1 className="w-full font-semibold text-base text-gray-600">Completion Time</h1>
                         <DatePicker
                             className="w-full p-1.5 text-base text-gray-600 border border-gray-600 rounded focus:border-gray-600 focus:ring-gray-600"
-                            isClearable
-                            showTimeSelect
-                            dateFormat="MMMM d, yyyy h:mm a"
-                            minDate={new Date()}
+                            isClearable showTimeSelect dateFormat="MMMM d, yyyy h:mm a" minDate={new Date()}
                             selected={values.completionTime} onChange={date => setFieldValue("completionTime", date)}
-                            placeholderText="Completion date and time"
-                        />
+                            placeholderText="Completion date and time"/>
                     </div>
                     <div className="mt-2">
                         <h1 className="w-full font-semibold text-base text-gray-600">Priority</h1>
