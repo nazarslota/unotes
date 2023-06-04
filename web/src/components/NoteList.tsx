@@ -1,6 +1,8 @@
 import React from "react";
 import Note from "./Note";
 
+import * as models from "../models/models";
+
 export default class NoteList extends React.Component<NoteListT.Props, NoteListT.State> {
     constructor(props: NoteListT.Props) {
         super(props);
@@ -15,8 +17,15 @@ export default class NoteList extends React.Component<NoteListT.Props, NoteListT
                 <h1 className="w-full font-semibold text-center text-lg text-gray-600">Your Notes</h1>
                 <ul className="mt-2">
                     {this.props.notes.map(note => (<li className="mt-2" key={note.id}><Note
-                        id={note.id} title={note.title} content={note.content} createdAt={note.createdAt}
-                        priority={note.priority} completionTime={note.completionTime} onEdit={this.props.noteOnEdit}
+                        note={({
+                            id: note.id,
+                            title: note.title,
+                            content: note.content,
+                            createdAt: note.createdAt,
+                            priority: note.priority,
+                            completionTime: note.completionTime,
+                        })}
+                        onEdit={this.props.noteOnEdit}
                         onDelete={this.props.noteOnDelete}
                     /></li>))}
                 </ul>
@@ -28,20 +37,18 @@ export default class NoteList extends React.Component<NoteListT.Props, NoteListT
 export module NoteListT {
     export type Props = {
         className?: string;
-
         notes: Note[];
-        noteOnEdit: (id: number, title: string, content: string, priority?: string, completionTime?: Date) => void;
-        noteOnDelete: (id: number) => void;
+
+        noteOnEdit?: (id: string, update: {
+            newTitle: string,
+            newContent: string,
+            newPriority?: string,
+            newCompletionTime?: Date,
+        }) => void;
+        noteOnDelete?: (id: string) => void;
     };
 
     export type State = {};
 
-    export type Note = {
-        id: number;
-        title: string;
-        content: string;
-        createdAt: Date;
-        priority?: string;
-        completionTime?: Date;
-    };
+    export type Note = models.Note;
 }

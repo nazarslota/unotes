@@ -1,7 +1,7 @@
 import {AxiosResponse} from "axios";
 import $api from "./http/note";
 
-// Requests
+import * as models from "../models/models";
 
 type CreateNoteRequest = {
     title: string;
@@ -11,7 +11,7 @@ type CreateNoteRequest = {
 };
 
 type UpdateNoteRequest = {
-    id: number;
+    id: string;
     newTitle: string;
     newContent: string;
     newPriority?: string;
@@ -19,19 +19,17 @@ type UpdateNoteRequest = {
 };
 
 type DeleteNoteRequest = {
-    id: number;
+    id: string;
 };
 
 type GetNoteRequest = {
-    id: number;
+    id: string;
 };
 
 type GetNotesRequest = {};
 
-// Responses
-
 type CreateNoteResponse = {
-    id: number;
+    id: string;
     userId: string;
 };
 
@@ -49,18 +47,8 @@ type GetNoteResponse = {
 }
 
 type GetNotesResponse = {
-    notes: {
-        id: number;
-        title: string;
-        content: string;
-        userId: string;
-        createdAt: Date;
-        priority?: string;
-        completionTime?: Date;
-    }[];
+    notes: models.Note[];
 }
-
-// NoteService
 
 class NoteService {
     static async create(request: CreateNoteRequest): Promise<AxiosResponse<CreateNoteResponse>> {

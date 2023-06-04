@@ -1,7 +1,6 @@
 import React from "react";
 import {Link} from "react-router-dom";
 import {Cookies, withCookies} from "react-cookie";
-import {FormikHelpers} from "formik";
 
 import axios from "axios";
 
@@ -10,8 +9,9 @@ import NoteList from "../components/NoteList";
 
 import AuthService from "../services/AuthService";
 import NoteService from "../services/NoteService";
-import utils from "../utils/utils";
 
+import * as models from "../models/models";
+import utils from "../utils/utils";
 
 export default withCookies(class Home extends React.Component<HomeT.Props, HomeT.State> {
     constructor(props: HomeT.Props) {
@@ -64,11 +64,17 @@ export default withCookies(class Home extends React.Component<HomeT.Props, HomeT
                 </p>
             </div>
         </div>) : (<div className="m-4 md:flex">
-            <NoteCreationForm className="md:w-5/12" formInitial={this.noteCreationFormInitial}
-                              formSubmit={this.noteCreationFormSubmit}/>
+            <NoteCreationForm
+                className="md:w-5/12" formInitial={this.noteCreationFormInitial}
+                onCreate={this.noteOnCreate}
+            />
             <div className="mt-4 border-b border-gray-600 border-dashed md:my-0 md:border-b-0 md:mx-4 md:border-l"/>
-            <NoteList className="mt-4 md:w-7/12" notes={this.state.notes} noteOnEdit={this.noteOnEdit}
-                      noteOnDelete={this.noteOnDelete}/>
+            <NoteList
+                className="mt-4 md:w-7/12"
+                notes={this.state.notes}
+                noteOnEdit={this.noteOnEdit}
+                noteOnDelete={this.noteOnDelete}
+            />
         </div>)}
     </>);
 
@@ -77,50 +83,41 @@ export default withCookies(class Home extends React.Component<HomeT.Props, HomeT
         content: "",
     };
 
-    private noteCreationFormSubmit = (values: NoteCreationFormT.FormValues, actions: FormikHelpers<NoteCreationFormT.FormValues>): void => {
-        const request = !values.priority?.length ? {
-            title: values.title, content: values.content,
-            completionTime: values.completionTime,
-        } : {
-            title: values.title, content: values.content,
-            priority: values.priority, completionTime: values.completionTime,
-        }
-
+    private noteOnCreate = (note: {
+        title: string;
+        content: string;
+        priority?: string;
+        completionTime?: Date;
+    }): void => {
+        const request = {...note};
         NoteService.create(request).then(r => {
-            const note = !values.priority?.length ? {
-                id: r.data.id, title: values.title, content: values.content,
-                createdAt: new Date(), completionTime: values.completionTime,
-            } : {
-                id: r.data.id, title: values.title, content: values.content,
-                priority: values.priority, createdAt: new Date(), completionTime: values.completionTime,
-            }
-
-            this.setState({notes: [...this.state.notes, note]});
-            actions.resetForm();
+            this.setState({notes: [...this.state.notes, {...note, id: r.data.id, createdAt: new Date()}]});
         }).catch(e => {
-            actions.resetForm();
             if (!axios.isAxiosError(e) || !e.response) {
                 return;
             }
         })
     }
 
-    private noteOnEdit = (id: number, title: string, content: string, priority?: string, completionTime?: Date): void => {
-        console.log(id, title, content, priority, completionTime);
-        NoteService.update({
-            id: id,
-            newTitle: title,
-            newContent: content,
-            newPriority: priority,
-            newCompletionTime: completionTime,
-        }).then(_ => {
+    private noteOnEdit = (id: string, update: {
+        newTitle: string,
+        newContent: string,
+        newPriority?: string,
+        newCompletionTime?: Date,
+    }): void => {
+        const request = {...update, id: id};
+        NoteService.update(request).then(_ => {
             const note = this.state.notes.find(note => note.id === id)!;
-            note.title = title;
-            note.content = content;
-            note.priority = priority;
-            note.completionTime = completionTime;
-
-            this.setState({notes: [...this.state.notes.filter(note => note.id !== id), note]});
+            this.setState({
+                notes: [...this.state.notes.filter(note => note.id !== id), {
+                    id: note.id,
+                    title: update.newTitle,
+                    content: update.newContent,
+                    createdAt: note.createdAt,
+                    priority: update.newPriority,
+                    completionTime: update.newCompletionTime,
+                }]
+            });
         }).catch(e => {
             if (!axios.isAxiosError(e) || !e.response) {
                 return;
@@ -128,8 +125,9 @@ export default withCookies(class Home extends React.Component<HomeT.Props, HomeT
         })
     }
 
-    private noteOnDelete = (id: number): void => {
-        NoteService.delete({id: id}).then(_ => {
+    private noteOnDelete = (id: string): void => {
+        const request = {id: id};
+        NoteService.delete(request).then(_ => {
             this.setState({notes: [...this.state.notes.filter(note => note.id !== id)]});
         }).catch(e => {
             if (!axios.isAxiosError(e) || !e.response) {
@@ -149,12 +147,5 @@ export module HomeT {
         notes: Note[];
     };
 
-    export type Note = {
-        id: number;
-        title: string;
-        content: string;
-        createdAt: Date;
-        priority?: string;
-        completionTime?: Date;
-    };
+    export type Note = models.Note;
 }

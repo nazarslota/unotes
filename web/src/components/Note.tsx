@@ -4,6 +4,8 @@ import EditNoteButton from "./EditNoteButton";
 
 import moment from "moment";
 
+import * as models from "../models/models";
+
 export default class Note extends React.Component<NoteT.Props, NoteT.State> {
     constructor(props: NoteT.Props) {
         super(props);
@@ -17,23 +19,23 @@ export default class Note extends React.Component<NoteT.Props, NoteT.State> {
                     <div
                         className="w-full inline-flex items-center space-x-2 justify-between max-[1000px]:flex-col max-[1000px]:items-start">
                         <div className="flex items-center">
-                            {this.props.priority && (
-                                (this.props.priority.toLowerCase().includes('lo') &&
+                            {this.props.note.priority && (
+                                (this.props.note.priority.toLowerCase().includes('lo') &&
                                     <div className="mr-2 p-1.5 rounded-full bg-green-600"></div>
-                                ) || (this.props.priority.toLowerCase().includes('md') &&
+                                ) || (this.props.note.priority.toLowerCase().includes('md') &&
                                     <div className="mr-2 p-1.5 rounded-full bg-orange-600"></div>
-                                ) || (this.props.priority.toLowerCase().includes('hi') &&
+                                ) || (this.props.note.priority.toLowerCase().includes('hi') &&
                                     <div className="mr-2 p-1.5 rounded-full bg-red-600"></div>
                                 )
                             )}
-                            <h1 className="my-auto font-semibold text-lg text-gray-600">{this.props.title}</h1>
+                            <h1 className="my-auto font-semibold text-lg text-gray-600">{this.props.note.title}</h1>
                         </div>
                         <div className="ml-5 my-auto text-gray-600 max-[1000px]:ml-0" style={{marginLeft: 0}}>{
-                            (this.props.completionTime &&
-                                <span>{`${moment(this.props.createdAt).format("MMMM D, YYYY h:MM A")} - ${moment(this.props.completionTime).format("MMMM D, YYYY h:MM A")}`}</span>
-                            ) || (
-                                <span>{`${moment(this.props.createdAt).format("MMMM D, YYYY h:MM A")} - Not Specified`}</span>
-                            )
+                            (this.props.note.completionTime && <span>{
+                                `${moment(this.props.note.createdAt).format("MMMM D, YYYY h:MM A")} - ${moment(this.props.note.completionTime).format("MMMM D, YYYY h:MM A")}`
+                            }</span>) || (<span>{
+                                `${moment(this.props.note.createdAt).format("MMMM D, YYYY h:MM A")} - Not Specified`
+                            }</span>)
                         }</div>
                     </div>
                     <div className="ml-2 border-l border-gray-600 border-dashed"/>
@@ -41,21 +43,24 @@ export default class Note extends React.Component<NoteT.Props, NoteT.State> {
                         className="flex items-center justify-between max-[1000px]:items-center max-[300px]:flex-col-reverse max-[300px]:justify-center">
                         <EditNoteButton
                             className="ml-2"
-                            noteId={this.props.id}
-                            noteTitle={this.props.title}
-                            noteContent={this.props.content}
-                            notePriority={this.props.priority}
-                            noteCompletionTime={this.props.completionTime}
-                            onClick={this.props.onEdit}
+                            formInitial={({
+                                newTitle: this.props.note.title,
+                                newContent: this.props.note.content,
+                                newPriority: this.props.note.priority,
+                                newCompletionTime: this.props.note.completionTime
+                            })}
+                            onEdit={(update: {
+                                newTitle: string,
+                                newContent: string,
+                                newPriority?: string,
+                                newCompletionTime?: Date,
+                            }) => this.props.onEdit?.(this.props.note.id, update)}
                         />
-                        <DeleteNoteButton
-                            className="ml-2"
-                            onClick={() => this.props.onDelete?.(this.props.id)}
-                        />
+                        <DeleteNoteButton className="ml-2" onDelete={() => this.props.onDelete?.(this.props.note.id)}/>
                     </div>
                 </div>
                 <div className="my-1.5 border-b border-gray-600 border-dashed"></div>
-                <p className="w-full text-base text-gray-600">{this.props.content}</p>
+                <p className="w-full text-base text-gray-600">{this.props.note.content}</p>
             </div>
         </div>
     </>);
@@ -64,16 +69,15 @@ export default class Note extends React.Component<NoteT.Props, NoteT.State> {
 export module NoteT {
     export type Props = {
         className?: string;
+        note: models.Note;
 
-        id: number;
-        title: string;
-        content: string;
-        createdAt: Date;
-        priority?: string;
-        completionTime?: Date;
-
-        onEdit?: (id: number, title: string, content: string, priority?: string, completionTime?: Date) => void;
-        onDelete?: (id: number) => void;
+        onEdit?: (id: string, update: {
+            newTitle: string,
+            newContent: string,
+            newPriority?: string,
+            newCompletionTime?: Date,
+        }) => void;
+        onDelete?: (id: string) => void;
     };
 
     export type State = {};

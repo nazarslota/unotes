@@ -15,7 +15,7 @@ export default class NoteCreationForm extends React.Component<NoteCreationFormT.
     public render = (): JSX.Element => (<>
         <div className={this.props.className}>
             <Formik
-                initialValues={this.props.formInitial} validate={this.formValidate} onSubmit={this.props.formSubmit}
+                initialValues={this.props.formInitial} validate={this.formValidate} onSubmit={this.formSubmit}
             >
                 {({isSubmitting, values, handleChange, setFieldValue}) => (<Form>
                     <h1 className="w-full font-semibold text-center text-lg text-gray-600">New Note</h1>
@@ -92,14 +92,35 @@ export default class NoteCreationForm extends React.Component<NoteCreationFormT.
         }
         return errors;
     }
+
+    private formSubmit = (values: NoteCreationFormT.FormValues, actions: FormikHelpers<NoteCreationFormT.FormValues>): void => {
+        const note = !values.priority?.length ? {
+            title: values.title,
+            content: values.content,
+            completionTime: values.completionTime,
+        } : {
+            title: values.title,
+            content: values.content,
+            priority: values.priority,
+            completionTime: values.completionTime,
+        }
+
+        this.props.onCreate?.({...note});
+        actions.resetForm();
+    }
 }
 
 export module NoteCreationFormT {
     export type Props = {
         className?: string;
-
         formInitial: FormValues;
-        formSubmit: (values: FormValues, actions: FormikHelpers<FormValues>) => void;
+
+        onCreate?: (note: {
+            title: string;
+            content: string;
+            priority?: string;
+            completionTime?: Date;
+        }) => void;
     };
 
     export type State = {};

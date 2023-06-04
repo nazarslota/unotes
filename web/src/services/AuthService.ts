@@ -1,8 +1,6 @@
 import {AxiosResponse} from "axios";
 import $api from "./http/auth";
 
-// Requests
-
 type SignUpRequest = {
     username: string;
     password: string;
@@ -20,8 +18,6 @@ type SignOutRequest = {
 type RefreshRequest = {
     refresh_token: string;
 };
-
-// Responses
 
 type SignUpResponse = {};
 
