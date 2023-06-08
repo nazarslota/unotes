@@ -2,14 +2,13 @@
 package storage
 
 import (
-	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
 	storagemongo "github.com/nazarslota/unotes/note/internal/storage/mongo"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// RepositoryProvider is a provider for the NoteRepository.
+// RepositoryProvider is a provider for the note repository.
 type RepositoryProvider struct {
-	NoteRepository domainnote.Repository
+	MongoNoteRepository *storagemongo.NoteRepository
 }
 
 // RepositoryProviderOption is a functional option for the RepositoryProvider.
@@ -25,10 +24,10 @@ func NewRepositoryProvider(options ...RepositoryProviderOption) *RepositoryProvi
 	return rp
 }
 
-// WithMongoNoteRepository is a functional option that sets the NoteRepository
+// WithMongoNoteRepository is a functional option that sets the MongoNoteRepository
 // of the RepositoryProvider to a new instance of `mongo.NoteRepository`.
 func WithMongoNoteRepository(db *mongo.Database) RepositoryProviderOption {
 	return func(rp *RepositoryProvider) {
-		rp.NoteRepository, _ = storagemongo.NewNoteRepository(db)
+		rp.MongoNoteRepository, _ = storagemongo.NewNoteRepository(db)
 	}
 }

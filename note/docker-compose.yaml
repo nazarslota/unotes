@@ -2,11 +2,11 @@ version: '3'
 
 services:
   note:
-    container_name: 'note'
     build: .
+    container_name: 'note'
     ports:
       - '8092:8092/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
       - '8082:8082/tcp'
+    restart: always
     env_file:
       - .env
-    restart: always

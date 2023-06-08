@@ -223,7 +223,7 @@ func local_request_NoteService_DeleteNote_0(ctx context.Context, marshaler runti
 // RegisterNoteServiceHandlerServer registers the http handlers for service NoteService to "mux".
 // UnaryRPC     :call NoteServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
-// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterNoteServiceHandlerFromEndpoint instead.
+// Models that using this registration option will cause many gRPC library features to stop working. Consider using RegisterNoteServiceHandlerFromEndpoint instead.
 func RegisterNoteServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server NoteServiceServer) error {
 
 	mux.Handle("POST", pattern_NoteService_CreateNote_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -339,7 +339,7 @@ func RegisterNoteServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 // RegisterNoteServiceHandlerFromEndpoint is same as RegisterNoteServiceHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func RegisterNoteServiceHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
-	conn, err := grpc.Dial(endpoint, opts...)
+	conn, err := grpc.DialContext(ctx, endpoint, opts...)
 	if err != nil {
 		return err
 	}
@@ -369,7 +369,7 @@ func RegisterNoteServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn
 
 // RegisterNoteServiceHandlerClient registers the http handlers for service NoteService
 // to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "NoteServiceClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "NoteServiceClient"
+// Models: the gRPC framework executes interceptors within the gRPC handler. If the passed in "NoteServiceClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "NoteServiceClient" to call the correct interceptors.
 func RegisterNoteServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client NoteServiceClient) error {

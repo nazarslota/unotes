@@ -2,6 +2,8 @@ syntax = "proto3";
 
 option go_package = "github.com/nazarslota/unotes/note/api/proto";
 
+import "google/protobuf/timestamp.proto";
+
 import "validate/validate.proto";
 
 message GetNoteRequest {
@@ -9,7 +11,11 @@ message GetNoteRequest {
 }
 
 message GetNoteResponse {
-  string title = 2;
-  string content = 3;
-  string user_id = 4;
+  string title = 1;
+  string content = 2;
+  string user_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+
+  optional string priority = 5;
+  optional google.protobuf.Timestamp completion_time = 6;
 }

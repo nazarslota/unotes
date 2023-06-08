@@ -177,6 +177,13 @@
         },
         "content": {
           "type": "string"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "completionTime": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -205,6 +212,17 @@
         },
         "userId": {
           "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "completionTime": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -219,6 +237,17 @@
         },
         "content": {
           "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "completionTime": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -233,6 +262,13 @@
         },
         "newContent": {
           "type": "string"
+        },
+        "newPriority": {
+          "type": "string"
+        },
+        "newCompletionTime": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -261,6 +297,7 @@
         "details": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
         }

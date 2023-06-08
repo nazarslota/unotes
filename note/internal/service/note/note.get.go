@@ -3,8 +3,9 @@ package note
 import (
 	"context"
 	"fmt"
+	"time"
 
-	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
+	domain "github.com/nazarslota/unotes/note/internal/domain/note"
 )
 
 type GetNoteRequest struct {
@@ -12,9 +13,12 @@ type GetNoteRequest struct {
 }
 
 type GetNoteResponse struct {
-	Title   string
-	Content string
-	UserID  string
+	Title          string
+	Content        string
+	UserID         string
+	CreatedAt      time.Time
+	Priority       *string
+	CompletionTime *time.Time
 }
 
 type GetNoteRequestHandler interface {
@@ -22,19 +26,26 @@ type GetNoteRequestHandler interface {
 }
 
 type getNoteRequestHandler struct {
-	NoteRepository domainnote.Repository
+	NoteFinder NoteFinder
 }
 
-var ErrGetNoteNotFound = func() error { return domainnote.ErrNoteNotFound }()
+var ErrGetNoteNotFound = func() error { return domain.ErrNoteNotFound }()
 
-func NewGetNoteRequestHandler(noteRepository domainnote.Repository) GetNoteRequestHandler {
-	return &getNoteRequestHandler{NoteRepository: noteRepository}
+func NewGetNoteRequestHandler(noteFinder NoteFinder) GetNoteRequestHandler {
+	return &getNoteRequestHandler{NoteFinder: noteFinder}
 }
 
 func (h getNoteRequestHandler) Handle(ctx context.Context, request GetNoteRequest) (GetNoteResponse, error) {
-	note, err := h.NoteRepository.FindOne(ctx, request.ID)
+	note, err := h.NoteFinder.FindOne(ctx, request.ID)
 	if err != nil {
 		return GetNoteResponse{}, fmt.Errorf("failed to find note: %w", err)
 	}
-	return GetNoteResponse{Title: note.Title, Content: note.Content, UserID: note.UserID}, nil
+	return GetNoteResponse{
+		Title:          note.Title,
+		Content:        note.Content,
+		UserID:         note.UserID,
+		CreatedAt:      note.CreatedAt,
+		Priority:       note.Priority,
+		CompletionTime: note.CompletionTime,
+	}, nil
 }

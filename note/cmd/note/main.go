@@ -49,7 +49,12 @@ func main() {
 
 	services := service.NewServices(
 		service.JWTServiceOptions{AccessTokenSecret: config.C().Note.AccessTokenSecret},
-		service.NoteServiceOptions{NoteRepository: repositories.NoteRepository},
+		service.NoteServiceOptions{
+			NoteSaver:   repositories.MongoNoteRepository,
+			NoteFinder:  repositories.MongoNoteRepository,
+			NoteUpdater: repositories.MongoNoteRepository,
+			NoteDeleter: repositories.MongoNoteRepository,
+		},
 	)
 
 	grpcServerAddr := net.JoinHostPort(

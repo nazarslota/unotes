@@ -1,0 +1,29 @@
+{"level":"info","time":"2023-05-30T17:40:50+03:00","message":"Attempting to establish a connection with a MongoDB..."}
+{"level":"info","time":"2023-05-30T17:40:51+03:00","message":"The connection to the database was successfully established."}
+{"level":"info","time":"2023-05-30T17:40:51+03:00","message":"Starting a gRPC server..."}
+{"level":"info","address":"0.0.0.0:8092","time":"2023-05-30T17:40:52+03:00","message":"The gRPC server is successfully started."}
+{"level":"info","time":"2023-05-30T17:40:52+03:00","message":"Starting a REST server..."}
+{"level":"info","address":"0.0.0.0:8082","time":"2023-05-30T17:40:54+03:00","message":"The REST server is successfully started."}
+{"level":"info","duration":"135.798791ms","method":"/NoteService/GetNotes","time":"2023-05-30T17:40:55+03:00","message":"gRPC, stream request handled."}
+{"level":"info","duration":"137.334125ms","method":"GET","path":"/api/notes","time":"2023-05-30T17:40:55+03:00","message":"HTTP request handled."}
+{"level":"info","duration":"127.65725ms","method":"/NoteService/GetNotes","time":"2023-05-30T17:40:55+03:00","message":"gRPC, stream request handled."}
+{"level":"info","duration":"129.852709ms","method":"GET","path":"/api/notes","time":"2023-05-30T17:40:55+03:00","message":"HTTP request handled."}
+{"level":"info","duration":"128.0945ms","method":"/NoteService/GetNotes","time":"2023-05-30T17:40:55+03:00","message":"gRPC, stream request handled."}
+{"level":"info","duration":"129.4395ms","method":"GET","path":"/api/notes","time":"2023-05-30T17:40:55+03:00","message":"HTTP request handled."}
+{"level":"info","duration":"148.026125ms","method":"/NoteService/GetNotes","time":"2023-05-30T17:40:56+03:00","message":"gRPC, stream request handled."}
+{"level":"info","duration":"150.333667ms","method":"GET","path":"/api/notes","time":"2023-05-30T17:40:56+03:00","message":"HTTP request handled."}
+{"level":"info","duration":"134.069916ms","method":"/NoteService/GetNotes","time":"2023-05-30T17:40:56+03:00","message":"gRPC, stream request handled."}
+{"level":"info","duration":"134.9965ms","method":"GET","path":"/api/notes","time":"2023-05-30T17:40:56+03:00","message":"HTTP request handled."}
+{"level":"info","duration":"168.648625ms","method":"/NoteService/GetNotes","time":"2023-05-30T17:40:56+03:00","message":"gRPC, stream request handled."}
+{"level":"info","duration":"169.674791ms","method":"GET","path":"/api/notes","time":"2023-05-30T17:40:56+03:00","message":"HTTP request handled."}
+{"level":"info","duration":"140.547125ms","method":"/NoteService/DeleteNote","time":"2023-05-30T17:41:01+03:00","message":"gRPC, unary request handled."}
+{"level":"info","duration":"143.099084ms","method":"DELETE","path":"/api/note/ebe3ffa7-dbcb-4411-8ec4-bf9810d374fd","time":"2023-05-30T17:41:01+03:00","message":"HTTP request handled."}
+{"level":"info","time":"2023-05-30T17:41:29+03:00","message":"Shutdown of the gRPC server..."}
+{"level":"info","duration":"27.321176542s","method":"/NoteService/CreateNote","time":"2023-05-30T17:41:29+03:00","message":"gRPC, unary request handled."}
+{"level":"info","time":"2023-05-30T17:41:29+03:00","message":"gRPC server was successfully shut down."}
+{"level":"info","time":"2023-05-30T17:41:29+03:00","message":"Shutdown of the REST server..."}
+{"level":"info","duration":"27.322535625s","method":"POST","path":"/api/note","time":"2023-05-30T17:41:29+03:00","message":"HTTP request handled."}
+{"level":"info","time":"2023-05-30T17:41:29+03:00","message":"REST server was successfully shut down."}
+{"level":"info","time":"2023-05-30T17:41:29+03:00","message":"Disconnecting from MongoDB..."}
+{"level":"info","time":"2023-05-30T17:41:29+03:00","message":"Successfully disconnected from MongoDB."}
+{"level":"info","time":"2023-05-30T17:41:29+03:00","message":"Shutdown completed successfully."}

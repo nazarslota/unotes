@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  note:
+    build: .
+    container_name: 'note'
+    ports:
+      - '8092:8092/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
+      - '8082:8082/tcp'
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - NOTE_MONGODB_HOST=mongo
+      - NOTE_MONGODB_PORT=27017
+      - NOTE_MONGODB_USERNAME=root
+      - NOTE_MONGODB_PASSWORD=root
+      - NOTE_MONGODB_DATABASE=notes
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6-jammy
+    container_name: 'mongo'
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_DATABASE=notes
+    volumes:
+      - ./db/mongo:/data/db

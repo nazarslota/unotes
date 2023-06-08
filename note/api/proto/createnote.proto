@@ -2,11 +2,16 @@ syntax = "proto3";
 
 option go_package = "github.com/nazarslota/unotes/note/api/proto";
 
+import "google/protobuf/timestamp.proto";
+
 import "validate/validate.proto";
 
 message CreateNoteRequest {
-  string title = 2   [(validate.rules).string = {min_len: 4, max_len: 128}];
-  string content = 3 [(validate.rules).string = {min_len: 0, max_len: 1024}];
+  string title = 1             [(validate.rules).string = {min_len: 0, max_len: 128}];
+  string content = 2           [(validate.rules).string = {min_len: 0, max_len: 1024}];
+
+  optional string priority = 3 [(validate.rules).string.len_bytes = 2];
+  optional google.protobuf.Timestamp completion_time = 4;
 }
 
 message CreateNoteResponse {

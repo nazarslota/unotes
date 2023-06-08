@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/nazarslota/unotes/auth/pkg/jwt"
 	pb "github.com/nazarslota/unotes/note/api/proto"
@@ -10,6 +11,7 @@ import (
 	servicenote "github.com/nazarslota/unotes/note/internal/service/note"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type noteServiceServer struct {
@@ -32,9 +34,17 @@ func (s noteServiceServer) CreateNote(ctx context.Context, in *pb.CreateNoteRequ
 	}
 
 	request := servicenote.CreateNoteRequest{
-		Title:   in.Title,
-		Content: in.Content,
-		UserID:  claims.UserID,
+		Title:    in.Title,
+		Content:  in.Content,
+		UserID:   claims.UserID,
+		Priority: in.Priority,
+		CompletionTime: func() *time.Time {
+			if in.CompletionTime == nil {
+				return nil
+			}
+			t := in.CompletionTime.AsTime()
+			return &t
+		}(),
 	}
 	response, err := s.services.NoteService.CreateNoteRequestHandler.Handle(ctx, request)
 	if errors.Is(err, servicenote.ErrCreateNoteAlreadyExist) {
@@ -61,7 +71,19 @@ func (s noteServiceServer) GetNote(ctx context.Context, in *pb.GetNoteRequest) (
 	} else if err != nil {
 		return nil, status.Error(codes.Internal, "internal")
 	}
-	return &pb.GetNoteResponse{Title: response.Title, Content: response.Content, UserId: response.UserID}, nil
+	return &pb.GetNoteResponse{
+		Title:     response.Title,
+		Content:   response.Content,
+		UserId:    response.UserID,
+		CreatedAt: timestamppb.New(response.CreatedAt),
+		Priority:  response.Priority,
+		CompletionTime: func() *timestamppb.Timestamp {
+			if response.CompletionTime == nil {
+				return nil
+			}
+			return timestamppb.New(*response.CompletionTime)
+		}(),
+	}, nil
 }
 
 func (s noteServiceServer) GetNotes(in *pb.GetNotesRequest, server pb.NoteService_GetNotesServer) error {
@@ -78,9 +100,17 @@ func (s noteServiceServer) GetNotes(in *pb.GetNotesRequest, server pb.NoteServic
 	response, errs := s.services.NoteService.GetNotesAsyncRequestHandler.Handle(server.Context(), request)
 	for note := range response.Notes {
 		if err := server.Send(&pb.GetNotesResponse{
-			Id:      note.ID,
-			Title:   note.Title,
-			Content: note.Content,
+			Id:        note.ID,
+			Title:     note.Title,
+			Content:   note.Content,
+			CreatedAt: timestamppb.New(note.CreatedAt),
+			Priority:  note.Priority,
+			CompletionTime: func() *timestamppb.Timestamp {
+				if note.CompletionTime == nil {
+					return nil
+				}
+				return timestamppb.New(*note.CompletionTime)
+			}(),
 		}); err != nil {
 			return status.Error(codes.Unknown, "failed to send response")
 		}
@@ -104,9 +134,18 @@ func (s noteServiceServer) UpdateNote(ctx context.Context, in *pb.UpdateNoteRequ
 	}
 
 	request := servicenote.UpdateNoteRequest{
-		ID:         in.Id,
-		NewTitle:   in.NewTitle,
-		NewContent: in.NewContent,
+		ID:          in.Id,
+		NewTitle:    in.NewTitle,
+		NewContent:  in.NewContent,
+		NewPriority: in.NewPriority,
+		NewCompletionTime: func() *time.Time {
+			if in.NewCompletionTime == nil {
+				return nil
+			}
+
+			t := in.NewCompletionTime.AsTime()
+			return &t
+		}(),
 	}
 	_, err := s.services.NoteService.UpdateNoteRequestHandler.Handle(ctx, request)
 	if errors.Is(err, servicenote.ErrUpdateNoteNotFound) {

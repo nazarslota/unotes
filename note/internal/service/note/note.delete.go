@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	domainnote "github.com/nazarslota/unotes/note/internal/domain/note"
+	domain "github.com/nazarslota/unotes/note/internal/domain/note"
 )
 
 type DeleteNoteRequest struct {
@@ -19,17 +19,17 @@ type DeleteNoteRequestHandler interface {
 }
 
 type deleteNoteRequestHandler struct {
-	NoteRepository domainnote.Repository
+	NoteDeleter NoteDeleter
 }
 
-var ErrDeleteNoteNotFound = func() error { return domainnote.ErrNoteNotFound }()
+var ErrDeleteNoteNotFound = func() error { return domain.ErrNoteNotFound }()
 
-func NewDeleteNoteRequestHandler(noteRepository domainnote.Repository) DeleteNoteRequestHandler {
-	return &deleteNoteRequestHandler{NoteRepository: noteRepository}
+func NewDeleteNoteRequestHandler(noteDeleter NoteDeleter) DeleteNoteRequestHandler {
+	return &deleteNoteRequestHandler{NoteDeleter: noteDeleter}
 }
 
 func (h deleteNoteRequestHandler) Handle(ctx context.Context, request DeleteNoteRequest) (DeleteNoteResponse, error) {
-	if err := h.NoteRepository.DeleteOne(ctx, request.ID); err != nil {
+	if err := h.NoteDeleter.DeleteOne(ctx, request.ID); err != nil {
 		return DeleteNoteResponse{}, fmt.Errorf("failed to delete note: %w", err)
 	}
 	return DeleteNoteResponse{}, nil
