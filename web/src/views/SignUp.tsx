@@ -31,7 +31,7 @@ export default class SignUp extends React.Component<SignUpT.Props, SignUpT.State
             {this.state.isUserSignedUp ? (<div className="h-96 p-8 grid place-items-center">
                 <div>
                     <span className="text-lg text-gray-600">You can go to the <Link
-                        className="text-lg text-gray-800 hover:text-gray-900 hover:underline"
+                        className="text-lg text-gray-800 font-semibold hover:text-gray-900 hover:underline"
                         to="/sign-in">Sign In</Link> page now!</span>
                 </div>
             </div>) : (<Formik

@@ -57,9 +57,11 @@ export default withCookies(class Home extends React.Component<HomeT.Props, HomeT
                     PostgreSQL and others.</p>
                 <br/>
                 <p className="text-base text-gray-600">
-                    <Link className="text-base text-gray-800 hover:text-gray-900 hover:underline" to="/sign-in">
+                    <Link className="text-base text-gray-800 font-semibold hover:text-gray-900 hover:underline"
+                          to="/sign-in">
                         Sign In</Link><span> or </span>
-                    <Link className="text-base text-gray-800 hover:text-gray-900 hover:underline" to="/sign-up">
+                    <Link className="text-base text-gray-800 font-semibold hover:text-gray-900 hover:underline"
+                          to="/sign-up">
                         Sign Up</Link><span> to use!</span>
                 </p>
             </div>
