@@ -99,5 +99,5 @@ jobs:
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}.${{ github.sha }}
             
             docker stop ${{ env.WEB_CONTAINER_NAME }} | true && docker rm ${{ env.WEB_CONTAINER_NAME }} | true
-            docker run --detach --restart always --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:80 \
+            docker run --detach --restart always --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:80 --publish 443:443 \
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}.${{ github.sha }}
