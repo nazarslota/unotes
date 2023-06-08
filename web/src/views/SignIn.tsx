@@ -30,7 +30,7 @@ export default withCookies(class SignIn extends React.Component<SignInT.Props, S
         return (<>
             {this.state.isUserSignedIn ? (<div className="h-96 p-8 grid place-items-center">
                 <p className="text-lg text-gray-600">You are signed in. You can go to the <Link
-                    className="text-lg text-gray-800 hover:text-gray-900 hover:underline"
+                    className="text-lg text-gray-800 font-semibold hover:text-gray-900 hover:underline"
                     to="/">Home</Link> page now!</p>
             </div>) : (<Formik
                 initialValues={this.formInitial} validate={this.formValidate} onSubmit={this.fromSubmit}
