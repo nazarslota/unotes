@@ -3,7 +3,7 @@ version: '3'
 services:
   web:
     build: ./web/
-    container_name: 'web'
+    container_name: 'unotes-web'
     ports:
       - '80:80/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
       - '443:443/tcp'
@@ -14,7 +14,7 @@ services:
 
   auth:
     build: ./auth/
-    container_name: 'auth'
+    container_name: 'unotes-auth'
     ports:
       - '8081:8081/tcp'
       - '8091:8091/tcp'
@@ -38,7 +38,7 @@ services:
 
   note:
     build: ./note/
-    container_name: 'note'
+    container_name: 'unotes-note'
     ports:
       - '8092:8092/tcp'
       - '8082:8082/tcp'

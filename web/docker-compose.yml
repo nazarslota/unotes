@@ -3,7 +3,7 @@ version: '3'
 services:
   web:
     build: .
-    container_name: 'web'
+    container_name: 'unotes-web'
     ports:
       - '80:80/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
       - '443:443/tcp'

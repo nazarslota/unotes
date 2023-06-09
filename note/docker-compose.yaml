@@ -3,7 +3,7 @@ version: '3'
 services:
   note:
     build: .
-    container_name: 'note'
+    container_name: 'unotes-note'
     ports:
       - '8092:8092/tcp' # '<EXTERNAL>:<INTERNAL>/tcp'
       - '8082:8082/tcp'
