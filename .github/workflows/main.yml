@@ -64,26 +64,29 @@ jobs:
           password: ${{ secrets.UNOTES_DROPLET_PASSWORD }}
 
           script: |
-            rm -r ~/auth.env | true && touch ~/auth.env
-            echo "AUTH_ACCESS_TOKEN_SECRET=${{ secrets.AUTH_ACCESS_TOKEN_SECRET }}" >> ~/auth.env
-            echo "AUTH_REFRESH_TOKEN_SECRET=${{ secrets.AUTH_REFRESH_TOKEN_SECRET }}" >> ~/auth.env
+            rm -r ~/auth/.env | true && touch ~/auth/.env
+            echo "AUTH_ACCESS_TOKEN_SECRET=${{ secrets.AUTH_ACCESS_TOKEN_SECRET }}" >> ~/auth/.env
+            echo "AUTH_REFRESH_TOKEN_SECRET=${{ secrets.AUTH_REFRESH_TOKEN_SECRET }}" >> ~/auth/.env
             
-            echo "AUTH_POSTGRESQL_HOST=${{ secrets.AUTH_POSTGRESQL_HOST }}" >> ~/auth.env
-            echo "AUTH_POSTGRESQL_PORT=${{ secrets.AUTH_POSTGRESQL_PORT }}" >> ~/auth.env
-            echo "AUTH_POSTGRESQL_USERNAME=${{ secrets.AUTH_POSTGRESQL_USERNAME }}" >> ~/auth.env
-            echo "AUTH_POSTGRESQL_PASSWORD=${{ secrets.AUTH_POSTGRESQL_PASSWORD }}" >> ~/auth.env
-            echo "AUTH_POSTGRESQL_DBNAME=${{ secrets.AUTH_POSTGRESQL_DBNAME }}" >> ~/auth.env
-            echo "AUTH_POSTGRESQL_SSLMODE=${{ secrets.AUTH_POSTGRESQL_SSLMODE }}" >> ~/auth.env
+            echo "AUTH_POSTGRESQL_HOST=${{ secrets.AUTH_POSTGRESQL_HOST }}" >> ~/auth/.env
+            echo "AUTH_POSTGRESQL_PORT=${{ secrets.AUTH_POSTGRESQL_PORT }}" >> ~/auth/.env
+            echo "AUTH_POSTGRESQL_USERNAME=${{ secrets.AUTH_POSTGRESQL_USERNAME }}" >> ~/auth/.env
+            echo "AUTH_POSTGRESQL_PASSWORD=${{ secrets.AUTH_POSTGRESQL_PASSWORD }}" >> ~/auth/.env
+            echo "AUTH_POSTGRESQL_DBNAME=${{ secrets.AUTH_POSTGRESQL_DBNAME }}" >> ~/auth/.env
+            echo "AUTH_POSTGRESQL_SSLMODE=${{ secrets.AUTH_POSTGRESQL_SSLMODE }}" >> ~/auth/.env
             
-            echo "AUTH_REDIS_ADDR=${{ secrets.AUTH_REDIS_ADDR }}" >> ~/auth.env
-            echo "AUTH_REDIS_PASSWORD=${{ secrets.AUTH_REDIS_PASSWORD }}" >> ~/auth.env
-            echo "AUTH_REDIS_DB=${{ secrets.AUTH_REDIS_DB }}" >> ~/auth.env
+            echo "AUTH_REDIS_ADDR=${{ secrets.AUTH_REDIS_ADDR }}" >> ~/auth/.env
+            echo "AUTH_REDIS_PASSWORD=${{ secrets.AUTH_REDIS_PASSWORD }}" >> ~/auth/.env
+            echo "AUTH_REDIS_DB=${{ secrets.AUTH_REDIS_DB }}" >> ~/auth/.env
             
             docker login ${{ env.DIGITALOCEAN_REGISTRY }} -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+            
+            docker network create ${{ env.WEB_REPOSITORY_NAME }}
             
             docker stop ${{ env.AUTH_CONTAINER_NAME }} | true && docker rm ${{ env.AUTH_CONTAINER_NAME }} | true
             docker run --detach --restart always --env-file ~/auth.env --name ${{ env.AUTH_CONTAINER_NAME }} --publish 8081:8081 --publish 8091:8091 \
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.AUTH_REPOSITORY_NAME }}:${{ env.AUTH_IMAGE_NAME }}.${{ github.sha }}
+            docker network connect ${{ env.WEB_REPOSITORY_NAME }} ${{ env.AUTH_CONTAINER_NAME }}
             
             rm -r ~/note.env | true && touch ~/note.env
             echo "NOTE_ACCESS_TOKEN_SECRET=${{ secrets.NOTE_ACCESS_TOKEN_SECRET }}" >> ~/note.env
@@ -97,7 +100,9 @@ jobs:
             docker stop ${{ env.NOTE_CONTAINER_NAME }} | true && docker rm ${{ env.NOTE_CONTAINER_NAME }} | true
             docker run --detach --restart always --env-file ~/note.env --name ${{ env.NOTE_CONTAINER_NAME }} --publish 8082:8082 --publish 8092:8092 \
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.NOTE_REPOSITORY_NAME }}:${{ env.NOTE_IMAGE_NAME }}.${{ github.sha }}
+            docker network connect ${{ env.WEB_REPOSITORY_NAME }} ${{ env.NOTE_CONTAINER_NAME }}
             
             docker stop ${{ env.WEB_CONTAINER_NAME }} | true && docker rm ${{ env.WEB_CONTAINER_NAME }} | true
             docker run --detach --restart always --name ${{ env.WEB_CONTAINER_NAME }} --publish 80:80 --publish 443:443 \
               ${{ env.DIGITALOCEAN_REGISTRY }}/${{ env.WEB_REPOSITORY_NAME }}:${{ env.WEB_IMAGE_NAME }}.${{ github.sha }}
+            docker network connect ${{ env.WEB_REPOSITORY_NAME }} ${{ env.WEB_CONTAINER_NAME }}
