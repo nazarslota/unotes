@@ -109,6 +109,11 @@ make dependencies
 #### Migrations
 
 - Using [migrate](https://github.com/golang-migrate/migrate) tool.
+
+    - New migration.
+        ````
+        migrate create -ext sql -dir schema/ -seq <name>
+        ````
     - Up.
         ````
         migrate -path ./schema -database 'postgres://<username>:<password>@<host>:<port>/<database>' up
